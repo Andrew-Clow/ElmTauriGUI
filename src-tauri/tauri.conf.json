@@ -1,0 +1,81 @@
+{
+  "build": {
+    "beforeBuildCommand": "elm make src/Main.elm --output=publicUI/main.js --optimize",
+    "beforeDevCommand": "elm make src/Main.elm --output=publicUI/main.js",
+    "devPath": "../publicUI",
+    "distDir": "../publicUI",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "ElmTauriGUI",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "fs": {
+        "scope": ["$APPCONFIG/*","$APPCONFIG","$HOME/Dropbox/NotWork/stuff/temp/*","$HOME/Dropbox/NotWork/stuff/temp"],
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "createDir": true,
+        "exists": true
+      },
+      "path": {
+        "all": true
+      },
+      "dialog": {
+        "all": true,
+        "open": true,
+        "save": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "DeveloperTool",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "Andrew-Clow.ElmTauriGUI",
+      "longDescription": "",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 600,
+        "resizable": true,
+        "title": "Elm Tauri GUI",
+        "width": 800
+      }
+    ]
+  }
+}
