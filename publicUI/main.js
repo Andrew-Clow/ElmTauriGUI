@@ -5377,13 +5377,17 @@ var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
-			it: {good: $author$project$Main$Neutral, text: ''}
+			answerWas: {good: $author$project$Main$Neutral, text: ''},
+			filePath: $elm$core$Maybe$Nothing
 		},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$Bad = {$: 'Bad'};
+var $author$project$Main$GotFilePath = function (a) {
+	return {$: 'GotFilePath', a: a};
+};
 var $author$project$Main$Good = {$: 'Good'};
 var $lobanov$elm_taskport$TaskPort$interopErrorToString = function (error) {
 	switch (error.$) {
@@ -5475,24 +5479,6 @@ var $author$project$Main$boolResultToString = F3(
 		};
 		return A2($author$project$Main$resultToString, result, decide);
 	});
-var $author$project$Tauri$Dialog$Error = {$: 'Error'};
-var $author$project$Main$GotMaybeString = function (a) {
-	return {$: 'GotMaybeString', a: a};
-};
-var $author$project$Main$GotMaybeStrings = function (a) {
-	return {$: 'GotMaybeStrings', a: a};
-};
-var $author$project$Main$IgnoreTauriFeedback = {$: 'IgnoreTauriFeedback'};
-var $author$project$Main$OKCancel = function (a) {
-	return {$: 'OKCancel', a: a};
-};
-var $author$project$Main$YesNo = function (a) {
-	return {$: 'YesNo', a: a};
-};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
@@ -5517,7 +5503,6 @@ var $elm$core$Task$attempt = F2(
 							$elm$core$Result$Ok),
 						task))));
 	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $lobanov$elm_taskport$TaskPort$DefaultNS = function (a) {
 	return {$: 'DefaultNS', a: a};
 };
@@ -6288,30 +6273,7 @@ var $lobanov$elm_taskport$TaskPort$call = F2(
 			},
 			args);
 	});
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Tauri$Dialog$encodeDialogType = function (dialogType) {
-	return $elm$json$Json$Encode$string(
-		function () {
-			switch (dialogType.$) {
-				case 'Info':
-					return 'info';
-				case 'Warning':
-					return 'warning';
-				default:
-					return 'error';
-			}
-		}());
-};
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
-	function (encoder, maybe) {
-		if (maybe.$ === 'Nothing') {
-			return $elm$json$Json$Encode$null;
-		} else {
-			var a = maybe.a;
-			return encoder(a);
-		}
-	});
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
 		return _Json_wrap(
@@ -6333,6 +6295,113 @@ var $elm$json$Json$Encode$object = function (pairs) {
 				}),
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Tauri$Dialog$encodeFilter = function (df) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'extensions',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, df.extensions)),
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(df.name))
+			]));
+};
+var $author$project$Tauri$Dialog$encodeFilters = function (dfs) {
+	return A2($elm$json$Json$Encode$list, $author$project$Tauri$Dialog$encodeFilter, dfs);
+};
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
+	function (encoder, maybe) {
+		if (maybe.$ === 'Nothing') {
+			return $elm$json$Json$Encode$null;
+		} else {
+			var a = maybe.a;
+			return encoder(a);
+		}
+	});
+var $author$project$Tauri$Dialog$encodeFileDialogOptions = F2(
+	function (isMultiSelect, options) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'defaultPath',
+					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.defaultPath)),
+					_Utils_Tuple2(
+					'directory',
+					$elm$json$Json$Encode$bool(false)),
+					_Utils_Tuple2(
+					'filters',
+					$author$project$Tauri$Dialog$encodeFilters(options.filters)),
+					_Utils_Tuple2(
+					'multiple',
+					$elm$json$Json$Encode$bool(isMultiSelect.multiple)),
+					_Utils_Tuple2(
+					'title',
+					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
+				]));
+	});
+var $elm$json$Json$Decode$maybe = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+			]));
+};
+var $author$project$Tauri$Dialog$openFile = F2(
+	function (options, toMsg) {
+		return A2(
+			$elm$core$Task$attempt,
+			toMsg,
+			A2(
+				$lobanov$elm_taskport$TaskPort$call,
+				{
+					argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
+						{multiple: false}),
+					_function: 'openDlg',
+					valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
+				},
+				options));
+	});
+var $author$project$Tauri$Dialog$Error = {$: 'Error'};
+var $author$project$Main$GotFileContents = function (a) {
+	return {$: 'GotFileContents', a: a};
+};
+var $author$project$Main$GotMaybeString = function (a) {
+	return {$: 'GotMaybeString', a: a};
+};
+var $author$project$Main$GotMaybeStrings = function (a) {
+	return {$: 'GotMaybeStrings', a: a};
+};
+var $author$project$Main$IgnoreTauriFeedback = {$: 'IgnoreTauriFeedback'};
+var $author$project$Main$NoFileSpecified = {$: 'NoFileSpecified'};
+var $author$project$Main$OKCancel = function (a) {
+	return {$: 'OKCancel', a: a};
+};
+var $author$project$Main$YesNo = function (a) {
+	return {$: 'YesNo', a: a};
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Tauri$Dialog$encodeDialogType = function (dialogType) {
+	return $elm$json$Json$Encode$string(
+		function () {
+			switch (dialogType.$) {
+				case 'Info':
+					return 'info';
+				case 'Warning':
+					return 'warning';
+				default:
+					return 'error';
+			}
+		}());
 };
 var $author$project$Tauri$Dialog$encodeMessageDialogOptions = F2(
 	function (_v0, msg) {
@@ -6408,7 +6477,6 @@ var $author$project$Tauri$Dialog$message = F2(
 				},
 				question));
 	});
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $author$project$Tauri$Dialog$encodeDirectoryDialogOptions = F2(
 	function (isMultiSelect, options) {
 		return $elm$json$Json$Encode$object(
@@ -6431,15 +6499,7 @@ var $author$project$Tauri$Dialog$encodeDirectoryDialogOptions = F2(
 					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
 				]));
 	});
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
-};
-var $author$project$Tauri$Dialog$openDirectory = F2(
+var $author$project$Tauri$Dialog$openDirectories = F2(
 	function (options, toMsg) {
 		return A2(
 			$elm$core$Task$attempt,
@@ -6448,64 +6508,31 @@ var $author$project$Tauri$Dialog$openDirectory = F2(
 				$lobanov$elm_taskport$TaskPort$call,
 				{
 					argsEncoder: $author$project$Tauri$Dialog$encodeDirectoryDialogOptions(
-						{multiple: false}),
-					_function: 'openDlg',
-					valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
-				},
-				options));
-	});
-var $author$project$Tauri$Dialog$encodeFilter = function (df) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'extensions',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, df.extensions)),
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(df.name))
-			]));
-};
-var $author$project$Tauri$Dialog$encodeFilters = function (dfs) {
-	return A2($elm$json$Json$Encode$list, $author$project$Tauri$Dialog$encodeFilter, dfs);
-};
-var $author$project$Tauri$Dialog$encodeFileDialogOptions = F2(
-	function (isMultiSelect, options) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'defaultPath',
-					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.defaultPath)),
-					_Utils_Tuple2(
-					'directory',
-					$elm$json$Json$Encode$bool(false)),
-					_Utils_Tuple2(
-					'filters',
-					$author$project$Tauri$Dialog$encodeFilters(options.filters)),
-					_Utils_Tuple2(
-					'multiple',
-					$elm$json$Json$Encode$bool(isMultiSelect.multiple)),
-					_Utils_Tuple2(
-					'title',
-					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
-				]));
-	});
-var $author$project$Tauri$Dialog$openFiles = F2(
-	function (options, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
 						{multiple: true}),
 					_function: 'openDlg',
 					valueDecoder: $elm$json$Json$Decode$maybe(
 						$elm$json$Json$Decode$list($elm$json$Json$Decode$string))
 				},
 				options));
+	});
+var $author$project$Tauri$FS$readTextFile = F2(
+	function (filePath, toMsg) {
+		return A2(
+			$elm$core$Task$attempt,
+			toMsg,
+			A2(
+				$lobanov$elm_taskport$TaskPort$call,
+				{
+					argsEncoder: $elm$json$Json$Encode$string,
+					_function: 'readTextFile',
+					valueDecoder: A2(
+						$elm$json$Json$Decode$map,
+						function (content) {
+							return {contents: content, filePath: filePath};
+						},
+						$elm$json$Json$Decode$string)
+				},
+				filePath));
 	});
 var $author$project$Tauri$Dialog$save = F2(
 	function (options, toMsg) {
@@ -6522,71 +6549,83 @@ var $author$project$Tauri$Dialog$save = F2(
 				},
 				options));
 	});
-var $author$project$Main$press = function (btn) {
-	switch (btn.$) {
-		case 'Confirm':
-			return A3(
-				$author$project$Tauri$Dialog$confirmOptions,
-				'Is this really a confirmation question?',
-				{
-					dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Error),
-					title: $elm$core$Maybe$Just('Confirm')
-				},
-				$author$project$Main$OKCancel);
-		case 'Ask':
-			return A3(
-				$author$project$Tauri$Dialog$askOptions,
-				'Is this really a question?',
-				{dialogType: $elm$core$Maybe$Nothing, title: $elm$core$Maybe$Nothing},
-				$author$project$Main$YesNo);
-		case 'Message':
-			return A2(
-				$author$project$Tauri$Dialog$message,
-				'Here\'s a little message for you',
-				$elm$core$Basics$always($author$project$Main$IgnoreTauriFeedback));
-		case 'OpenDirectory':
-			return A2(
-				$author$project$Tauri$Dialog$openDirectory,
-				{
-					defaultPath: $elm$core$Maybe$Just('C:/Users/Andrew/Dropbox'),
-					recursive: true,
-					title: $elm$core$Maybe$Just('Please pick a directory')
-				},
-				$author$project$Main$GotMaybeString);
-		case 'OpenFiles':
-			return A2(
-				$author$project$Tauri$Dialog$openFiles,
-				{
-					defaultPath: $elm$core$Maybe$Just('C:/Users/Andrew/Dropbox'),
-					filters: _List_fromArray(
-						[
-							{
-							extensions: _List_fromArray(
-								['txt', 'elm', 'md']),
-							name: 'Texty Files'
-						}
-						]),
-					title: $elm$core$Maybe$Just('Please pick some files')
-				},
-				$author$project$Main$GotMaybeStrings);
-		default:
-			return A2(
-				$author$project$Tauri$Dialog$save,
-				{
-					defaultPath: $elm$core$Maybe$Just('C:/Users/Andrew/Dropbox'),
-					filters: _List_fromArray(
-						[
-							{
-							extensions: _List_fromArray(
-								['txt', 'elm', 'md']),
-							name: 'Texty Files'
-						}
-						]),
-					title: $elm$core$Maybe$Just('What do you want me to save it as?')
-				},
-				$author$project$Main$GotMaybeString);
-	}
-};
+var $author$project$Main$press = F2(
+	function (model, btn) {
+		switch (btn.$) {
+			case 'Confirm':
+				return A3(
+					$author$project$Tauri$Dialog$confirmOptions,
+					'Is this really a confirmation question?',
+					{
+						dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Error),
+						title: $elm$core$Maybe$Just('Confirm')
+					},
+					$author$project$Main$OKCancel);
+			case 'Ask':
+				return A3(
+					$author$project$Tauri$Dialog$askOptions,
+					'Is this really a question?',
+					{dialogType: $elm$core$Maybe$Nothing, title: $elm$core$Maybe$Nothing},
+					$author$project$Main$YesNo);
+			case 'Message':
+				return A2(
+					$author$project$Tauri$Dialog$message,
+					'Here\'s a little message for you',
+					$elm$core$Basics$always($author$project$Main$IgnoreTauriFeedback));
+			case 'OpenDirectories':
+				return A2(
+					$author$project$Tauri$Dialog$openDirectories,
+					{
+						defaultPath: $elm$core$Maybe$Nothing,
+						recursive: true,
+						title: $elm$core$Maybe$Just('Please pick a directory or directories')
+					},
+					$author$project$Main$GotMaybeStrings);
+			case 'OpenFile':
+				return A2(
+					$author$project$Tauri$Dialog$openFile,
+					{
+						defaultPath: $elm$core$Maybe$Nothing,
+						filters: _List_fromArray(
+							[
+								{
+								extensions: _List_fromArray(
+									['txt', 'elm', 'md']),
+								name: 'Texty Files'
+							}
+							]),
+						title: $elm$core$Maybe$Just('Please pick a file')
+					},
+					$author$project$Main$GotFilePath);
+			case 'Save':
+				return A2(
+					$author$project$Tauri$Dialog$save,
+					{
+						defaultPath: $elm$core$Maybe$Nothing,
+						filters: _List_fromArray(
+							[
+								{
+								extensions: _List_fromArray(
+									['txt', 'elm', 'md']),
+								name: 'Texty Files'
+							}
+							]),
+						title: $elm$core$Maybe$Just('What do you want me to save it as?')
+					},
+					$author$project$Main$GotMaybeString);
+			default:
+				var _v1 = model.filePath;
+				if (_v1.$ === 'Nothing') {
+					return A2(
+						$elm$core$Task$perform,
+						$elm$core$Basics$identity,
+						$elm$core$Task$succeed($author$project$Main$NoFileSpecified));
+				} else {
+					var filePath = _v1.a;
+					return A2($author$project$Tauri$FS$readTextFile, filePath, $author$project$Main$GotFileContents);
+				}
+		}
+	});
 var $author$project$Main$show = function (btn) {
 	switch (btn.$) {
 		case 'Ask':
@@ -6595,12 +6634,14 @@ var $author$project$Main$show = function (btn) {
 			return 'Confirm';
 		case 'Message':
 			return 'Message';
-		case 'OpenDirectory':
-			return 'Open Directory';
-		case 'OpenFiles':
-			return 'Open Files';
-		default:
+		case 'OpenDirectories':
+			return 'Open Directories';
+		case 'OpenFile':
+			return 'Open File';
+		case 'Save':
 			return 'Save';
+		default:
+			return 'Read Text File';
 	}
 };
 var $author$project$Main$showMaybe = function (m) {
@@ -6623,19 +6664,19 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							it: {
+							answerWas: {
 								good: $author$project$Main$Neutral,
 								text: $author$project$Main$show(btn)
 							}
 						}),
-					$author$project$Main$press(btn));
+					A2($author$project$Main$press, model, btn));
 			case 'YesNo':
 				var result = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							it: A3(
+							answerWas: A3(
 								$author$project$Main$boolResultToString,
 								result,
 								function ($) {
@@ -6650,7 +6691,7 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							it: A3(
+							answerWas: A3(
 								$author$project$Main$boolResultToString,
 								result,
 								function ($) {
@@ -6663,30 +6704,87 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'GotMaybeString':
 				var result = msg.a;
-				var it = A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{it: it}),
+						{
+							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe)
+						}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'GotMaybeStrings':
 				var result = msg.a;
-				var it = A2($author$project$Main$resultToString, result, $author$project$Main$showMaybeList);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{it: it}),
+						{
+							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybeList)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'GotFilePath':
+				var result = msg.a;
+				var pathFromResult = function (r) {
+					if ((r.$ === 'Ok') && (r.a.$ === 'Just')) {
+						var fp = r.a.a;
+						return $elm$core$Maybe$Just(fp);
+					} else {
+						return $elm$core$Maybe$Nothing;
+					}
+				};
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe),
+							filePath: pathFromResult(result)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoFileSpecified':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Bad, text: 'No file specified'}
+						}),
+					A2(
+						$author$project$Tauri$Dialog$openFile,
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							filters: _List_fromArray(
+								[
+									{
+									extensions: _List_fromArray(
+										['txt', 'elm', 'md']),
+									name: 'Texty Files'
+								}
+								]),
+							title: $elm$core$Maybe$Just('Please pick a text file')
+						},
+						$author$project$Main$GotFilePath));
+			default:
+				var fileContents = msg.a;
+				var showFileContents = function (_v2) {
+					var filePath = _v2.filePath;
+					var contents = _v2.contents;
+					return filePath + ('\n\n' + contents);
+				};
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: A2($author$project$Main$resultToString, fileContents, showFileContents)
+						}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$Ask = {$: 'Ask'};
 var $author$project$Main$Confirm = {$: 'Confirm'};
 var $author$project$Main$Message = {$: 'Message'};
-var $author$project$Main$OpenDirectory = {$: 'OpenDirectory'};
-var $author$project$Main$OpenFiles = {$: 'OpenFiles'};
+var $author$project$Main$OpenDirectories = {$: 'OpenDirectories'};
+var $author$project$Main$OpenFile = {$: 'OpenFile'};
 var $author$project$Main$Pressed = function (a) {
 	return {$: 'Pressed', a: a};
 };
+var $author$project$Main$ReadTextFile = {$: 'ReadTextFile'};
 var $author$project$Main$Save = {$: 'Save'};
 var $mdgriffith$elm_ui$Internal$Model$Attr = function (a) {
 	return {$: 'Attr', a: a};
@@ -12785,16 +12883,31 @@ var $author$project$Main$view = function (model) {
 									$author$project$Main$Pressed($author$project$Main$Message)),
 									A2(
 									$author$project$Main$button,
-									'Open Directory',
-									$author$project$Main$Pressed($author$project$Main$OpenDirectory)),
+									'Open Directories',
+									$author$project$Main$Pressed($author$project$Main$OpenDirectories)),
 									A2(
 									$author$project$Main$button,
-									'Open Files',
-									$author$project$Main$Pressed($author$project$Main$OpenFiles)),
+									'Open File',
+									$author$project$Main$Pressed($author$project$Main$OpenFile)),
 									A2(
 									$author$project$Main$button,
 									'Save',
 									$author$project$Main$Pressed($author$project$Main$Save))
+								])),
+							$mdgriffith$elm_ui$Element$text(' '),
+							$mdgriffith$elm_ui$Element$text('FS'),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$spacing(10)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$author$project$Main$button,
+									'Read Text File',
+									$author$project$Main$Pressed($author$project$Main$ReadTextFile))
 								]))
 						])),
 					A2(
@@ -12803,7 +12916,7 @@ var $author$project$Main$view = function (model) {
 						[
 							$mdgriffith$elm_ui$Element$Font$color(
 							function () {
-								var _v0 = model.it.good;
+								var _v0 = model.answerWas.good;
 								switch (_v0.$) {
 									case 'Good':
 										return A3($mdgriffith$elm_ui$Element$rgb255, 125, 208, 125);
@@ -12814,7 +12927,7 @@ var $author$project$Main$view = function (model) {
 								}
 							}())
 						]),
-					$mdgriffith$elm_ui$Element$text(model.it.text))
+					$mdgriffith$elm_ui$Element$text(model.answerWas.text))
 				])));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

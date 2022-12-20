@@ -7,8 +7,10 @@ import Element.Border
 import Element.Font
 import Element.Input
 import Html
+import Task
 import TaskPort
 import Tauri.Dialog
+import Tauri.FS
 
 
 main : Program () Model Msg
@@ -21,8 +23,14 @@ main =
         }
 
 
+type alias FilePath =
+    String
+
+
 type alias Model =
-    { it : { text : String, good : Good } }
+    { answerWas : { text : String, good : Good }
+    , filePath : Maybe FilePath
+    }
 
 
 type Good
@@ -35,9 +43,10 @@ type Button
     = Ask
     | Confirm
     | Message
-    | OpenDirectory
-    | OpenFiles
+    | OpenDirectories
+    | OpenFile
     | Save
+    | ReadTextFile
 
 
 type Msg
@@ -47,6 +56,9 @@ type Msg
     | GotMaybeString (TaskPort.Result (Maybe String))
     | GotMaybeStrings (TaskPort.Result (Maybe (List String)))
     | IgnoreTauriFeedback
+    | GotFilePath (TaskPort.Result (Maybe String))
+    | NoFileSpecified
+    | GotFileContents (TaskPort.Result Tauri.FS.FileContents)
 
 
 
@@ -55,7 +67,7 @@ type Msg
 
 init : flags -> ( Model, Cmd msg )
 init =
-    \_ -> ( { it = { text = "", good = Neutral } }, Cmd.none )
+    \_ -> ( { answerWas = { text = "", good = Neutral }, filePath = Nothing }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -69,14 +81,19 @@ view model =
                     [ button "Ask." <| Pressed Ask
                     , button "Confirm" <| Pressed Confirm
                     , button "Message" <| Pressed Message
-                    , button "Open Directory" <| Pressed OpenDirectory
-                    , button "Open Files" <| Pressed OpenFiles
+                    , button "Open Directories" <| Pressed OpenDirectories
+                    , button "Open File" <| Pressed OpenFile
                     , button "Save" <| Pressed Save
+                    ]
+                , Element.text " "
+                , Element.text "FS"
+                , Element.row [ Element.spacing 10 ]
+                    [ button "Read Text File" <| Pressed ReadTextFile
                     ]
                 ]
             , Element.el
                 [ Element.Font.color <|
-                    case model.it.good of
+                    case model.answerWas.good of
                         Good ->
                             Element.rgb255 125 208 125
 
@@ -87,7 +104,7 @@ view model =
                             Element.rgb255 85 116 208
                 ]
               <|
-                Element.text model.it.text
+                Element.text model.answerWas.text
             ]
 
 
@@ -95,36 +112,53 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Pressed btn ->
-            ( { model | it = { text = show btn, good = Neutral } }, press btn )
+            ( { model | answerWas = { text = show btn, good = Neutral } }, press model btn )
 
         YesNo result ->
-            ( { model | it = boolResultToString result .pressedYes { true = "Yes", false = "No" } }, Cmd.none )
+            ( { model | answerWas = boolResultToString result .pressedYes { true = "Yes", false = "No" } }, Cmd.none )
 
         OKCancel result ->
-            ( { model | it = boolResultToString result .pressedOK { true = "OK", false = "Cancel" } }, Cmd.none )
+            ( { model | answerWas = boolResultToString result .pressedOK { true = "OK", false = "Cancel" } }, Cmd.none )
 
         IgnoreTauriFeedback ->
             ( model, Cmd.none )
 
         GotMaybeString result ->
-            let
-                it =
-                    resultToString result showMaybe
-            in
-            ( { model | it = it }, Cmd.none )
+            ( { model | answerWas = resultToString result showMaybe }, Cmd.none )
 
         GotMaybeStrings result ->
+            ( { model | answerWas = resultToString result showMaybeList }, Cmd.none )
+
+        GotFilePath result ->
             let
-                it =
-                    resultToString result showMaybeList
+                pathFromResult : TaskPort.Result (Maybe FilePath) -> Maybe FilePath
+                pathFromResult r =
+                    case r of
+                        Ok (Just fp) ->
+                            Just fp
+
+                        _ ->
+                            Nothing
             in
-            ( { model | it = it }, Cmd.none )
+            ( { model | answerWas = resultToString result showMaybe, filePath = pathFromResult result }, Cmd.none )
 
+        NoFileSpecified ->
+            ( { model | answerWas = { text = "No file specified", good = Bad } }
+            , Tauri.Dialog.openFile
+                { defaultPath = Nothing
+                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
+                , title = Just "Please pick a text file"
+                }
+                GotFilePath
+            )
 
-
--- ( { model | it = "Yo." }, Tauri.FS.readTextFile "C:\\Users\\Andrew\\Dropbox\\NotWork\\prog\\elm\\ElmTauri\\elm.json" GotFile )
--- ( { model | it = "Yo." }, Tauri.FS.readTextFile "C:\\Users\\Andrew\\Dropbox\\NotWork\\stuff\\temp\\this\\hello.txt" GotFile )
---    ( { model | it = "Yo." }, Cmd.none )
+        GotFileContents fileContents ->
+            let
+                showFileContents : Tauri.FS.FileContents -> String
+                showFileContents { filePath, contents } =
+                    filePath ++ "\n\n" ++ contents
+            in
+            ( { model | answerWas = resultToString fileContents showFileContents }, Cmd.none )
 
 
 showMaybeList : Maybe (List String) -> String
@@ -154,18 +188,21 @@ show btn =
         Message ->
             "Message"
 
-        OpenDirectory ->
-            "Open Directory"
+        OpenDirectories ->
+            "Open Directories"
 
-        OpenFiles ->
-            "Open Files"
+        OpenFile ->
+            "Open File"
 
         Save ->
             "Save"
 
+        ReadTextFile ->
+            "Read Text File"
 
-press : Button -> Cmd Msg
-press btn =
+
+press : Model -> Button -> Cmd Msg
+press model btn =
     case btn of
         Confirm ->
             Tauri.Dialog.confirmOptions "Is this really a confirmation question?"
@@ -184,29 +221,37 @@ press btn =
         Message ->
             Tauri.Dialog.message "Here's a little message for you" <| always IgnoreTauriFeedback
 
-        OpenDirectory ->
-            Tauri.Dialog.openDirectory
-                { defaultPath = Just "C:/Users/Andrew/Dropbox"
+        OpenDirectories ->
+            Tauri.Dialog.openDirectories
+                { defaultPath = Nothing
                 , recursive = True
-                , title = Just "Please pick a directory"
-                }
-                GotMaybeString
-
-        OpenFiles ->
-            Tauri.Dialog.openFiles
-                { defaultPath = Just "C:/Users/Andrew/Dropbox"
-                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
-                , title = Just "Please pick some files"
+                , title = Just "Please pick a directory or directories"
                 }
                 GotMaybeStrings
 
+        OpenFile ->
+            Tauri.Dialog.openFile
+                { defaultPath = Nothing
+                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
+                , title = Just "Please pick a file"
+                }
+                GotFilePath
+
         Save ->
             Tauri.Dialog.save
-                { defaultPath = Just "C:/Users/Andrew/Dropbox"
+                { defaultPath = Nothing
                 , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                 , title = Just "What do you want me to save it as?"
                 }
                 GotMaybeString
+
+        ReadTextFile ->
+            case model.filePath of
+                Nothing ->
+                    Task.succeed NoFileSpecified |> Task.perform identity
+
+                Just filePath ->
+                    Tauri.FS.readTextFile filePath GotFileContents
 
 
 resultToString : TaskPort.Result a -> (a -> String) -> { text : String, good : Good }
