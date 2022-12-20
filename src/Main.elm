@@ -4,6 +4,7 @@ import Browser
 import Element exposing (Element)
 import Element.Background
 import Element.Border
+import Element.Font
 import Element.Input
 import Html
 import TaskPort
@@ -21,7 +22,13 @@ main =
 
 
 type alias Model =
-    { it : String }
+    { it : { text : String, good : Good } }
+
+
+type Good
+    = Good
+    | Bad
+    | Neutral
 
 
 type Button
@@ -29,6 +36,8 @@ type Button
     | Confirm
     | Message
     | OpenDirectory
+    | OpenFiles
+    | Save
 
 
 type Msg
@@ -36,6 +45,7 @@ type Msg
     | YesNo (TaskPort.Result { pressedYes : Bool })
     | OKCancel (TaskPort.Result { pressedOK : Bool })
     | GotMaybeString (TaskPort.Result (Maybe String))
+    | GotMaybeStrings (TaskPort.Result (Maybe (List String)))
     | IgnoreTauriFeedback
 
 
@@ -45,21 +55,39 @@ type Msg
 
 init : flags -> ( Model, Cmd msg )
 init =
-    \_ -> ( { it = "" }, Cmd.none )
+    \_ -> ( { it = { text = "", good = Neutral } }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
 view model =
     Element.layout [ Element.padding 20 ] <|
-        Element.column [ Element.spacing 10 ]
-            [ Element.text "Hello!"
-            , Element.row [ Element.spacing 10 ]
-                [ button "Ask." <| Pressed Ask
-                , button "Confirm" <| Pressed Confirm
-                , button "Message" <| Pressed Message
-                , button "Open" <| Pressed OpenDirectory
+        Element.column [ Element.spacing 25 ]
+            [ Element.text "Hello! This is just to experiment with using Tauri with elm."
+            , Element.column [ Element.spacing 7 ]
+                [ Element.text "Dialog"
+                , Element.row [ Element.spacing 10 ]
+                    [ button "Ask." <| Pressed Ask
+                    , button "Confirm" <| Pressed Confirm
+                    , button "Message" <| Pressed Message
+                    , button "Open Directory" <| Pressed OpenDirectory
+                    , button "Open Files" <| Pressed OpenFiles
+                    , button "Save" <| Pressed Save
+                    ]
                 ]
-            , Element.text model.it
+            , Element.el
+                [ Element.Font.color <|
+                    case model.it.good of
+                        Good ->
+                            Element.rgb255 125 208 125
+
+                        Bad ->
+                            Element.rgb255 210 120 142
+
+                        Neutral ->
+                            Element.rgb255 85 116 208
+                ]
+              <|
+                Element.text model.it.text
             ]
 
 
@@ -67,7 +95,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Pressed btn ->
-            ( { model | it = show btn }, press btn )
+            ( { model | it = { text = show btn, good = Neutral } }, press btn )
 
         YesNo result ->
             ( { model | it = boolResultToString result .pressedYes { true = "Yes", false = "No" } }, Cmd.none )
@@ -85,11 +113,28 @@ update msg model =
             in
             ( { model | it = it }, Cmd.none )
 
+        GotMaybeStrings result ->
+            let
+                it =
+                    resultToString result showMaybeList
+            in
+            ( { model | it = it }, Cmd.none )
+
 
 
 -- ( { model | it = "Yo." }, Tauri.FS.readTextFile "C:\\Users\\Andrew\\Dropbox\\NotWork\\prog\\elm\\ElmTauri\\elm.json" GotFile )
 -- ( { model | it = "Yo." }, Tauri.FS.readTextFile "C:\\Users\\Andrew\\Dropbox\\NotWork\\stuff\\temp\\this\\hello.txt" GotFile )
 --    ( { model | it = "Yo." }, Cmd.none )
+
+
+showMaybeList : Maybe (List String) -> String
+showMaybeList m =
+    case m of
+        Nothing ->
+            "Nothing"
+
+        Just list ->
+            String.join "\n" list
 
 
 showMaybe : Maybe String -> String
@@ -111,6 +156,12 @@ show btn =
 
         OpenDirectory ->
             "Open Directory"
+
+        OpenFiles ->
+            "Open Files"
+
+        Save ->
+            "Save"
 
 
 press : Button -> Cmd Msg
@@ -134,20 +185,41 @@ press btn =
             Tauri.Dialog.message "Here's a little message for you" <| always IgnoreTauriFeedback
 
         OpenDirectory ->
-            Tauri.Dialog.open { defaultPath = Nothing, directory = True, filters = Nothing, multiple = Tauri.Dialog.MultiSelectFalse, recursive = True, title = Just "pick a directory" } GotMaybeString
+            Tauri.Dialog.openDirectory
+                { defaultPath = Just "C:/Users/Andrew/Dropbox"
+                , recursive = True
+                , title = Just "Please pick a directory"
+                }
+                GotMaybeString
+
+        OpenFiles ->
+            Tauri.Dialog.openFiles
+                { defaultPath = Just "C:/Users/Andrew/Dropbox"
+                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
+                , title = Just "Please pick some files"
+                }
+                GotMaybeStrings
+
+        Save ->
+            Tauri.Dialog.save
+                { defaultPath = Just "C:/Users/Andrew/Dropbox"
+                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
+                , title = Just "What do you want me to save it as?"
+                }
+                GotMaybeString
 
 
-resultToString : TaskPort.Result a -> (a -> String) -> String
+resultToString : TaskPort.Result a -> (a -> String) -> { text : String, good : Good }
 resultToString result toString =
     case result of
         Ok value ->
-            toString value
+            { text = toString value, good = Good }
 
         Err error ->
-            TaskPort.errorToString error
+            { text = TaskPort.errorToString error, good = Bad }
 
 
-boolResultToString : TaskPort.Result a -> (a -> Bool) -> { true : String, false : String } -> String
+boolResultToString : TaskPort.Result a -> (a -> Bool) -> { true : String, false : String } -> { text : String, good : Good }
 boolResultToString result toBool { true, false } =
     let
         decide a =

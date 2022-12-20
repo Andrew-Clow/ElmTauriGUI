@@ -6,7 +6,7 @@
 </head>
 
 <body>
-  <script src="./taskport.min.js"></script>
+  <script src="./taskport.2.0.1.min.js"></script>
   <script>
     TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
     TaskPort.register("readTextFile", (args) => {return window.__TAURI__.fs.readTextFile(args)});
@@ -17,7 +17,8 @@
     TaskPort.register("confirmOptions", (args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
     TaskPort.register("message", (args) => {return window.__TAURI__.dialog.confirm(args)});
     TaskPort.register("messageOptions", (args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
-    TaskPort.register("openDlg", (args) => {return window.__TAURI__.dialog.open({defaultPath:args[0].defaultPath,directory:args[0].directory,filters:args[0].filters,multiple:args[0].multiple,recursive:args[0].recursive,title:args[0].title})});
+    TaskPort.register("openDlg", (args) => {return window.__TAURI__.dialog.open({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
+    TaskPort.register("save", (args) => {return window.__TAURI__.dialog.save({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
   </script>
 
   <div id="myapp"></div>

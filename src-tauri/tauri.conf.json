@@ -13,7 +13,7 @@
   "tauri": {
     "allowlist": {
       "fs": {
-        "scope": ["$APPCONFIG/*","$APPCONFIG","$HOME/Dropbox/NotWork/stuff/temp/*","$HOME/Dropbox/NotWork/stuff/temp"],
+        "scope": ["$APPCONFIG/*","$APPCONFIG","$HOME/*","$HOME"],
         "readFile": true,
         "writeFile": true,
         "readDir": true,
