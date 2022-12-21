@@ -2,8 +2,8 @@ module Tauri.Dialog exposing
     ( DialogType(..)
     , ask
     , askOptions
-    , confirm
-    , confirmOptions
+    , confirmOptions_WarningDoesNotActuallyGiveCancelOption
+    , confirm_WarningDoesNotActuallyGiveCancelOption
     , message
     , messageOptions
     , openDirectories
@@ -51,7 +51,7 @@ import TaskPort
 -- ask (Yes/No), confirm (OK/Cancel), message (())
 
 
-ask : String -> (TaskPort.Result { pressedYes : Bool } -> msg) -> Cmd msg
+ask : String -> (Result TaskPort.Error { pressedYes : Bool } -> msg) -> Cmd msg
 ask question toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -62,8 +62,12 @@ ask question toMsg =
             question
 
 
-confirm : String -> (TaskPort.Result { pressedOK : Bool } -> msg) -> Cmd msg
-confirm question toMsg =
+
+-- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
+
+
+confirm_WarningDoesNotActuallyGiveCancelOption : String -> (Result TaskPort.Error { pressedOK : Bool } -> msg) -> Cmd msg
+confirm_WarningDoesNotActuallyGiveCancelOption question toMsg =
     Task.attempt toMsg <|
         TaskPort.call
             { function = "confirm"
@@ -73,7 +77,7 @@ confirm question toMsg =
             question
 
 
-message : String -> (TaskPort.Result () -> msg) -> Cmd msg
+message : String -> (Result TaskPort.Error () -> msg) -> Cmd msg
 message question toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -96,7 +100,7 @@ type DialogType
     | Error
 
 
-askOptions : String -> MessageDialogOptions -> (TaskPort.Result { pressedYes : Bool } -> msg) -> Cmd msg
+askOptions : String -> MessageDialogOptions -> (Result TaskPort.Error { pressedYes : Bool } -> msg) -> Cmd msg
 askOptions question options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -107,8 +111,12 @@ askOptions question options toMsg =
             question
 
 
-confirmOptions : String -> MessageDialogOptions -> (TaskPort.Result { pressedOK : Bool } -> msg) -> Cmd msg
-confirmOptions question options toMsg =
+
+-- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
+
+
+confirmOptions_WarningDoesNotActuallyGiveCancelOption : String -> MessageDialogOptions -> (Result TaskPort.Error { pressedOK : Bool } -> msg) -> Cmd msg
+confirmOptions_WarningDoesNotActuallyGiveCancelOption question options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
             { function = "confirmOptions"
@@ -118,7 +126,7 @@ confirmOptions question options toMsg =
             question
 
 
-messageOptions : String -> MessageDialogOptions -> (TaskPort.Result () -> msg) -> Cmd msg
+messageOptions : String -> MessageDialogOptions -> (Result TaskPort.Error () -> msg) -> Cmd msg
 messageOptions question options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -147,7 +155,7 @@ type alias FileDialogOptions =
     }
 
 
-openFile : FileDialogOptions -> (TaskPort.Result (Maybe String) -> msg) -> Cmd msg
+openFile : FileDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
 openFile options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -158,7 +166,7 @@ openFile options toMsg =
             options
 
 
-openFiles : FileDialogOptions -> (TaskPort.Result (Maybe (List String)) -> msg) -> Cmd msg
+openFiles : FileDialogOptions -> (Result TaskPort.Error (Maybe (List String)) -> msg) -> Cmd msg
 openFiles options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -180,7 +188,7 @@ type alias DirectoryDialogOptions =
     }
 
 
-openDirectory : DirectoryDialogOptions -> (TaskPort.Result (Maybe String) -> msg) -> Cmd msg
+openDirectory : DirectoryDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
 openDirectory options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -191,7 +199,7 @@ openDirectory options toMsg =
             options
 
 
-openDirectories : DirectoryDialogOptions -> (TaskPort.Result (Maybe (List String)) -> msg) -> Cmd msg
+openDirectories : DirectoryDialogOptions -> (Result TaskPort.Error (Maybe (List String)) -> msg) -> Cmd msg
 openDirectories options toMsg =
     Task.attempt toMsg <|
         TaskPort.call
@@ -206,7 +214,7 @@ openDirectories options toMsg =
 -- Save ----------------------------------------------------------------------------------------------------------------
 
 
-save : FileDialogOptions -> (TaskPort.Result (Maybe String) -> msg) -> Cmd msg
+save : FileDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
 save options toMsg =
     Task.attempt toMsg <|
         TaskPort.call

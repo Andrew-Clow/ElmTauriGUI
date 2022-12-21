@@ -9,6 +9,9 @@
   <script src="./taskport.2.0.1.min.js"></script>
   <script>
     TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
+    TaskPort.register("createDir", (args) => {return window.__TAURI__.fs.createDir(args)});
+    TaskPort.register("copyFile", (args) => {return window.__TAURI__.fs.copyFile(args[0],args[1])});
+    TaskPort.register("exists", (args) => {return window.__TAURI__.fs.exists(args)});
     TaskPort.register("readTextFile", (args) => {return window.__TAURI__.fs.readTextFile(args)});
     TaskPort.register("open", (args) => {return window.__TAURI__.dialog.open(args)});
     TaskPort.register("ask", (args) => {return window.__TAURI__.dialog.ask(args)});

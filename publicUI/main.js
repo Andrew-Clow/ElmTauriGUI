@@ -5378,17 +5378,34 @@ var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
 			answerWas: {good: $author$project$Main$Neutral, text: ''},
-			filePath: $elm$core$Maybe$Nothing
+			readFilePath: $elm$core$Maybe$Nothing,
+			saveFilePath: $elm$core$Maybe$Nothing
 		},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$Bad = {$: 'Bad'};
+var $author$project$Main$Copied = function (a) {
+	return {$: 'Copied', a: a};
+};
+var $author$project$Main$Created = function (a) {
+	return {$: 'Created', a: a};
+};
+var $author$project$Main$Good = {$: 'Good'};
 var $author$project$Main$GotFilePath = function (a) {
 	return {$: 'GotFilePath', a: a};
 };
-var $author$project$Main$Good = {$: 'Good'};
+var $author$project$Main$GotSaveFilePath = function (a) {
+	return {$: 'GotSaveFilePath', a: a};
+};
+var $author$project$Main$TaskPortError = function (a) {
+	return {$: 'TaskPortError', a: a};
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
 var $lobanov$elm_taskport$TaskPort$interopErrorToString = function (error) {
 	switch (error.$) {
 		case 'NotInstalled':
@@ -5478,6 +5495,11 @@ var $author$project$Main$boolResultToString = F3(
 			return toBool(a) ? _true : _false;
 		};
 		return A2($author$project$Main$resultToString, result, decide);
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
@@ -6273,7 +6295,6 @@ var $lobanov$elm_taskport$TaskPort$call = F2(
 			},
 			args);
 	});
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
 		return _Json_wrap(
@@ -6283,6 +6304,81 @@ var $elm$json$Json$Encode$list = F2(
 				_Json_emptyArray(_Utils_Tuple0),
 				entries));
 	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Tauri$FS$copyFile = F2(
+	function (fromTo, toMsg) {
+		return A2(
+			$elm$core$Task$attempt,
+			toMsg,
+			A2(
+				$lobanov$elm_taskport$TaskPort$call,
+				{
+					argsEncoder: function (args) {
+						return A2(
+							$elm$json$Json$Encode$list,
+							$elm$json$Json$Encode$string,
+							_List_fromArray(
+								[args.from, args.to]));
+					},
+					_function: 'copyFile',
+					valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+				},
+				fromTo));
+	});
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $author$project$Tauri$FS$encodeBaseDirectory = function (b) {
+	return $elm$json$Json$Encode$string(
+		function () {
+			switch (b.$) {
+				case 'App':
+					return 'App';
+				case 'AppConfig':
+					return 'AppConfig';
+				case 'AppData':
+					return 'AppData';
+				case 'AppLocalData':
+					return 'AppLocalData';
+				case 'AppLog':
+					return 'AppLog';
+				case 'Audio':
+					return 'Audio';
+				case 'Cache':
+					return 'Cache';
+				case 'Config':
+					return 'Config';
+				case 'Data':
+					return 'Data';
+				case 'Desktop':
+					return 'Desktop';
+				case 'Document':
+					return 'Document';
+				case 'Download':
+					return 'Download';
+				case 'Executable':
+					return 'Executable';
+				case 'Home':
+					return 'Home';
+				case 'LocalData':
+					return 'LocalData';
+				case 'Log':
+					return 'Log';
+				case 'Picture':
+					return 'Picture';
+				case 'Public':
+					return 'Public';
+				case 'Resource':
+					return 'Resource';
+				case 'Runtime':
+					return 'Runtime';
+				case 'Temp':
+					return 'Temp';
+				case 'Template':
+					return 'Template';
+				default:
+					return 'Video';
+			}
+		}());
+};
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -6296,7 +6392,45 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Tauri$FS$createDirIn = F4(
+	function (nameOfDirectory, baseDir, _v0, toMsg) {
+		var createParentsIfAbsent = _v0.createParentsIfAbsent;
+		return A2(
+			$elm$core$Task$attempt,
+			toMsg,
+			A2(
+				$lobanov$elm_taskport$TaskPort$call,
+				{
+					argsEncoder: function (dir) {
+						return A2(
+							$elm$json$Json$Encode$list,
+							$elm$core$Basics$identity,
+							_List_fromArray(
+								[
+									$elm$json$Json$Encode$string(dir),
+									$elm$json$Json$Encode$object(
+									_List_fromArray(
+										[
+											_Utils_Tuple2(
+											'dir',
+											$author$project$Tauri$FS$encodeBaseDirectory(baseDir)),
+											_Utils_Tuple2(
+											'recursive',
+											$elm$json$Json$Encode$bool(createParentsIfAbsent))
+										]))
+								]));
+					},
+					_function: 'createDir',
+					valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+				},
+				nameOfDirectory));
+	});
+var $author$project$Tauri$FS$Home = {$: 'Home'};
+var $author$project$Tauri$FS$home = $author$project$Tauri$FS$Home;
+var $author$project$Main$iff = F3(
+	function (_true, x, y) {
+		return _true ? x : y;
+	});
 var $author$project$Tauri$Dialog$encodeFilter = function (df) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -6367,28 +6501,41 @@ var $author$project$Tauri$Dialog$openFile = F2(
 				},
 				options));
 	});
-var $author$project$Tauri$Dialog$Error = {$: 'Error'};
+var $author$project$Main$pathFromResult = function (r) {
+	if ((r.$ === 'Ok') && (r.a.$ === 'Just')) {
+		var fp = r.a.a;
+		return $elm$core$Maybe$Just(fp);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$ConfirmCopy = F2(
+	function (a, b) {
+		return {$: 'ConfirmCopy', a: a, b: b};
+	});
+var $author$project$Main$CreateDir = function (a) {
+	return {$: 'CreateDir', a: a};
+};
+var $author$project$Main$Existence = F2(
+	function (a, b) {
+		return {$: 'Existence', a: a, b: b};
+	});
 var $author$project$Main$GotFileContents = function (a) {
 	return {$: 'GotFileContents', a: a};
-};
-var $author$project$Main$GotMaybeString = function (a) {
-	return {$: 'GotMaybeString', a: a};
 };
 var $author$project$Main$GotMaybeStrings = function (a) {
 	return {$: 'GotMaybeStrings', a: a};
 };
 var $author$project$Main$IgnoreTauriFeedback = {$: 'IgnoreTauriFeedback'};
-var $author$project$Main$NoFileSpecified = {$: 'NoFileSpecified'};
+var $author$project$Main$NoReadFileSpecified = {$: 'NoReadFileSpecified'};
+var $author$project$Main$NoSaveFileSpecified = {$: 'NoSaveFileSpecified'};
 var $author$project$Main$OKCancel = function (a) {
 	return {$: 'OKCancel', a: a};
 };
+var $author$project$Tauri$Dialog$Warning = {$: 'Warning'};
 var $author$project$Main$YesNo = function (a) {
 	return {$: 'YesNo', a: a};
 };
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Tauri$Dialog$encodeDialogType = function (dialogType) {
 	return $elm$json$Json$Encode$string(
@@ -6444,7 +6591,7 @@ var $author$project$Tauri$Dialog$askOptions = F3(
 				},
 				question));
 	});
-var $author$project$Tauri$Dialog$confirmOptions = F3(
+var $author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption = F3(
 	function (question, options, toMsg) {
 		return A2(
 			$elm$core$Task$attempt,
@@ -6462,6 +6609,16 @@ var $author$project$Tauri$Dialog$confirmOptions = F3(
 						$elm$json$Json$Decode$bool)
 				},
 				question));
+	});
+var $author$project$Tauri$FS$exists = F2(
+	function (filePath, toMsg) {
+		return A2(
+			$elm$core$Task$attempt,
+			toMsg,
+			A2(
+				$lobanov$elm_taskport$TaskPort$call,
+				{argsEncoder: $elm$json$Json$Encode$string, _function: 'exists', valueDecoder: $elm$json$Json$Decode$bool},
+				filePath));
 	});
 var $author$project$Tauri$Dialog$message = F2(
 	function (question, toMsg) {
@@ -6549,15 +6706,25 @@ var $author$project$Tauri$Dialog$save = F2(
 				},
 				options));
 	});
+var $author$project$Main$splitMsg = F3(
+	function (errToMsg, toMsg, r) {
+		if (r.$ === 'Ok') {
+			var value = r.a;
+			return toMsg(value);
+		} else {
+			var error = r.a;
+			return errToMsg(error);
+		}
+	});
 var $author$project$Main$press = F2(
 	function (model, btn) {
 		switch (btn.$) {
 			case 'Confirm':
 				return A3(
-					$author$project$Tauri$Dialog$confirmOptions,
+					$author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption,
 					'Is this really a confirmation question?',
 					{
-						dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Error),
+						dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
 						title: $elm$core$Maybe$Just('Confirm')
 					},
 					$author$project$Main$OKCancel);
@@ -6612,17 +6779,85 @@ var $author$project$Main$press = F2(
 							]),
 						title: $elm$core$Maybe$Just('What do you want me to save it as?')
 					},
-					$author$project$Main$GotMaybeString);
-			default:
-				var _v1 = model.filePath;
+					$author$project$Main$GotSaveFilePath);
+			case 'ReadTextFile':
+				var _v1 = model.readFilePath;
 				if (_v1.$ === 'Nothing') {
 					return A2(
 						$elm$core$Task$perform,
 						$elm$core$Basics$identity,
-						$elm$core$Task$succeed($author$project$Main$NoFileSpecified));
+						$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
 				} else {
 					var filePath = _v1.a;
 					return A2($author$project$Tauri$FS$readTextFile, filePath, $author$project$Main$GotFileContents);
+				}
+			case 'CopyFile':
+				var _v2 = _Utils_Tuple2(model.readFilePath, model.saveFilePath);
+				if (_v2.a.$ === 'Nothing') {
+					var _v3 = _v2.a;
+					var a = _v2.b;
+					return A2(
+						$elm$core$Task$perform,
+						$elm$core$Basics$identity,
+						$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
+				} else {
+					if (_v2.b.$ === 'Just') {
+						var from = _v2.a.a;
+						var to = _v2.b.a;
+						return A3(
+							$author$project$Tauri$Dialog$askOptions,
+							'Are you sure you want to copy\n' + (from + ('\nto\n' + (to + '\n?'))),
+							{
+								dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+								title: $elm$core$Maybe$Just('Are you sure?')
+							},
+							$author$project$Main$ConfirmCopy(
+								{from: from, to: to}));
+					} else {
+						var _v4 = _v2.b;
+						return A2(
+							$elm$core$Task$perform,
+							$elm$core$Basics$identity,
+							$elm$core$Task$succeed($author$project$Main$NoSaveFileSpecified));
+					}
+				}
+			case 'ChooseToCreateDir':
+				return A2(
+					$author$project$Tauri$Dialog$save,
+					{
+						defaultPath: $elm$core$Maybe$Nothing,
+						filters: _List_Nil,
+						title: $elm$core$Maybe$Just('Please enter the name of your new folder.')
+					},
+					$author$project$Main$CreateDir);
+			default:
+				var _v5 = model.saveFilePath;
+				if (_v5.$ === 'Just') {
+					var saveFilePath = _v5.a;
+					return A2(
+						$author$project$Tauri$FS$exists,
+						saveFilePath,
+						A2(
+							$author$project$Main$splitMsg,
+							A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
+							$author$project$Main$Existence(saveFilePath)));
+				} else {
+					var _v6 = model.readFilePath;
+					if (_v6.$ === 'Just') {
+						var filePath = _v6.a;
+						return A2(
+							$author$project$Tauri$FS$exists,
+							filePath,
+							A2(
+								$author$project$Main$splitMsg,
+								A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
+								$author$project$Main$Existence(filePath)));
+					} else {
+						return A2(
+							$elm$core$Task$perform,
+							$elm$core$Basics$identity,
+							$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
+					}
 				}
 		}
 	});
@@ -6640,8 +6875,14 @@ var $author$project$Main$show = function (btn) {
 			return 'Open File';
 		case 'Save':
 			return 'Save';
-		default:
+		case 'ReadTextFile':
 			return 'Read Text File';
+		case 'CopyFile':
+			return 'Copy File';
+		case 'ChooseToCreateDir':
+			return 'Create Folder';
+		default:
+			return 'Exists';
 	}
 };
 var $author$project$Main$showMaybe = function (m) {
@@ -6722,23 +6963,25 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'GotFilePath':
 				var result = msg.a;
-				var pathFromResult = function (r) {
-					if ((r.$ === 'Ok') && (r.a.$ === 'Just')) {
-						var fp = r.a.a;
-						return $elm$core$Maybe$Just(fp);
-					} else {
-						return $elm$core$Maybe$Nothing;
-					}
-				};
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
 							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe),
-							filePath: pathFromResult(result)
+							readFilePath: $author$project$Main$pathFromResult(result)
 						}),
 					$elm$core$Platform$Cmd$none);
-			case 'NoFileSpecified':
+			case 'GotSaveFilePath':
+				var result = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe),
+							saveFilePath: $author$project$Main$pathFromResult(result)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoReadFileSpecified':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6760,11 +7003,33 @@ var $author$project$Main$update = F2(
 							title: $elm$core$Maybe$Just('Please pick a text file')
 						},
 						$author$project$Main$GotFilePath));
-			default:
+			case 'NoSaveFileSpecified':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Bad, text: 'No save destination specified'}
+						}),
+					A2(
+						$author$project$Tauri$Dialog$save,
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							filters: _List_fromArray(
+								[
+									{
+									extensions: _List_fromArray(
+										['txt', 'elm', 'md']),
+									name: 'Texty Files'
+								}
+								]),
+							title: $elm$core$Maybe$Just('Please pick a text file to save to')
+						},
+						$author$project$Main$GotSaveFilePath));
+			case 'GotFileContents':
 				var fileContents = msg.a;
-				var showFileContents = function (_v2) {
-					var filePath = _v2.filePath;
-					var contents = _v2.contents;
+				var showFileContents = function (_v1) {
+					var filePath = _v1.filePath;
+					var contents = _v1.contents;
 					return filePath + ('\n\n' + contents);
 				};
 				return _Utils_Tuple2(
@@ -6774,10 +7039,135 @@ var $author$project$Main$update = F2(
 							answerWas: A2($author$project$Main$resultToString, fileContents, showFileContents)
 						}),
 					$elm$core$Platform$Cmd$none);
+			case 'ConfirmCopy':
+				var record = msg.a;
+				var result = msg.b;
+				if (result.$ === 'Ok') {
+					var value = result.a;
+					return value.pressedYes ? _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {good: $author$project$Main$Neutral, text: 'Copying ' + (record.from + (' to ' + record.to))}
+							}),
+						A2(
+							$author$project$Tauri$FS$copyFile,
+							record,
+							$elm$core$Basics$always(
+								$author$project$Main$Copied(record)))) : _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {good: $author$project$Main$Neutral, text: 'Not copying ' + (record.from + (' to ' + record.to))}
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var error = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {
+									good: $author$project$Main$Bad,
+									text: $lobanov$elm_taskport$TaskPort$errorToString(error)
+								}
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'Copied':
+				var record = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Good, text: 'Copied ' + (record.from + (' to ' + record.to))}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'TaskPortError':
+				var string = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Bad, text: string}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'CreateDir':
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					if (result.a.$ === 'Just') {
+						var filePath = result.a.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									answerWas: {good: $author$project$Main$Good, text: 'Saving as ' + filePath}
+								}),
+							A4(
+								$author$project$Tauri$FS$createDirIn,
+								filePath,
+								$author$project$Tauri$FS$home,
+								{createParentsIfAbsent: true},
+								A2(
+									$author$project$Main$splitMsg,
+									A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
+									function (_v4) {
+										return $author$project$Main$Created(filePath);
+									})));
+					} else {
+						var _v5 = result.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									answerWas: {good: $author$project$Main$Neutral, text: 'Save cancelled'}
+								}),
+							$elm$core$Platform$Cmd$none);
+					}
+				} else {
+					var err = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {
+									good: $author$project$Main$Bad,
+									text: $lobanov$elm_taskport$TaskPort$errorToString(err)
+								}
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'Created':
+				var filePath = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Good, text: filePath}
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var filePath = msg.a;
+				var bool = msg.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {
+								good: $author$project$Main$Good,
+								text: _Utils_ap(
+									filePath,
+									A3($author$project$Main$iff, bool, ' exists.', ' doesn\'t exist.'))
+							}
+						}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$Ask = {$: 'Ask'};
+var $author$project$Main$ChooseToCreateDir = {$: 'ChooseToCreateDir'};
 var $author$project$Main$Confirm = {$: 'Confirm'};
+var $author$project$Main$CopyFile = {$: 'CopyFile'};
+var $author$project$Main$Exists = {$: 'Exists'};
 var $author$project$Main$Message = {$: 'Message'};
 var $author$project$Main$OpenDirectories = {$: 'OpenDirectories'};
 var $author$project$Main$OpenFile = {$: 'OpenFile'};
@@ -12907,8 +13297,35 @@ var $author$project$Main$view = function (model) {
 									A2(
 									$author$project$Main$button,
 									'Read Text File',
-									$author$project$Main$Pressed($author$project$Main$ReadTextFile))
+									$author$project$Main$Pressed($author$project$Main$ReadTextFile)),
+									A2(
+									$author$project$Main$button,
+									'Copy File',
+									$author$project$Main$Pressed($author$project$Main$CopyFile)),
+									A2(
+									$author$project$Main$button,
+									'Create Folder',
+									$author$project$Main$Pressed($author$project$Main$ChooseToCreateDir)),
+									A2(
+									$author$project$Main$button,
+									'Existence',
+									$author$project$Main$Pressed($author$project$Main$Exists))
 								]))
+						])),
+					A2(
+					$mdgriffith$elm_ui$Element$column,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$spacing(7),
+							$mdgriffith$elm_ui$Element$Font$color(
+							A3($mdgriffith$elm_ui$Element$rgb255, 9, 85, 165))
+						]),
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text(
+							'Read: ' + A2($elm$core$Maybe$withDefault, '', model.readFilePath)),
+							$mdgriffith$elm_ui$Element$text(
+							'Save: ' + A2($elm$core$Maybe$withDefault, '', model.saveFilePath))
 						])),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
