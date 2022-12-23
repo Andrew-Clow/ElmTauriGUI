@@ -5378,19 +5378,26 @@ var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
 			answerWas: {good: $author$project$Main$Neutral, text: ''},
+			directory: $elm$core$Maybe$Nothing,
 			readFilePath: $elm$core$Maybe$Nothing,
-			saveFilePath: $elm$core$Maybe$Nothing
+			saveFilePath: $elm$core$Maybe$Nothing,
+			showPathButtons: false,
+			textFileContent: $elm$core$Maybe$Nothing
 		},
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$Bad = {$: 'Bad'};
+var $author$project$Main$Broken = {$: 'Broken'};
 var $author$project$Main$Copied = function (a) {
 	return {$: 'Copied', a: a};
 };
 var $author$project$Main$Created = function (a) {
 	return {$: 'Created', a: a};
+};
+var $author$project$Main$Directory = function (a) {
+	return {$: 'Directory', a: a};
 };
 var $author$project$Main$Good = {$: 'Good'};
 var $author$project$Main$GotFilePath = function (a) {
@@ -5399,132 +5406,110 @@ var $author$project$Main$GotFilePath = function (a) {
 var $author$project$Main$GotSaveFilePath = function (a) {
 	return {$: 'GotSaveFilePath', a: a};
 };
-var $author$project$Main$TaskPortError = function (a) {
-	return {$: 'TaskPortError', a: a};
+var $lobanov$elm_taskport$TaskPort$JSError = function (a) {
+	return {$: 'JSError', a: a};
+};
+var $author$project$Main$Removed = function (a) {
+	return {$: 'Removed', a: a};
+};
+var $author$project$Main$Renamed = function (a) {
+	return {$: 'Renamed', a: a};
 };
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
 	});
-var $lobanov$elm_taskport$TaskPort$interopErrorToString = function (error) {
-	switch (error.$) {
-		case 'NotInstalled':
-			return 'NotInstalled: TaskPort JS component is not installed.';
-		case 'NotFound':
-			var msg = error.a;
-			return 'NotFound: ' + msg;
-		case 'NotCompatible':
-			var msg = error.a;
-			return 'NotCompatible: ' + msg;
-		case 'CannotDecodeValue':
-			var err = error.a;
-			var value = error.b;
-			return 'CannotDecodeValue: unable to decode JavaScript function return value.\n' + ('Value:\n' + (value + ('\n\n' + ('Decoding error:\n' + $elm$json$Json$Decode$errorToString(err)))));
+var $author$project$Tauri$BaseDir$toString = function (b) {
+	switch (b.$) {
+		case 'App':
+			return 'App';
+		case 'AppConfig':
+			return 'AppConfig';
+		case 'AppData':
+			return 'AppData';
+		case 'AppLocalData':
+			return 'AppLocalData';
+		case 'AppLog':
+			return 'AppLog';
+		case 'Audio':
+			return 'Audio';
+		case 'Cache':
+			return 'Cache';
+		case 'Config':
+			return 'Config';
+		case 'Data':
+			return 'Data';
+		case 'Desktop':
+			return 'Desktop';
+		case 'Document':
+			return 'Document';
+		case 'Download':
+			return 'Download';
+		case 'Executable':
+			return 'Executable';
+		case 'Home':
+			return 'Home';
+		case 'LocalData':
+			return 'LocalData';
+		case 'Log':
+			return 'Log';
+		case 'Picture':
+			return 'Picture';
+		case 'Public':
+			return 'Public';
+		case 'Resource':
+			return 'Resource';
+		case 'Runtime':
+			return 'Runtime';
+		case 'Temp':
+			return 'Temp';
+		case 'Template':
+			return 'Template';
 		default:
-			var msg = error.a;
-			return 'RuntimeError: ' + msg;
+			return 'Video';
 	}
 };
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $lobanov$elm_taskport$TaskPort$jsErrorToString = function (error) {
-	if (error.$ === 'ErrorValue') {
-		var v = error.a;
-		return 'JSON object:\n' + A2($elm$json$Json$Encode$encode, 4, v);
-	} else {
-		var name = error.a;
-		var o = error.b;
-		return name + (': ' + (o.message + ('\n' + (A2($elm$core$String$join, '\n', o.stackLines) + A2(
-			$elm$core$Maybe$withDefault,
-			'',
-			A2(
-				$elm$core$Maybe$map,
-				function (cause) {
-					return '\nCaused by:\n' + $lobanov$elm_taskport$TaskPort$jsErrorToString(cause);
-				},
-				o.cause))))));
+var $author$project$Main$buttonName = function (btn) {
+	switch (btn.$) {
+		case 'AskDialog':
+			return 'Ask';
+		case 'ConfirmDialog':
+			return 'Confirm';
+		case 'MessageDialog':
+			return 'Message';
+		case 'OpenDirectoriesDialog':
+			return 'Open Directories';
+		case 'OpenFileDialog':
+			return 'Open File';
+		case 'SaveDialog':
+			return 'Save';
+		case 'ReadTextFile':
+			return 'Read Text File';
+		case 'CopyFile':
+			return 'Copy File';
+		case 'ChooseToCreateDir':
+			return 'Create Dir';
+		case 'CheckExists':
+			return 'Exists';
+		case 'ReadDir':
+			return 'Read Dir';
+		case 'ChooseDir':
+			return 'Choose Dir';
+		case 'RemoveDir':
+			return 'Remove Dir';
+		case 'RemoveFile':
+			return 'Remove File';
+		case 'RenameFile':
+			return 'Rename File';
+		case 'WriteTextFile':
+			return 'Write File';
+		case 'GetPath':
+			var baseDir = btn.a;
+			return $author$project$Tauri$BaseDir$toString(baseDir);
+		default:
+			return 'Temp Test';
 	}
 };
-var $lobanov$elm_taskport$TaskPort$errorToString = function (error) {
-	if (error.$ === 'InteropError') {
-		var e = error.a;
-		return $lobanov$elm_taskport$TaskPort$interopErrorToString(e);
-	} else {
-		var e = error.a;
-		return $lobanov$elm_taskport$TaskPort$jsErrorToString(e);
-	}
-};
-var $author$project$Main$resultToString = F2(
-	function (result, toString) {
-		if (result.$ === 'Ok') {
-			var value = result.a;
-			return {
-				good: $author$project$Main$Good,
-				text: toString(value)
-			};
-		} else {
-			var error = result.a;
-			return {
-				good: $author$project$Main$Bad,
-				text: $lobanov$elm_taskport$TaskPort$errorToString(error)
-			};
-		}
-	});
-var $author$project$Main$boolResultToString = F3(
-	function (result, toBool, _v0) {
-		var _true = _v0._true;
-		var _false = _v0._false;
-		var decide = function (a) {
-			return toBool(a) ? _true : _false;
-		};
-		return A2($author$project$Main$resultToString, result, decide);
-	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$Task$onError = _Scheduler_onError;
-var $elm$core$Task$attempt = F2(
-	function (resultToMessage, task) {
-		return $elm$core$Task$command(
-			$elm$core$Task$Perform(
-				A2(
-					$elm$core$Task$onError,
-					A2(
-						$elm$core$Basics$composeL,
-						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-						$elm$core$Result$Err),
-					A2(
-						$elm$core$Task$andThen,
-						A2(
-							$elm$core$Basics$composeL,
-							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-							$elm$core$Result$Ok),
-						task))));
-	});
 var $lobanov$elm_taskport$TaskPort$DefaultNS = function (a) {
 	return {$: 'DefaultNS', a: a};
 };
@@ -6095,9 +6080,6 @@ var $lobanov$elm_taskport$TaskPort$CannotDecodeValue = F2(
 var $lobanov$elm_taskport$TaskPort$InteropError = function (a) {
 	return {$: 'InteropError', a: a};
 };
-var $lobanov$elm_taskport$TaskPort$JSError = function (a) {
-	return {$: 'JSError', a: a};
-};
 var $lobanov$elm_taskport$TaskPort$NotCompatible = function (a) {
 	return {$: 'NotCompatible', a: a};
 };
@@ -6305,80 +6287,131 @@ var $elm$json$Json$Encode$list = F2(
 				entries));
 	});
 var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Tauri$FS$copyFile = F2(
-	function (fromTo, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: function (args) {
-						return A2(
-							$elm$json$Json$Encode$list,
-							$elm$json$Json$Encode$string,
-							_List_fromArray(
-								[args.from, args.to]));
-					},
-					_function: 'copyFile',
-					valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
-				},
-				fromTo));
-	});
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $author$project$Tauri$FS$encodeBaseDirectory = function (b) {
-	return $elm$json$Json$Encode$string(
-		function () {
-			switch (b.$) {
-				case 'App':
-					return 'App';
-				case 'AppConfig':
-					return 'AppConfig';
-				case 'AppData':
-					return 'AppData';
-				case 'AppLocalData':
-					return 'AppLocalData';
-				case 'AppLog':
-					return 'AppLog';
-				case 'Audio':
-					return 'Audio';
-				case 'Cache':
-					return 'Cache';
-				case 'Config':
-					return 'Config';
-				case 'Data':
-					return 'Data';
-				case 'Desktop':
-					return 'Desktop';
-				case 'Document':
-					return 'Document';
-				case 'Download':
-					return 'Download';
-				case 'Executable':
-					return 'Executable';
-				case 'Home':
-					return 'Home';
-				case 'LocalData':
-					return 'LocalData';
-				case 'Log':
-					return 'Log';
-				case 'Picture':
-					return 'Picture';
-				case 'Public':
-					return 'Public';
-				case 'Resource':
-					return 'Resource';
-				case 'Runtime':
-					return 'Runtime';
-				case 'Temp':
-					return 'Temp';
-				case 'Template':
-					return 'Template';
-				default:
-					return 'Video';
-			}
-		}());
+var $author$project$Tauri$FS$copyFile = function (fromTo) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: function (args) {
+				return A2(
+					$elm$json$Json$Encode$list,
+					$elm$json$Json$Encode$string,
+					_List_fromArray(
+						[args.from, args.to]));
+			},
+			_function: 'copyFile',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		fromTo);
 };
+var $author$project$Tauri$FS$createDir = function (nameOfDirectory) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'createDir',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		nameOfDirectory);
+};
+var $lobanov$elm_taskport$TaskPort$interopErrorToString = function (error) {
+	switch (error.$) {
+		case 'NotInstalled':
+			return 'NotInstalled: TaskPort JS component is not installed.';
+		case 'NotFound':
+			var msg = error.a;
+			return 'NotFound: ' + msg;
+		case 'NotCompatible':
+			var msg = error.a;
+			return 'NotCompatible: ' + msg;
+		case 'CannotDecodeValue':
+			var err = error.a;
+			var value = error.b;
+			return 'CannotDecodeValue: unable to decode JavaScript function return value.\n' + ('Value:\n' + (value + ('\n\n' + ('Decoding error:\n' + $elm$json$Json$Decode$errorToString(err)))));
+		default:
+			var msg = error.a;
+			return 'RuntimeError: ' + msg;
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $lobanov$elm_taskport$TaskPort$jsErrorToString = function (error) {
+	if (error.$ === 'ErrorValue') {
+		var v = error.a;
+		return 'JSON object:\n' + A2($elm$json$Json$Encode$encode, 4, v);
+	} else {
+		var name = error.a;
+		var o = error.b;
+		return name + (': ' + (o.message + ('\n' + (A2($elm$core$String$join, '\n', o.stackLines) + A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2(
+				$elm$core$Maybe$map,
+				function (cause) {
+					return '\nCaused by:\n' + $lobanov$elm_taskport$TaskPort$jsErrorToString(cause);
+				},
+				o.cause))))));
+	}
+};
+var $lobanov$elm_taskport$TaskPort$errorToString = function (error) {
+	if (error.$ === 'InteropError') {
+		var e = error.a;
+		return $lobanov$elm_taskport$TaskPort$interopErrorToString(e);
+	} else {
+		var e = error.a;
+		return $lobanov$elm_taskport$TaskPort$jsErrorToString(e);
+	}
+};
+var $author$project$Main$good = F2(
+	function (model, text) {
+		return _Utils_update(
+			model,
+			{
+				answerWas: {good: $author$project$Main$Good, text: text}
+			});
+	});
+var $author$project$Main$iff = F3(
+	function (_true, x, y) {
+		return _true ? x : y;
+	});
+var $author$project$Main$IgnoreTauriFeedback = {$: 'IgnoreTauriFeedback'};
+var $author$project$Main$ignoreNothing = F2(
+	function (toMsg, m) {
+		if (m.$ === 'Just') {
+			var a = m.a;
+			return toMsg(a);
+		} else {
+			return $author$project$Main$IgnoreTauriFeedback;
+		}
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
+	function (encoder, maybe) {
+		if (maybe.$ === 'Nothing') {
+			return $elm$json$Json$Encode$null;
+		} else {
+			var a = maybe.a;
+			return encoder(a);
+		}
+	});
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -6392,45 +6425,47 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
-var $author$project$Tauri$FS$createDirIn = F4(
-	function (nameOfDirectory, baseDir, _v0, toMsg) {
-		var createParentsIfAbsent = _v0.createParentsIfAbsent;
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: function (dir) {
-						return A2(
-							$elm$json$Json$Encode$list,
-							$elm$core$Basics$identity,
-							_List_fromArray(
-								[
-									$elm$json$Json$Encode$string(dir),
-									$elm$json$Json$Encode$object(
-									_List_fromArray(
-										[
-											_Utils_Tuple2(
-											'dir',
-											$author$project$Tauri$FS$encodeBaseDirectory(baseDir)),
-											_Utils_Tuple2(
-											'recursive',
-											$elm$json$Json$Encode$bool(createParentsIfAbsent))
-										]))
-								]));
-					},
-					_function: 'createDir',
-					valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
-				},
-				nameOfDirectory));
+var $author$project$Tauri$Dialog$encodeDirectoryDialogOptions = F2(
+	function (isMultiSelect, options) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'defaultPath',
+					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.defaultPath)),
+					_Utils_Tuple2(
+					'directory',
+					$elm$json$Json$Encode$bool(true)),
+					_Utils_Tuple2(
+					'multiple',
+					$elm$json$Json$Encode$bool(isMultiSelect.multiple)),
+					_Utils_Tuple2(
+					'recursive',
+					$elm$json$Json$Encode$bool(options.recursive)),
+					_Utils_Tuple2(
+					'title',
+					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
+				]));
 	});
-var $author$project$Tauri$FS$Home = {$: 'Home'};
-var $author$project$Tauri$FS$home = $author$project$Tauri$FS$Home;
-var $author$project$Main$iff = F3(
-	function (_true, x, y) {
-		return _true ? x : y;
-	});
+var $elm$json$Json$Decode$maybe = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+			]));
+};
+var $author$project$Tauri$Dialog$openDirectory = function (options) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$Dialog$encodeDirectoryDialogOptions(
+				{multiple: false}),
+			_function: 'openDlg',
+			valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
+		},
+		options);
+};
 var $author$project$Tauri$Dialog$encodeFilter = function (df) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -6446,16 +6481,6 @@ var $author$project$Tauri$Dialog$encodeFilter = function (df) {
 var $author$project$Tauri$Dialog$encodeFilters = function (dfs) {
 	return A2($elm$json$Json$Encode$list, $author$project$Tauri$Dialog$encodeFilter, dfs);
 };
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
-	function (encoder, maybe) {
-		if (maybe.$ === 'Nothing') {
-			return $elm$json$Json$Encode$null;
-		} else {
-			var a = maybe.a;
-			return encoder(a);
-		}
-	});
 var $author$project$Tauri$Dialog$encodeFileDialogOptions = F2(
 	function (isMultiSelect, options) {
 		return $elm$json$Json$Encode$object(
@@ -6478,61 +6503,90 @@ var $author$project$Tauri$Dialog$encodeFileDialogOptions = F2(
 					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
 				]));
 	});
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
+var $author$project$Tauri$Dialog$openFile = function (options) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
+				{multiple: false}),
+			_function: 'openDlg',
+			valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
+		},
+		options);
 };
-var $author$project$Tauri$Dialog$openFile = F2(
-	function (options, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
-						{multiple: false}),
-					_function: 'openDlg',
-					valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
-				},
-				options));
-	});
-var $author$project$Main$pathFromResult = function (r) {
-	if ((r.$ === 'Ok') && (r.a.$ === 'Just')) {
-		var fp = r.a.a;
-		return $elm$core$Maybe$Just(fp);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
+var $author$project$Tauri$BaseDir$App = {$: 'App'};
+var $author$project$Tauri$BaseDir$AppConfig = {$: 'AppConfig'};
+var $author$project$Tauri$BaseDir$AppData = {$: 'AppData'};
+var $author$project$Tauri$BaseDir$AppLocalData = {$: 'AppLocalData'};
+var $author$project$Tauri$BaseDir$AppLog = {$: 'AppLog'};
+var $author$project$Tauri$BaseDir$Audio = {$: 'Audio'};
+var $author$project$Tauri$BaseDir$Cache = {$: 'Cache'};
+var $author$project$Tauri$BaseDir$Config = {$: 'Config'};
 var $author$project$Main$ConfirmCopy = F2(
 	function (a, b) {
 		return {$: 'ConfirmCopy', a: a, b: b};
 	});
+var $author$project$Main$ConfirmRemoveDir = F2(
+	function (a, b) {
+		return {$: 'ConfirmRemoveDir', a: a, b: b};
+	});
+var $author$project$Main$ConfirmRemoveFile = F2(
+	function (a, b) {
+		return {$: 'ConfirmRemoveFile', a: a, b: b};
+	});
+var $author$project$Main$ConfirmRename = F2(
+	function (a, b) {
+		return {$: 'ConfirmRename', a: a, b: b};
+	});
 var $author$project$Main$CreateDir = function (a) {
 	return {$: 'CreateDir', a: a};
 };
+var $author$project$Tauri$BaseDir$Data = {$: 'Data'};
+var $author$project$Tauri$BaseDir$Desktop = {$: 'Desktop'};
+var $author$project$Tauri$BaseDir$Document = {$: 'Document'};
+var $author$project$Tauri$BaseDir$Download = {$: 'Download'};
+var $author$project$Main$EnableTextBox = {$: 'EnableTextBox'};
+var $author$project$Tauri$BaseDir$Executable = {$: 'Executable'};
 var $author$project$Main$Existence = F2(
 	function (a, b) {
 		return {$: 'Existence', a: a, b: b};
 	});
+var $author$project$Main$Folder = function (a) {
+	return {$: 'Folder', a: a};
+};
 var $author$project$Main$GotFileContents = function (a) {
 	return {$: 'GotFileContents', a: a};
 };
 var $author$project$Main$GotMaybeStrings = function (a) {
 	return {$: 'GotMaybeStrings', a: a};
 };
-var $author$project$Main$IgnoreTauriFeedback = {$: 'IgnoreTauriFeedback'};
+var $author$project$Main$GotNumbers = function (a) {
+	return {$: 'GotNumbers', a: a};
+};
+var $author$project$Main$GotPath = F2(
+	function (a, b) {
+		return {$: 'GotPath', a: a, b: b};
+	});
+var $author$project$Tauri$BaseDir$Home = {$: 'Home'};
+var $author$project$Tauri$BaseDir$LocalData = {$: 'LocalData'};
+var $author$project$Tauri$BaseDir$Log = {$: 'Log'};
+var $author$project$Main$NoFolderSpecified = {$: 'NoFolderSpecified'};
 var $author$project$Main$NoReadFileSpecified = {$: 'NoReadFileSpecified'};
 var $author$project$Main$NoSaveFileSpecified = {$: 'NoSaveFileSpecified'};
 var $author$project$Main$OKCancel = function (a) {
 	return {$: 'OKCancel', a: a};
 };
+var $author$project$Tauri$BaseDir$Picture = {$: 'Picture'};
+var $author$project$Tauri$BaseDir$Public = {$: 'Public'};
+var $author$project$Tauri$BaseDir$Resource = {$: 'Resource'};
+var $author$project$Tauri$BaseDir$Runtime = {$: 'Runtime'};
+var $author$project$Tauri$BaseDir$Temp = {$: 'Temp'};
+var $author$project$Tauri$BaseDir$Template = {$: 'Template'};
+var $author$project$Tauri$BaseDir$Video = {$: 'Video'};
 var $author$project$Tauri$Dialog$Warning = {$: 'Warning'};
+var $author$project$Main$WroteTextFile = function (a) {
+	return {$: 'WroteTextFile', a: a};
+};
 var $author$project$Main$YesNo = function (a) {
 	return {$: 'YesNo', a: a};
 };
@@ -6572,318 +6626,662 @@ var $author$project$Tauri$Dialog$encodeMessageDialogOptions = F2(
 						]))
 				]));
 	});
-var $author$project$Tauri$Dialog$askOptions = F3(
-	function (question, options, toMsg) {
+var $author$project$Tauri$Dialog$askOptions = F2(
+	function (question, options) {
 		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeMessageDialogOptions(options),
-					_function: 'askOptions',
-					valueDecoder: A2(
-						$elm$json$Json$Decode$map,
-						function (bool) {
-							return {pressedYes: bool};
-						},
-						$elm$json$Json$Decode$bool)
-				},
-				question));
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: $author$project$Tauri$Dialog$encodeMessageDialogOptions(options),
+				_function: 'askOptions',
+				valueDecoder: A2(
+					$elm$json$Json$Decode$map,
+					function (bool) {
+						return {pressedYes: bool};
+					},
+					$elm$json$Json$Decode$bool)
+			},
+			question);
 	});
-var $author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption = F3(
-	function (question, options, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeMessageDialogOptions(options),
-					_function: 'confirmOptions',
-					valueDecoder: A2(
-						$elm$json$Json$Decode$map,
-						function (bool) {
-							return {pressedOK: bool};
-						},
-						$elm$json$Json$Decode$bool)
-				},
-				question));
-	});
-var $author$project$Tauri$FS$exists = F2(
-	function (filePath, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{argsEncoder: $elm$json$Json$Encode$string, _function: 'exists', valueDecoder: $elm$json$Json$Decode$bool},
-				filePath));
-	});
-var $author$project$Tauri$Dialog$message = F2(
-	function (question, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $elm$json$Json$Encode$string,
-					_function: 'message',
-					valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
-				},
-				question));
-	});
-var $author$project$Tauri$Dialog$encodeDirectoryDialogOptions = F2(
-	function (isMultiSelect, options) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'defaultPath',
-					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.defaultPath)),
-					_Utils_Tuple2(
-					'directory',
-					$elm$json$Json$Encode$bool(true)),
-					_Utils_Tuple2(
-					'multiple',
-					$elm$json$Json$Encode$bool(isMultiSelect.multiple)),
-					_Utils_Tuple2(
-					'recursive',
-					$elm$json$Json$Encode$bool(options.recursive)),
-					_Utils_Tuple2(
-					'title',
-					A2($author$project$Tauri$Dialog$encodeNothingAsNull, $elm$json$Json$Encode$string, options.title))
-				]));
-	});
-var $author$project$Tauri$Dialog$openDirectories = F2(
-	function (options, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeDirectoryDialogOptions(
-						{multiple: true}),
-					_function: 'openDlg',
-					valueDecoder: $elm$json$Json$Decode$maybe(
-						$elm$json$Json$Decode$list($elm$json$Json$Decode$string))
-				},
-				options));
-	});
-var $author$project$Tauri$FS$readTextFile = F2(
-	function (filePath, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $elm$json$Json$Encode$string,
-					_function: 'readTextFile',
-					valueDecoder: A2(
-						$elm$json$Json$Decode$map,
-						function (content) {
-							return {contents: content, filePath: filePath};
-						},
-						$elm$json$Json$Decode$string)
-				},
-				filePath));
-	});
-var $author$project$Tauri$Dialog$save = F2(
-	function (options, toMsg) {
-		return A2(
-			$elm$core$Task$attempt,
-			toMsg,
-			A2(
-				$lobanov$elm_taskport$TaskPort$call,
-				{
-					argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
-						{multiple: false}),
-					_function: 'save',
-					valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
-				},
-				options));
-	});
-var $author$project$Main$splitMsg = F3(
-	function (errToMsg, toMsg, r) {
-		if (r.$ === 'Ok') {
-			var value = r.a;
-			return toMsg(value);
+var $author$project$Main$cmdSucceed = function (msg) {
+	return A2(
+		$elm$core$Task$perform,
+		$elm$core$Basics$identity,
+		$elm$core$Task$succeed(msg));
+};
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
 		} else {
-			var error = r.a;
-			return errToMsg(error);
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
 		}
 	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption = F2(
+	function (question, options) {
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: $author$project$Tauri$Dialog$encodeMessageDialogOptions(options),
+				_function: 'confirmOptions',
+				valueDecoder: A2(
+					$elm$json$Json$Decode$map,
+					function (bool) {
+						return {pressedOK: bool};
+					},
+					$elm$json$Json$Decode$bool)
+			},
+			question);
+	});
+var $author$project$Tauri$BaseDir$encodeBaseDirectory = function (b) {
+	return $elm$json$Json$Encode$string(
+		$author$project$Tauri$BaseDir$toString(b));
+};
+var $author$project$Tauri$FS$exists = function (filePath) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{argsEncoder: $elm$json$Json$Encode$string, _function: 'exists', valueDecoder: $elm$json$Json$Decode$bool},
+		filePath);
+};
+var $elm$core$String$cons = _String_cons;
+var $elm$core$Char$toLower = _Char_toLower;
+var $author$project$Tauri$BaseDir$toFunctionName = function (b) {
+	var _v0 = $elm$core$String$uncons(
+		$author$project$Tauri$BaseDir$toString(b));
+	if (_v0.$ === 'Just') {
+		var _v1 = _v0.a;
+		var c = _v1.a;
+		var cs = _v1.b;
+		return A2(
+			$elm$core$String$cons,
+			$elm$core$Char$toLower(c),
+			cs + 'Dir');
+	} else {
+		return '';
+	}
+};
+var $author$project$Tauri$Path$get = function (baseDir) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$core$Basics$always($elm$json$Json$Encode$null),
+			_function: $author$project$Tauri$BaseDir$toFunctionName(baseDir),
+			valueDecoder: $elm$json$Json$Decode$string
+		},
+		_Utils_Tuple0);
+};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$Tauri$Dialog$message = function (question) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'message',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		question);
+};
+var $author$project$Tauri$Dialog$openDirectories = function (options) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$Dialog$encodeDirectoryDialogOptions(
+				{multiple: true}),
+			_function: 'openDlg',
+			valueDecoder: $elm$json$Json$Decode$maybe(
+				$elm$json$Json$Decode$list($elm$json$Json$Decode$string))
+		},
+		options);
+};
+var $author$project$Tauri$FS$FolderContents = function (a) {
+	return {$: 'FolderContents', a: a};
+};
+var $elm$json$Json$Decode$map3 = _Json_map3;
+function $author$project$Tauri$FS$cyclic$decodeFileEntry() {
+	return A4(
+		$elm$json$Json$Decode$map3,
+		F3(
+			function (c, n, p) {
+				return {folderContents: c, name: n, path: p};
+			}),
+		$elm$json$Json$Decode$maybe(
+			A2(
+				$elm$json$Json$Decode$field,
+				'children',
+				$author$project$Tauri$FS$cyclic$decodeChildren())),
+		$elm$json$Json$Decode$maybe(
+			A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string)),
+		A2($elm$json$Json$Decode$field, 'path', $elm$json$Json$Decode$string));
+}
+function $author$project$Tauri$FS$cyclic$decodeChildren() {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$author$project$Tauri$FS$FolderContents,
+		$elm$json$Json$Decode$list(
+			$elm$json$Json$Decode$lazy(
+				function (_v0) {
+					return $author$project$Tauri$FS$cyclic$decodeFileEntry();
+				})));
+}
+try {
+	var $author$project$Tauri$FS$decodeFileEntry = $author$project$Tauri$FS$cyclic$decodeFileEntry();
+	$author$project$Tauri$FS$cyclic$decodeFileEntry = function () {
+		return $author$project$Tauri$FS$decodeFileEntry;
+	};
+	var $author$project$Tauri$FS$decodeChildren = $author$project$Tauri$FS$cyclic$decodeChildren();
+	$author$project$Tauri$FS$cyclic$decodeChildren = function () {
+		return $author$project$Tauri$FS$decodeChildren;
+	};
+} catch ($) {
+	throw 'Some top-level definitions from `Tauri.FS` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeFileEntry\n  │     ↓\n  │    decodeChildren\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+var $author$project$Tauri$FSInBaseDir$encodeBaseDir = function (baseDir) {
+	return _Utils_Tuple2(
+		'dir',
+		$author$project$Tauri$BaseDir$encodeBaseDirectory(baseDir));
+};
+var $author$project$Tauri$FSInBaseDir$encodeFsDirOptions = F3(
+	function (baseDir, _v0, filePath) {
+		var recursive = _v0.recursive;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(filePath),
+					$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							$author$project$Tauri$FSInBaseDir$encodeBaseDir(baseDir),
+							_Utils_Tuple2(
+							'recursive',
+							$elm$json$Json$Encode$bool(recursive))
+						]))
+				]));
+	});
+var $author$project$Tauri$FSInBaseDir$readDir = F3(
+	function (baseDir, _v0, filePath) {
+		var recursive = _v0.recursive;
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: A2(
+					$author$project$Tauri$FSInBaseDir$encodeFsDirOptions,
+					baseDir,
+					{recursive: recursive}),
+				_function: 'readDirOptionsOptions',
+				valueDecoder: A2(
+					$elm$json$Json$Decode$map,
+					$author$project$Tauri$FS$FolderContents,
+					$elm$json$Json$Decode$list($author$project$Tauri$FS$decodeFileEntry))
+			},
+			filePath);
+	});
+var $author$project$Tauri$FS$readTextFile = function (filePath) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'readTextFile',
+			valueDecoder: A2(
+				$elm$json$Json$Decode$map,
+				function (content) {
+					return {contents: content, filePath: filePath};
+				},
+				$elm$json$Json$Decode$string)
+		},
+		filePath);
+};
+var $author$project$Tauri$Dialog$save = function (options) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$Dialog$encodeFileDialogOptions(
+				{multiple: false}),
+			_function: 'save',
+			valueDecoder: $elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)
+		},
+		options);
+};
+var $author$project$Main$InteropError = function (a) {
+	return {$: 'InteropError', a: a};
+};
+var $author$project$Main$JSReturnError = function (a) {
+	return {$: 'JSReturnError', a: a};
+};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			$elm$core$Task$Perform(
+				A2(
+					$elm$core$Task$onError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Err),
+					A2(
+						$elm$core$Task$andThen,
+						A2(
+							$elm$core$Basics$composeL,
+							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+							$elm$core$Result$Ok),
+						task))));
+	});
+var $author$project$Tauri$toCmd3 = F4(
+	function (tagInteropError, tagJSError, toMsg, task) {
+		var toMessage = function (result) {
+			if (result.$ === 'Ok') {
+				var value = result.a;
+				return toMsg(value);
+			} else {
+				var error = result.a;
+				if (error.$ === 'InteropError') {
+					var interopError = error.a;
+					return tagInteropError(interopError);
+				} else {
+					var jSError = error.a;
+					return tagJSError(jSError);
+				}
+			}
+		};
+		return A2($elm$core$Task$attempt, toMessage, task);
+	});
+var $author$project$Main$toCmd = A2($author$project$Tauri$toCmd3, $author$project$Main$InteropError, $author$project$Main$JSReturnError);
+var $author$project$Tauri$FS$encodeFileContents = function (fileContents) {
+	return A2(
+		$elm$json$Json$Encode$list,
+		$elm$json$Json$Encode$string,
+		_List_fromArray(
+			[fileContents.filePath, fileContents.contents]));
+};
+var $author$project$Tauri$FS$writeTextFile = function (fileContents) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$FS$encodeFileContents,
+			_function: 'writeTextFile',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		fileContents);
+};
 var $author$project$Main$press = F2(
 	function (model, btn) {
 		switch (btn.$) {
-			case 'Confirm':
-				return A3(
-					$author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption,
-					'Is this really a confirmation question?',
-					{
-						dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
-						title: $elm$core$Maybe$Just('Confirm')
-					},
-					$author$project$Main$OKCancel);
-			case 'Ask':
-				return A3(
-					$author$project$Tauri$Dialog$askOptions,
-					'Is this really a question?',
-					{dialogType: $elm$core$Maybe$Nothing, title: $elm$core$Maybe$Nothing},
-					$author$project$Main$YesNo);
-			case 'Message':
+			case 'ConfirmDialog':
 				return A2(
-					$author$project$Tauri$Dialog$message,
-					'Here\'s a little message for you',
-					$elm$core$Basics$always($author$project$Main$IgnoreTauriFeedback));
-			case 'OpenDirectories':
+					$author$project$Main$toCmd,
+					$author$project$Main$OKCancel,
+					A2(
+						$author$project$Tauri$Dialog$confirmOptions_WarningDoesNotActuallyGiveCancelOption,
+						'Is this really a confirmation question?',
+						{
+							dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+							title: $elm$core$Maybe$Just('Confirm')
+						}));
+			case 'AskDialog':
 				return A2(
-					$author$project$Tauri$Dialog$openDirectories,
-					{
-						defaultPath: $elm$core$Maybe$Nothing,
-						recursive: true,
-						title: $elm$core$Maybe$Just('Please pick a directory or directories')
-					},
-					$author$project$Main$GotMaybeStrings);
-			case 'OpenFile':
+					$author$project$Main$toCmd,
+					$author$project$Main$YesNo,
+					A2(
+						$author$project$Tauri$Dialog$askOptions,
+						'Is this really a question?',
+						{dialogType: $elm$core$Maybe$Nothing, title: $elm$core$Maybe$Nothing}));
+			case 'MessageDialog':
 				return A2(
-					$author$project$Tauri$Dialog$openFile,
-					{
-						defaultPath: $elm$core$Maybe$Nothing,
-						filters: _List_fromArray(
-							[
-								{
-								extensions: _List_fromArray(
-									['txt', 'elm', 'md']),
-								name: 'Texty Files'
-							}
-							]),
-						title: $elm$core$Maybe$Just('Please pick a file')
-					},
-					$author$project$Main$GotFilePath);
-			case 'Save':
+					$author$project$Main$toCmd,
+					$elm$core$Basics$always($author$project$Main$IgnoreTauriFeedback),
+					$author$project$Tauri$Dialog$message('Here\'s a little message for you'));
+			case 'OpenDirectoriesDialog':
 				return A2(
-					$author$project$Tauri$Dialog$save,
-					{
-						defaultPath: $elm$core$Maybe$Nothing,
-						filters: _List_fromArray(
-							[
-								{
-								extensions: _List_fromArray(
-									['txt', 'elm', 'md']),
-								name: 'Texty Files'
-							}
-							]),
-						title: $elm$core$Maybe$Just('What do you want me to save it as?')
-					},
-					$author$project$Main$GotSaveFilePath);
+					$author$project$Main$toCmd,
+					$author$project$Main$GotMaybeStrings,
+					$author$project$Tauri$Dialog$openDirectories(
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							recursive: true,
+							title: $elm$core$Maybe$Just('Please pick a directory or directories')
+						}));
+			case 'OpenFileDialog':
+				return A2(
+					$author$project$Main$toCmd,
+					$author$project$Main$GotFilePath,
+					$author$project$Tauri$Dialog$openFile(
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							filters: _List_fromArray(
+								[
+									{
+									extensions: _List_fromArray(
+										['txt', 'elm', 'md']),
+									name: 'Texty Files'
+								}
+								]),
+							title: $elm$core$Maybe$Just('Please pick a file')
+						}));
+			case 'SaveDialog':
+				return A2(
+					$author$project$Main$toCmd,
+					$author$project$Main$GotSaveFilePath,
+					$author$project$Tauri$Dialog$save(
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							filters: _List_fromArray(
+								[
+									{
+									extensions: _List_fromArray(
+										['txt', 'elm', 'md']),
+									name: 'Texty Files'
+								}
+								]),
+							title: $elm$core$Maybe$Just('What do you want me to save it as?')
+						}));
 			case 'ReadTextFile':
 				var _v1 = model.readFilePath;
 				if (_v1.$ === 'Nothing') {
-					return A2(
-						$elm$core$Task$perform,
-						$elm$core$Basics$identity,
-						$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
+					return $author$project$Main$cmdSucceed($author$project$Main$NoReadFileSpecified);
 				} else {
 					var filePath = _v1.a;
-					return A2($author$project$Tauri$FS$readTextFile, filePath, $author$project$Main$GotFileContents);
+					return A2(
+						$author$project$Main$toCmd,
+						$author$project$Main$GotFileContents,
+						$author$project$Tauri$FS$readTextFile(filePath));
 				}
 			case 'CopyFile':
 				var _v2 = _Utils_Tuple2(model.readFilePath, model.saveFilePath);
 				if (_v2.a.$ === 'Nothing') {
 					var _v3 = _v2.a;
 					var a = _v2.b;
-					return A2(
-						$elm$core$Task$perform,
-						$elm$core$Basics$identity,
-						$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
+					return $author$project$Main$cmdSucceed($author$project$Main$NoReadFileSpecified);
 				} else {
 					if (_v2.b.$ === 'Just') {
 						var from = _v2.a.a;
 						var to = _v2.b.a;
-						return A3(
-							$author$project$Tauri$Dialog$askOptions,
-							'Are you sure you want to copy\n' + (from + ('\nto\n' + (to + '\n?'))),
-							{
-								dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
-								title: $elm$core$Maybe$Just('Are you sure?')
-							},
+						return A2(
+							$author$project$Main$toCmd,
 							$author$project$Main$ConfirmCopy(
-								{from: from, to: to}));
+								{from: from, to: to}),
+							A2(
+								$author$project$Tauri$Dialog$askOptions,
+								'Are you sure you want to copy\n' + (from + ('\nto\n' + (to + '\n?'))),
+								{
+									dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+									title: $elm$core$Maybe$Just('Are you sure?')
+								}));
 					} else {
 						var _v4 = _v2.b;
-						return A2(
-							$elm$core$Task$perform,
-							$elm$core$Basics$identity,
-							$elm$core$Task$succeed($author$project$Main$NoSaveFileSpecified));
+						return $author$project$Main$cmdSucceed($author$project$Main$NoSaveFileSpecified);
 					}
 				}
 			case 'ChooseToCreateDir':
 				return A2(
-					$author$project$Tauri$Dialog$save,
-					{
-						defaultPath: $elm$core$Maybe$Nothing,
-						filters: _List_Nil,
-						title: $elm$core$Maybe$Just('Please enter the name of your new folder.')
-					},
-					$author$project$Main$CreateDir);
-			default:
+					$author$project$Main$toCmd,
+					$author$project$Main$CreateDir,
+					$author$project$Tauri$Dialog$save(
+						{
+							defaultPath: $elm$core$Maybe$Nothing,
+							filters: _List_Nil,
+							title: $elm$core$Maybe$Just('Please enter the name of your new folder.')
+						}));
+			case 'CheckExists':
 				var _v5 = model.saveFilePath;
 				if (_v5.$ === 'Just') {
 					var saveFilePath = _v5.a;
 					return A2(
-						$author$project$Tauri$FS$exists,
-						saveFilePath,
-						A2(
-							$author$project$Main$splitMsg,
-							A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
-							$author$project$Main$Existence(saveFilePath)));
+						$author$project$Main$toCmd,
+						$author$project$Main$Existence(saveFilePath),
+						$author$project$Tauri$FS$exists(saveFilePath));
 				} else {
 					var _v6 = model.readFilePath;
 					if (_v6.$ === 'Just') {
 						var filePath = _v6.a;
 						return A2(
-							$author$project$Tauri$FS$exists,
-							filePath,
-							A2(
-								$author$project$Main$splitMsg,
-								A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
-								$author$project$Main$Existence(filePath)));
+							$author$project$Main$toCmd,
+							$author$project$Main$Existence(filePath),
+							$author$project$Tauri$FS$exists(filePath));
 					} else {
-						return A2(
-							$elm$core$Task$perform,
-							$elm$core$Basics$identity,
-							$elm$core$Task$succeed($author$project$Main$NoReadFileSpecified));
+						return $author$project$Main$cmdSucceed($author$project$Main$NoReadFileSpecified);
 					}
 				}
+			case 'ChooseDir':
+				return A2(
+					$author$project$Main$toCmd,
+					$author$project$Main$ignoreNothing($author$project$Main$Directory),
+					$author$project$Tauri$Dialog$openDirectory(
+						{defaultPath: $elm$core$Maybe$Nothing, recursive: false, title: $elm$core$Maybe$Nothing}));
+			case 'ReadDir':
+				var _v7 = model.directory;
+				if (_v7.$ === 'Just') {
+					var filePath = _v7.a;
+					return A2(
+						$author$project$Main$toCmd,
+						$author$project$Main$Folder,
+						A3(
+							$author$project$Tauri$FSInBaseDir$readDir,
+							$author$project$Tauri$BaseDir$Home,
+							{recursive: true},
+							filePath));
+				} else {
+					return $author$project$Main$cmdSucceed($author$project$Main$NoFolderSpecified);
+				}
+			case 'RemoveDir':
+				var _v8 = model.directory;
+				if (_v8.$ === 'Just') {
+					var filePath = _v8.a;
+					return A2(
+						$author$project$Main$toCmd,
+						$author$project$Main$ConfirmRemoveDir(filePath),
+						A2(
+							$author$project$Tauri$Dialog$askOptions,
+							'Are you sure you want to remove' + (filePath + '?'),
+							{
+								dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+								title: $elm$core$Maybe$Just('Are you sure?')
+							}));
+				} else {
+					return $author$project$Main$cmdSucceed($author$project$Main$NoFolderSpecified);
+				}
+			case 'RemoveFile':
+				var _v9 = model.readFilePath;
+				if (_v9.$ === 'Just') {
+					var filePath = _v9.a;
+					return A2(
+						$author$project$Main$toCmd,
+						$author$project$Main$ConfirmRemoveFile(filePath),
+						A2(
+							$author$project$Tauri$Dialog$askOptions,
+							'Are you sure you want to remove' + (filePath + '?'),
+							{
+								dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+								title: $elm$core$Maybe$Just('Are you sure?')
+							}));
+				} else {
+					return $author$project$Main$cmdSucceed($author$project$Main$NoReadFileSpecified);
+				}
+			case 'RenameFile':
+				var _v10 = _Utils_Tuple2(model.readFilePath, model.saveFilePath);
+				if (_v10.a.$ === 'Nothing') {
+					var _v11 = _v10.a;
+					var a = _v10.b;
+					return $author$project$Main$cmdSucceed($author$project$Main$NoReadFileSpecified);
+				} else {
+					if (_v10.b.$ === 'Just') {
+						var from = _v10.a.a;
+						var to = _v10.b.a;
+						return A2(
+							$author$project$Main$toCmd,
+							$author$project$Main$ConfirmRename(
+								{from: from, to: to}),
+							A2(
+								$author$project$Tauri$Dialog$askOptions,
+								'Are you sure you want to rename\n' + (from + ('\nto\n' + (to + '\n?'))),
+								{
+									dialogType: $elm$core$Maybe$Just($author$project$Tauri$Dialog$Warning),
+									title: $elm$core$Maybe$Just('Are you sure?')
+								}));
+					} else {
+						var _v12 = _v10.b;
+						return $author$project$Main$cmdSucceed($author$project$Main$NoSaveFileSpecified);
+					}
+				}
+			case 'WriteTextFile':
+				var _v13 = model.textFileContent;
+				if (_v13.$ === 'Nothing') {
+					return $author$project$Main$cmdSucceed($author$project$Main$EnableTextBox);
+				} else {
+					var contents = _v13.a;
+					var _v14 = model.saveFilePath;
+					if (_v14.$ === 'Just') {
+						var filePath = _v14.a;
+						return A2(
+							$author$project$Main$toCmd,
+							$elm$core$Basics$always(
+								$author$project$Main$WroteTextFile(filePath)),
+							$author$project$Tauri$FS$writeTextFile(
+								{contents: contents, filePath: filePath}));
+					} else {
+						return A2(
+							$author$project$Main$toCmd,
+							$author$project$Main$GotSaveFilePath,
+							$author$project$Tauri$Dialog$save(
+								{
+									defaultPath: $elm$core$Maybe$Nothing,
+									filters: _List_fromArray(
+										[
+											{
+											extensions: _List_fromArray(
+												['txt', 'elm', 'md']),
+											name: 'Texty Files'
+										}
+										]),
+									title: $elm$core$Maybe$Just('What do you want me to save it as?')
+								}));
+					}
+				}
+			case 'GetPath':
+				var baseDir = btn.a;
+				return A2(
+					$author$project$Main$toCmd,
+					$author$project$Main$GotPath(baseDir),
+					$author$project$Tauri$Path$get(baseDir));
+			default:
+				var go = function (baseDir) {
+					return A2(
+						$lobanov$elm_taskport$TaskPort$call,
+						{argsEncoder: $author$project$Tauri$BaseDir$encodeBaseDirectory, _function: 'BaseDirNo', valueDecoder: $elm$json$Json$Decode$int},
+						baseDir);
+				};
+				return A2(
+					$author$project$Main$toCmd,
+					$author$project$Main$GotNumbers,
+					$elm$core$Task$sequence(
+						A2(
+							$elm$core$List$map,
+							go,
+							$elm$core$List$concat(
+								_List_fromArray(
+									[
+										_List_fromArray(
+										[$author$project$Tauri$BaseDir$App, $author$project$Tauri$BaseDir$AppConfig, $author$project$Tauri$BaseDir$AppData, $author$project$Tauri$BaseDir$AppLocalData, $author$project$Tauri$BaseDir$AppLog]),
+										_List_fromArray(
+										[$author$project$Tauri$BaseDir$Audio, $author$project$Tauri$BaseDir$Cache, $author$project$Tauri$BaseDir$Config, $author$project$Tauri$BaseDir$Data, $author$project$Tauri$BaseDir$Desktop, $author$project$Tauri$BaseDir$Document]),
+										_List_fromArray(
+										[$author$project$Tauri$BaseDir$Download, $author$project$Tauri$BaseDir$Executable, $author$project$Tauri$BaseDir$Home, $author$project$Tauri$BaseDir$LocalData, $author$project$Tauri$BaseDir$Log, $author$project$Tauri$BaseDir$Picture]),
+										_List_fromArray(
+										[$author$project$Tauri$BaseDir$Public, $author$project$Tauri$BaseDir$Resource, $author$project$Tauri$BaseDir$Runtime, $author$project$Tauri$BaseDir$Temp, $author$project$Tauri$BaseDir$Template, $author$project$Tauri$BaseDir$Video])
+									])))));
 		}
 	});
-var $author$project$Main$show = function (btn) {
-	switch (btn.$) {
-		case 'Ask':
-			return 'Ask';
-		case 'Confirm':
-			return 'Confirm';
-		case 'Message':
-			return 'Message';
-		case 'OpenDirectories':
-			return 'Open Directories';
-		case 'OpenFile':
-			return 'Open File';
-		case 'Save':
-			return 'Save';
-		case 'ReadTextFile':
-			return 'Read Text File';
-		case 'CopyFile':
-			return 'Copy File';
-		case 'ChooseToCreateDir':
-			return 'Create Folder';
-		default:
-			return 'Exists';
-	}
+var $author$project$Tauri$FS$removeDir = function (filePath) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'removeDir',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		filePath);
+};
+var $author$project$Tauri$FS$removeFile = function (filePath) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'removeFile',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		filePath);
+};
+var $author$project$Tauri$FS$encodeFromTo = function (fromTo) {
+	return A2(
+		$elm$json$Json$Encode$list,
+		$elm$json$Json$Encode$string,
+		_List_fromArray(
+			[fromTo.from, fromTo.to]));
+};
+var $author$project$Tauri$FS$renameFile = function (fromTo) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $author$project$Tauri$FS$encodeFromTo,
+			_function: 'renameFile',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		fromTo);
+};
+var $elm$core$String$lines = _String_lines;
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $author$project$Main$indent = F2(
+	function (n, string) {
+		var indentation = '\n' + A2($elm$core$String$repeat, n, ' ');
+		return A2(
+			$elm$core$String$join,
+			indentation,
+			$elm$core$String$lines(string));
+	});
+var $elm_community$maybe_extra$Maybe$Extra$unwrap = F3(
+	function (_default, f, m) {
+		if (m.$ === 'Nothing') {
+			return _default;
+		} else {
+			var a = m.a;
+			return f(a);
+		}
+	});
+var $author$project$Main$showFile = function (_v1) {
+	var folderContents = _v1.folderContents;
+	var name = _v1.name;
+	var path = _v1.path;
+	return A2($elm$core$Maybe$withDefault, '', name) + ('  ' + (path + ('  ' + A2(
+		$author$project$Main$indent,
+		4,
+		A3($elm_community$maybe_extra$Maybe$Extra$unwrap, '', $author$project$Main$showFolderContents, folderContents)))));
+};
+var $author$project$Main$showFolderContents = function (_v0) {
+	var list = _v0.a;
+	return '\n' + (A2(
+		$elm$core$String$join,
+		'\n',
+		A2($elm$core$List$map, $author$project$Main$showFile, list)) + '\n');
 };
 var $author$project$Main$showMaybe = function (m) {
 	return A2($elm$core$Maybe$withDefault, 'Nothing', m);
@@ -6902,84 +7300,64 @@ var $author$project$Main$update = F2(
 			case 'Pressed':
 				var btn = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: {
-								good: $author$project$Main$Neutral,
-								text: $author$project$Main$show(btn)
-							}
-						}),
+						$author$project$Main$buttonName(btn)),
 					A2($author$project$Main$press, model, btn));
 			case 'YesNo':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: A3(
-								$author$project$Main$boolResultToString,
-								result,
-								function ($) {
-									return $.pressedYes;
-								},
-								{_false: 'No', _true: 'Yes'})
-						}),
+						A3($author$project$Main$iff, result.pressedYes, 'Yes', 'No')),
 					$elm$core$Platform$Cmd$none);
 			case 'OKCancel':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: A3(
-								$author$project$Main$boolResultToString,
-								result,
-								function ($) {
-									return $.pressedOK;
-								},
-								{_false: 'Cancel', _true: 'OK'})
-						}),
+						A3($author$project$Main$iff, result.pressedOK, 'OK', 'Cancel')),
 					$elm$core$Platform$Cmd$none);
 			case 'IgnoreTauriFeedback':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'GotMaybeString':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe)
-						}),
+						$author$project$Main$showMaybe(result)),
 					$elm$core$Platform$Cmd$none);
 			case 'GotMaybeStrings':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybeList)
-						}),
+						$author$project$Main$showMaybeList(result)),
 					$elm$core$Platform$Cmd$none);
 			case 'GotFilePath':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe),
-							readFilePath: $author$project$Main$pathFromResult(result)
-						}),
+					A2(
+						$author$project$Main$good,
+						_Utils_update(
+							model,
+							{readFilePath: result}),
+						$author$project$Main$showMaybe(result)),
 					$elm$core$Platform$Cmd$none);
 			case 'GotSaveFilePath':
 				var result = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							answerWas: A2($author$project$Main$resultToString, result, $author$project$Main$showMaybe),
-							saveFilePath: $author$project$Main$pathFromResult(result)
-						}),
+					A2(
+						$author$project$Main$good,
+						_Utils_update(
+							model,
+							{saveFilePath: result}),
+						$author$project$Main$showMaybe(result)),
 					$elm$core$Platform$Cmd$none);
 			case 'NoReadFileSpecified':
 				return _Utils_Tuple2(
@@ -6989,20 +7367,21 @@ var $author$project$Main$update = F2(
 							answerWas: {good: $author$project$Main$Bad, text: 'No file specified'}
 						}),
 					A2(
-						$author$project$Tauri$Dialog$openFile,
-						{
-							defaultPath: $elm$core$Maybe$Nothing,
-							filters: _List_fromArray(
-								[
-									{
-									extensions: _List_fromArray(
-										['txt', 'elm', 'md']),
-									name: 'Texty Files'
-								}
-								]),
-							title: $elm$core$Maybe$Just('Please pick a text file')
-						},
-						$author$project$Main$GotFilePath));
+						$author$project$Main$toCmd,
+						$author$project$Main$GotFilePath,
+						$author$project$Tauri$Dialog$openFile(
+							{
+								defaultPath: $elm$core$Maybe$Nothing,
+								filters: _List_fromArray(
+									[
+										{
+										extensions: _List_fromArray(
+											['txt', 'elm', 'md']),
+										name: 'Texty Files'
+									}
+									]),
+								title: $elm$core$Maybe$Just('Please pick a text file')
+							})));
 			case 'NoSaveFileSpecified':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -7011,20 +7390,21 @@ var $author$project$Main$update = F2(
 							answerWas: {good: $author$project$Main$Bad, text: 'No save destination specified'}
 						}),
 					A2(
-						$author$project$Tauri$Dialog$save,
-						{
-							defaultPath: $elm$core$Maybe$Nothing,
-							filters: _List_fromArray(
-								[
-									{
-									extensions: _List_fromArray(
-										['txt', 'elm', 'md']),
-									name: 'Texty Files'
-								}
-								]),
-							title: $elm$core$Maybe$Just('Please pick a text file to save to')
-						},
-						$author$project$Main$GotSaveFilePath));
+						$author$project$Main$toCmd,
+						$author$project$Main$GotSaveFilePath,
+						$author$project$Tauri$Dialog$save(
+							{
+								defaultPath: $elm$core$Maybe$Nothing,
+								filters: _List_fromArray(
+									[
+										{
+										extensions: _List_fromArray(
+											['txt', 'elm', 'md']),
+										name: 'Texty Files'
+									}
+									]),
+								title: $elm$core$Maybe$Just('Please pick a text file to save to')
+							})));
 			case 'GotFileContents':
 				var fileContents = msg.a;
 				var showFileContents = function (_v1) {
@@ -7033,47 +7413,31 @@ var $author$project$Main$update = F2(
 					return filePath + ('\n\n' + contents);
 				};
 				return _Utils_Tuple2(
-					_Utils_update(
+					A2(
+						$author$project$Main$good,
 						model,
-						{
-							answerWas: A2($author$project$Main$resultToString, fileContents, showFileContents)
-						}),
+						showFileContents(fileContents)),
 					$elm$core$Platform$Cmd$none);
 			case 'ConfirmCopy':
 				var record = msg.a;
-				var result = msg.b;
-				if (result.$ === 'Ok') {
-					var value = result.a;
-					return value.pressedYes ? _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								answerWas: {good: $author$project$Main$Neutral, text: 'Copying ' + (record.from + (' to ' + record.to))}
-							}),
-						A2(
-							$author$project$Tauri$FS$copyFile,
-							record,
-							$elm$core$Basics$always(
-								$author$project$Main$Copied(record)))) : _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								answerWas: {good: $author$project$Main$Neutral, text: 'Not copying ' + (record.from + (' to ' + record.to))}
-							}),
-						$elm$core$Platform$Cmd$none);
-				} else {
-					var error = result.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								answerWas: {
-									good: $author$project$Main$Bad,
-									text: $lobanov$elm_taskport$TaskPort$errorToString(error)
-								}
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
+				var value = msg.b;
+				return value.pressedYes ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Copying ' + (record.from + (' to ' + record.to))}
+						}),
+					A2(
+						$author$project$Main$toCmd,
+						$elm$core$Basics$always(
+							$author$project$Main$Copied(record)),
+						$author$project$Tauri$FS$copyFile(record))) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Not copying ' + (record.from + (' to ' + record.to))}
+						}),
+					$elm$core$Platform$Cmd$none);
 			case 'Copied':
 				var record = msg.a;
 				return _Utils_Tuple2(
@@ -7083,57 +7447,28 @@ var $author$project$Main$update = F2(
 							answerWas: {good: $author$project$Main$Good, text: 'Copied ' + (record.from + (' to ' + record.to))}
 						}),
 					$elm$core$Platform$Cmd$none);
-			case 'TaskPortError':
-				var string = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							answerWas: {good: $author$project$Main$Bad, text: string}
-						}),
-					$elm$core$Platform$Cmd$none);
 			case 'CreateDir':
 				var result = msg.a;
-				if (result.$ === 'Ok') {
-					if (result.a.$ === 'Just') {
-						var filePath = result.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									answerWas: {good: $author$project$Main$Good, text: 'Saving as ' + filePath}
-								}),
-							A4(
-								$author$project$Tauri$FS$createDirIn,
-								filePath,
-								$author$project$Tauri$FS$home,
-								{createParentsIfAbsent: true},
-								A2(
-									$author$project$Main$splitMsg,
-									A2($elm$core$Basics$composeR, $lobanov$elm_taskport$TaskPort$errorToString, $author$project$Main$TaskPortError),
-									function (_v4) {
-										return $author$project$Main$Created(filePath);
-									})));
-					} else {
-						var _v5 = result.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									answerWas: {good: $author$project$Main$Neutral, text: 'Save cancelled'}
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
-				} else {
-					var err = result.a;
+				if (result.$ === 'Just') {
+					var filePath = result.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								answerWas: {
-									good: $author$project$Main$Bad,
-									text: $lobanov$elm_taskport$TaskPort$errorToString(err)
-								}
+								answerWas: {good: $author$project$Main$Good, text: 'Saving as ' + filePath}
+							}),
+						A2(
+							$author$project$Main$toCmd,
+							function (_v3) {
+								return $author$project$Main$Created(filePath);
+							},
+							$author$project$Tauri$FS$createDir(filePath)));
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {good: $author$project$Main$Neutral, text: 'Save cancelled'}
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
@@ -7146,7 +7481,7 @@ var $author$project$Main$update = F2(
 							answerWas: {good: $author$project$Main$Good, text: filePath}
 						}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'Existence':
 				var filePath = msg.a;
 				var bool = msg.b;
 				return _Utils_Tuple2(
@@ -7161,21 +7496,223 @@ var $author$project$Main$update = F2(
 							}
 						}),
 					$elm$core$Platform$Cmd$none);
+			case 'Directory':
+				var filePath = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Good, text: filePath},
+							directory: $elm$core$Maybe$Just(filePath)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoFolderSpecified':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Bad, text: 'No folder specified'}
+						}),
+					A2(
+						$author$project$Main$toCmd,
+						$author$project$Main$ignoreNothing($author$project$Main$Directory),
+						$author$project$Tauri$Dialog$openDirectory(
+							{
+								defaultPath: $elm$core$Maybe$Nothing,
+								recursive: false,
+								title: $elm$core$Maybe$Just('Please pick a folder')
+							})));
+			case 'Folder':
+				var folderContents = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {
+								good: $author$project$Main$Good,
+								text: $author$project$Main$showFolderContents(folderContents)
+							}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'InteropError':
+				var interopError = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {
+								good: $author$project$Main$Broken,
+								text: 'Interop Error:\n' + $lobanov$elm_taskport$TaskPort$interopErrorToString(interopError)
+							}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'JSReturnError':
+				var jSError = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {
+								good: $author$project$Main$Bad,
+								text: 'Error Returned from Javascript:\n' + $lobanov$elm_taskport$TaskPort$errorToString(
+									$lobanov$elm_taskport$TaskPort$JSError(jSError))
+							}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'ConfirmRemoveDir':
+				var filePath = msg.a;
+				var value = msg.b;
+				return value.pressedYes ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Removing ' + filePath}
+						}),
+					A2(
+						$author$project$Main$toCmd,
+						$elm$core$Basics$always(
+							$author$project$Main$Removed(filePath)),
+						$author$project$Tauri$FS$removeDir(filePath))) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Not removing ' + filePath}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'Removed':
+				var filePath = msg.a;
+				return _Utils_Tuple2(
+					A2($author$project$Main$good, model, 'Removed ' + filePath),
+					$elm$core$Platform$Cmd$none);
+			case 'ConfirmRemoveFile':
+				var filePath = msg.a;
+				var value = msg.b;
+				return value.pressedYes ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Removing ' + filePath}
+						}),
+					A2(
+						$author$project$Main$toCmd,
+						$elm$core$Basics$always(
+							$author$project$Main$Removed(filePath)),
+						$author$project$Tauri$FS$removeFile(filePath))) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Not removing ' + filePath}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'ConfirmRename':
+				var record = msg.a;
+				var value = msg.b;
+				return value.pressedYes ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Rename ' + (record.from + (' to ' + record.to))}
+						}),
+					A2(
+						$author$project$Main$toCmd,
+						$elm$core$Basics$always(
+							$author$project$Main$Renamed(record)),
+						$author$project$Tauri$FS$renameFile(record))) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Neutral, text: 'Not renaming ' + (record.from + (' to ' + record.to))}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'Renamed':
+				var record = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							answerWas: {good: $author$project$Main$Good, text: 'Renamed ' + (record.from + (' to ' + record.to))}
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'EnableTextBox':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							textFileContent: $elm$core$Maybe$Just('')
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'WroteTextFile':
+				var filePath = msg.a;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Main$good,
+						_Utils_update(
+							model,
+							{textFileContent: $elm$core$Maybe$Nothing}),
+						'Wrote text file ' + filePath),
+					$elm$core$Platform$Cmd$none);
+			case 'EditedTextBox':
+				var string = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							textFileContent: $elm$core$Maybe$Just(string)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'ToggleShowPathButtons':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showPathButtons: !model.showPathButtons}),
+					$elm$core$Platform$Cmd$none);
+			case 'GotPath':
+				var baseDir = msg.a;
+				var filePath = msg.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Main$good,
+						model,
+						$author$project$Tauri$BaseDir$toString(baseDir) + (':\n' + filePath)),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var ints = msg.a;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Main$good,
+						model,
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2($elm$core$List$map, $elm$core$String$fromInt, ints))),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Main$Ask = {$: 'Ask'};
+var $author$project$Main$AskDialog = {$: 'AskDialog'};
+var $author$project$Main$CheckExists = {$: 'CheckExists'};
+var $author$project$Main$ChooseDir = {$: 'ChooseDir'};
 var $author$project$Main$ChooseToCreateDir = {$: 'ChooseToCreateDir'};
-var $author$project$Main$Confirm = {$: 'Confirm'};
+var $author$project$Main$ConfirmDialog = {$: 'ConfirmDialog'};
 var $author$project$Main$CopyFile = {$: 'CopyFile'};
-var $author$project$Main$Exists = {$: 'Exists'};
-var $author$project$Main$Message = {$: 'Message'};
-var $author$project$Main$OpenDirectories = {$: 'OpenDirectories'};
-var $author$project$Main$OpenFile = {$: 'OpenFile'};
+var $author$project$Main$EditedTextBox = function (a) {
+	return {$: 'EditedTextBox', a: a};
+};
+var $author$project$Main$GetPath = function (a) {
+	return {$: 'GetPath', a: a};
+};
+var $author$project$Main$MessageDialog = {$: 'MessageDialog'};
+var $author$project$Main$OpenDirectoriesDialog = {$: 'OpenDirectoriesDialog'};
+var $author$project$Main$OpenFileDialog = {$: 'OpenFileDialog'};
+var $author$project$Main$ReadDir = {$: 'ReadDir'};
+var $author$project$Main$ReadTextFile = {$: 'ReadTextFile'};
+var $author$project$Main$RemoveDir = {$: 'RemoveDir'};
+var $author$project$Main$RemoveFile = {$: 'RemoveFile'};
+var $author$project$Main$RenameFile = {$: 'RenameFile'};
+var $author$project$Main$SaveDialog = {$: 'SaveDialog'};
+var $author$project$Main$ToggleShowPathButtons = {$: 'ToggleShowPathButtons'};
 var $author$project$Main$Pressed = function (a) {
 	return {$: 'Pressed', a: a};
 };
-var $author$project$Main$ReadTextFile = {$: 'ReadTextFile'};
-var $author$project$Main$Save = {$: 'Save'};
 var $mdgriffith$elm_ui$Internal$Model$Attr = function (a) {
 	return {$: 'Attr', a: a};
 };
@@ -7734,17 +8271,6 @@ var $mdgriffith$elm_ui$Internal$Style$CenterY = {$: 'CenterY'};
 var $mdgriffith$elm_ui$Internal$Style$Top = {$: 'Top'};
 var $mdgriffith$elm_ui$Internal$Style$alignments = _List_fromArray(
 	[$mdgriffith$elm_ui$Internal$Style$Top, $mdgriffith$elm_ui$Internal$Style$Bottom, $mdgriffith$elm_ui$Internal$Style$Right, $mdgriffith$elm_ui$Internal$Style$Left, $mdgriffith$elm_ui$Internal$Style$CenterX, $mdgriffith$elm_ui$Internal$Style$CenterY]);
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
 var $elm$core$List$concatMap = F2(
 	function (f, list) {
 		return $elm$core$List$concat(
@@ -10833,9 +11359,7 @@ var $elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 	return _VirtualDom_keyedNode(
 		_VirtualDom_noScript(tag));
 };
-var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$p = _VirtualDom_node('p');
-var $elm$core$Bitwise$and = _Bitwise_and;
 var $mdgriffith$elm_ui$Internal$Flag$present = F2(
 	function (myFlag, _v0) {
 		var fieldOne = _v0.a;
@@ -12860,7 +13384,7 @@ var $mdgriffith$elm_ui$Internal$Model$Text = function (a) {
 var $mdgriffith$elm_ui$Element$text = function (content) {
 	return $mdgriffith$elm_ui$Internal$Model$Text(content);
 };
-var $author$project$Main$button = F2(
+var $author$project$Main$greenButton = F2(
 	function (string, msg) {
 		return A2(
 			$mdgriffith$elm_ui$Element$Input$button,
@@ -12883,6 +13407,12 @@ var $author$project$Main$button = F2(
 				onPress: $elm$core$Maybe$Just(msg)
 			});
 	});
+var $author$project$Main$button = function (b) {
+	return A2(
+		$author$project$Main$greenButton,
+		$author$project$Main$buttonName(b),
+		$author$project$Main$Pressed(b));
+};
 var $mdgriffith$elm_ui$Internal$Flag$fontColor = $mdgriffith$elm_ui$Internal$Flag$flag(14);
 var $mdgriffith$elm_ui$Element$Font$color = function (fontColor) {
 	return A2(
@@ -12931,6 +13461,12 @@ var $mdgriffith$elm_ui$Element$el = F2(
 				_List_fromArray(
 					[child])));
 	});
+var $mdgriffith$elm_ui$Element$Input$Label = F3(
+	function (a, b, c) {
+		return {$: 'Label', a: a, b: b, c: c};
+	});
+var $mdgriffith$elm_ui$Element$Input$OnLeft = {$: 'OnLeft'};
+var $mdgriffith$elm_ui$Element$Input$labelLeft = $mdgriffith$elm_ui$Element$Input$Label($mdgriffith$elm_ui$Element$Input$OnLeft);
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {
 		return {$: 'OnlyDynamic', a: a, b: b};
@@ -13187,6 +13723,13 @@ var $mdgriffith$elm_ui$Element$layoutWith = F3(
 	});
 var $mdgriffith$elm_ui$Element$layout = $mdgriffith$elm_ui$Element$layoutWith(
 	{options: _List_Nil});
+var $mdgriffith$elm_ui$Internal$Model$Empty = {$: 'Empty'};
+var $mdgriffith$elm_ui$Element$none = $mdgriffith$elm_ui$Internal$Model$Empty;
+var $mdgriffith$elm_ui$Element$Input$Placeholder = F2(
+	function (a, b) {
+		return {$: 'Placeholder', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Element$Input$placeholder = $mdgriffith$elm_ui$Element$Input$Placeholder;
 var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
 var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
 var $mdgriffith$elm_ui$Element$row = F2(
@@ -13226,6 +13769,956 @@ var $mdgriffith$elm_ui$Element$spacing = function (x) {
 			x,
 			x));
 };
+var $mdgriffith$elm_ui$Element$Input$TextInputNode = function (a) {
+	return {$: 'TextInputNode', a: a};
+};
+var $mdgriffith$elm_ui$Element$Input$TextArea = {$: 'TextArea'};
+var $mdgriffith$elm_ui$Internal$Model$LivePolite = {$: 'LivePolite'};
+var $mdgriffith$elm_ui$Element$Region$announce = $mdgriffith$elm_ui$Internal$Model$Describe($mdgriffith$elm_ui$Internal$Model$LivePolite);
+var $mdgriffith$elm_ui$Element$Input$applyLabel = F3(
+	function (attrs, label, input) {
+		if (label.$ === 'HiddenLabel') {
+			var labelText = label.a;
+			return A4(
+				$mdgriffith$elm_ui$Internal$Model$element,
+				$mdgriffith$elm_ui$Internal$Model$asColumn,
+				$mdgriffith$elm_ui$Internal$Model$NodeName('label'),
+				attrs,
+				$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+					_List_fromArray(
+						[input])));
+		} else {
+			var position = label.a;
+			var labelAttrs = label.b;
+			var labelChild = label.c;
+			var labelElement = A4(
+				$mdgriffith$elm_ui$Internal$Model$element,
+				$mdgriffith$elm_ui$Internal$Model$asEl,
+				$mdgriffith$elm_ui$Internal$Model$div,
+				labelAttrs,
+				$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+					_List_fromArray(
+						[labelChild])));
+			switch (position.$) {
+				case 'Above':
+					return A4(
+						$mdgriffith$elm_ui$Internal$Model$element,
+						$mdgriffith$elm_ui$Internal$Model$asColumn,
+						$mdgriffith$elm_ui$Internal$Model$NodeName('label'),
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputLabel),
+							attrs),
+						$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+							_List_fromArray(
+								[labelElement, input])));
+				case 'Below':
+					return A4(
+						$mdgriffith$elm_ui$Internal$Model$element,
+						$mdgriffith$elm_ui$Internal$Model$asColumn,
+						$mdgriffith$elm_ui$Internal$Model$NodeName('label'),
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputLabel),
+							attrs),
+						$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+							_List_fromArray(
+								[input, labelElement])));
+				case 'OnRight':
+					return A4(
+						$mdgriffith$elm_ui$Internal$Model$element,
+						$mdgriffith$elm_ui$Internal$Model$asRow,
+						$mdgriffith$elm_ui$Internal$Model$NodeName('label'),
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputLabel),
+							attrs),
+						$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+							_List_fromArray(
+								[input, labelElement])));
+				default:
+					return A4(
+						$mdgriffith$elm_ui$Internal$Model$element,
+						$mdgriffith$elm_ui$Internal$Model$asRow,
+						$mdgriffith$elm_ui$Internal$Model$NodeName('label'),
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputLabel),
+							attrs),
+						$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+							_List_fromArray(
+								[labelElement, input])));
+			}
+		}
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $mdgriffith$elm_ui$Element$Input$autofill = A2(
+	$elm$core$Basics$composeL,
+	$mdgriffith$elm_ui$Internal$Model$Attr,
+	$elm$html$Html$Attributes$attribute('autocomplete'));
+var $mdgriffith$elm_ui$Internal$Model$Behind = {$: 'Behind'};
+var $mdgriffith$elm_ui$Internal$Model$Nearby = F2(
+	function (a, b) {
+		return {$: 'Nearby', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Element$createNearby = F2(
+	function (loc, element) {
+		if (element.$ === 'Empty') {
+			return $mdgriffith$elm_ui$Internal$Model$NoAttribute;
+		} else {
+			return A2($mdgriffith$elm_ui$Internal$Model$Nearby, loc, element);
+		}
+	});
+var $mdgriffith$elm_ui$Element$behindContent = function (element) {
+	return A2($mdgriffith$elm_ui$Element$createNearby, $mdgriffith$elm_ui$Internal$Model$Behind, element);
+};
+var $mdgriffith$elm_ui$Internal$Model$MoveY = function (a) {
+	return {$: 'MoveY', a: a};
+};
+var $mdgriffith$elm_ui$Internal$Model$TransformComponent = F2(
+	function (a, b) {
+		return {$: 'TransformComponent', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$moveY = $mdgriffith$elm_ui$Internal$Flag$flag(26);
+var $mdgriffith$elm_ui$Element$moveUp = function (y) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$TransformComponent,
+		$mdgriffith$elm_ui$Internal$Flag$moveY,
+		$mdgriffith$elm_ui$Internal$Model$MoveY(-y));
+};
+var $mdgriffith$elm_ui$Element$Input$calcMoveToCompensateForPadding = function (attrs) {
+	var gatherSpacing = F2(
+		function (attr, found) {
+			if ((attr.$ === 'StyleClass') && (attr.b.$ === 'SpacingStyle')) {
+				var _v2 = attr.b;
+				var x = _v2.b;
+				var y = _v2.c;
+				if (found.$ === 'Nothing') {
+					return $elm$core$Maybe$Just(y);
+				} else {
+					return found;
+				}
+			} else {
+				return found;
+			}
+		});
+	var _v0 = A3($elm$core$List$foldr, gatherSpacing, $elm$core$Maybe$Nothing, attrs);
+	if (_v0.$ === 'Nothing') {
+		return $mdgriffith$elm_ui$Internal$Model$NoAttribute;
+	} else {
+		var vSpace = _v0.a;
+		return $mdgriffith$elm_ui$Element$moveUp(
+			$elm$core$Basics$floor(vSpace / 2));
+	}
+};
+var $mdgriffith$elm_ui$Internal$Flag$overflow = $mdgriffith$elm_ui$Internal$Flag$flag(20);
+var $mdgriffith$elm_ui$Element$clip = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.clip);
+var $mdgriffith$elm_ui$Internal$Flag$borderColor = $mdgriffith$elm_ui$Internal$Flag$flag(28);
+var $mdgriffith$elm_ui$Element$Border$color = function (clr) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$borderColor,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Colored,
+			'bc-' + $mdgriffith$elm_ui$Internal$Model$formatColorClass(clr),
+			'border-color',
+			clr));
+};
+var $mdgriffith$elm_ui$Element$rgb = F3(
+	function (r, g, b) {
+		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, r, g, b, 1);
+	});
+var $mdgriffith$elm_ui$Element$Input$darkGrey = A3($mdgriffith$elm_ui$Element$rgb, 186 / 255, 189 / 255, 182 / 255);
+var $mdgriffith$elm_ui$Element$paddingXY = F2(
+	function (x, y) {
+		if (_Utils_eq(x, y)) {
+			var f = x;
+			return A2(
+				$mdgriffith$elm_ui$Internal$Model$StyleClass,
+				$mdgriffith$elm_ui$Internal$Flag$padding,
+				A5(
+					$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+					'p-' + $elm$core$String$fromInt(x),
+					f,
+					f,
+					f,
+					f));
+		} else {
+			var yFloat = y;
+			var xFloat = x;
+			return A2(
+				$mdgriffith$elm_ui$Internal$Model$StyleClass,
+				$mdgriffith$elm_ui$Internal$Flag$padding,
+				A5(
+					$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+					'p-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y))),
+					yFloat,
+					xFloat,
+					yFloat,
+					xFloat));
+		}
+	});
+var $mdgriffith$elm_ui$Element$Input$defaultTextPadding = A2($mdgriffith$elm_ui$Element$paddingXY, 12, 12);
+var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
+	return {$: 'Fill', a: a};
+};
+var $mdgriffith$elm_ui$Element$fill = $mdgriffith$elm_ui$Internal$Model$Fill(1);
+var $mdgriffith$elm_ui$Element$Input$white = A3($mdgriffith$elm_ui$Element$rgb, 1, 1, 1);
+var $mdgriffith$elm_ui$Internal$Model$BorderWidth = F5(
+	function (a, b, c, d, e) {
+		return {$: 'BorderWidth', a: a, b: b, c: c, d: d, e: e};
+	});
+var $mdgriffith$elm_ui$Element$Border$width = function (v) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$borderWidth,
+		A5(
+			$mdgriffith$elm_ui$Internal$Model$BorderWidth,
+			'b-' + $elm$core$String$fromInt(v),
+			v,
+			v,
+			v,
+			v));
+};
+var $mdgriffith$elm_ui$Element$Input$defaultTextBoxStyle = _List_fromArray(
+	[
+		$mdgriffith$elm_ui$Element$Input$defaultTextPadding,
+		$mdgriffith$elm_ui$Element$Border$rounded(3),
+		$mdgriffith$elm_ui$Element$Border$color($mdgriffith$elm_ui$Element$Input$darkGrey),
+		$mdgriffith$elm_ui$Element$Background$color($mdgriffith$elm_ui$Element$Input$white),
+		$mdgriffith$elm_ui$Element$Border$width(1),
+		$mdgriffith$elm_ui$Element$spacing(5),
+		$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+		$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink)
+	]);
+var $mdgriffith$elm_ui$Element$Input$getHeight = function (attr) {
+	if (attr.$ === 'Height') {
+		var h = attr.a;
+		return $elm$core$Maybe$Just(h);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $mdgriffith$elm_ui$Internal$Model$Label = function (a) {
+	return {$: 'Label', a: a};
+};
+var $mdgriffith$elm_ui$Element$Input$hiddenLabelAttribute = function (label) {
+	if (label.$ === 'HiddenLabel') {
+		var textLabel = label.a;
+		return $mdgriffith$elm_ui$Internal$Model$Describe(
+			$mdgriffith$elm_ui$Internal$Model$Label(textLabel));
+	} else {
+		return $mdgriffith$elm_ui$Internal$Model$NoAttribute;
+	}
+};
+var $mdgriffith$elm_ui$Internal$Model$InFront = {$: 'InFront'};
+var $mdgriffith$elm_ui$Element$inFront = function (element) {
+	return A2($mdgriffith$elm_ui$Element$createNearby, $mdgriffith$elm_ui$Internal$Model$InFront, element);
+};
+var $mdgriffith$elm_ui$Element$Input$isConstrained = function (len) {
+	isConstrained:
+	while (true) {
+		switch (len.$) {
+			case 'Content':
+				return false;
+			case 'Px':
+				return true;
+			case 'Fill':
+				return true;
+			case 'Min':
+				var l = len.b;
+				var $temp$len = l;
+				len = $temp$len;
+				continue isConstrained;
+			default:
+				var l = len.b;
+				return true;
+		}
+	}
+};
+var $mdgriffith$elm_ui$Element$Input$isHiddenLabel = function (label) {
+	if (label.$ === 'HiddenLabel') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $mdgriffith$elm_ui$Element$Input$isStacked = function (label) {
+	if (label.$ === 'Label') {
+		var loc = label.a;
+		switch (loc.$) {
+			case 'OnRight':
+				return false;
+			case 'OnLeft':
+				return false;
+			case 'Above':
+				return true;
+			default:
+				return true;
+		}
+	} else {
+		return true;
+	}
+};
+var $mdgriffith$elm_ui$Element$Input$negateBox = function (box) {
+	return {bottom: -box.bottom, left: -box.left, right: -box.right, top: -box.top};
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $mdgriffith$elm_ui$Internal$Model$paddingName = F4(
+	function (top, right, bottom, left) {
+		return 'pad-' + ($elm$core$String$fromInt(top) + ('-' + ($elm$core$String$fromInt(right) + ('-' + ($elm$core$String$fromInt(bottom) + ('-' + $elm$core$String$fromInt(left)))))));
+	});
+var $mdgriffith$elm_ui$Element$paddingEach = function (_v0) {
+	var top = _v0.top;
+	var right = _v0.right;
+	var bottom = _v0.bottom;
+	var left = _v0.left;
+	if (_Utils_eq(top, right) && (_Utils_eq(top, bottom) && _Utils_eq(top, left))) {
+		var topFloat = top;
+		return A2(
+			$mdgriffith$elm_ui$Internal$Model$StyleClass,
+			$mdgriffith$elm_ui$Internal$Flag$padding,
+			A5(
+				$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+				'p-' + $elm$core$String$fromInt(top),
+				topFloat,
+				topFloat,
+				topFloat,
+				topFloat));
+	} else {
+		return A2(
+			$mdgriffith$elm_ui$Internal$Model$StyleClass,
+			$mdgriffith$elm_ui$Internal$Flag$padding,
+			A5(
+				$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+				A4($mdgriffith$elm_ui$Internal$Model$paddingName, top, right, bottom, left),
+				top,
+				right,
+				bottom,
+				left));
+	}
+};
+var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
+var $mdgriffith$elm_ui$Element$Input$isFill = function (len) {
+	isFill:
+	while (true) {
+		switch (len.$) {
+			case 'Fill':
+				return true;
+			case 'Content':
+				return false;
+			case 'Px':
+				return false;
+			case 'Min':
+				var l = len.b;
+				var $temp$len = l;
+				len = $temp$len;
+				continue isFill;
+			default:
+				var l = len.b;
+				var $temp$len = l;
+				len = $temp$len;
+				continue isFill;
+		}
+	}
+};
+var $mdgriffith$elm_ui$Element$Input$isPixel = function (len) {
+	isPixel:
+	while (true) {
+		switch (len.$) {
+			case 'Content':
+				return false;
+			case 'Px':
+				return true;
+			case 'Fill':
+				return false;
+			case 'Min':
+				var l = len.b;
+				var $temp$len = l;
+				len = $temp$len;
+				continue isPixel;
+			default:
+				var l = len.b;
+				var $temp$len = l;
+				len = $temp$len;
+				continue isPixel;
+		}
+	}
+};
+var $mdgriffith$elm_ui$Internal$Model$paddingNameFloat = F4(
+	function (top, right, bottom, left) {
+		return 'pad-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(top) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(right) + ('-' + ($mdgriffith$elm_ui$Internal$Model$floatClass(bottom) + ('-' + $mdgriffith$elm_ui$Internal$Model$floatClass(left)))))));
+	});
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $mdgriffith$elm_ui$Element$Input$redistributeOver = F4(
+	function (isMultiline, stacked, attr, els) {
+		switch (attr.$) {
+			case 'Nearby':
+				return _Utils_update(
+					els,
+					{
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					});
+			case 'Width':
+				var width = attr.a;
+				return $mdgriffith$elm_ui$Element$Input$isFill(width) ? _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent),
+						input: A2($elm$core$List$cons, attr, els.input),
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					}) : (stacked ? _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent)
+					}) : _Utils_update(
+					els,
+					{
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					}));
+			case 'Height':
+				var height = attr.a;
+				return (!stacked) ? _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent),
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					}) : ($mdgriffith$elm_ui$Element$Input$isFill(height) ? _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent),
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					}) : ($mdgriffith$elm_ui$Element$Input$isPixel(height) ? _Utils_update(
+					els,
+					{
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					}) : _Utils_update(
+					els,
+					{
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					})));
+			case 'AlignX':
+				return _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent)
+					});
+			case 'AlignY':
+				return _Utils_update(
+					els,
+					{
+						fullParent: A2($elm$core$List$cons, attr, els.fullParent)
+					});
+			case 'StyleClass':
+				switch (attr.b.$) {
+					case 'SpacingStyle':
+						var _v1 = attr.b;
+						return _Utils_update(
+							els,
+							{
+								fullParent: A2($elm$core$List$cons, attr, els.fullParent),
+								input: A2($elm$core$List$cons, attr, els.input),
+								parent: A2($elm$core$List$cons, attr, els.parent),
+								wrapper: A2($elm$core$List$cons, attr, els.wrapper)
+							});
+					case 'PaddingStyle':
+						var cls = attr.a;
+						var _v2 = attr.b;
+						var pad = _v2.a;
+						var t = _v2.b;
+						var r = _v2.c;
+						var b = _v2.d;
+						var l = _v2.e;
+						if (isMultiline) {
+							return _Utils_update(
+								els,
+								{
+									cover: A2($elm$core$List$cons, attr, els.cover),
+									parent: A2($elm$core$List$cons, attr, els.parent)
+								});
+						} else {
+							var newTop = t - A2($elm$core$Basics$min, t, b);
+							var newLineHeight = $mdgriffith$elm_ui$Element$htmlAttribute(
+								A2(
+									$elm$html$Html$Attributes$style,
+									'line-height',
+									'calc(1.0em + ' + ($elm$core$String$fromFloat(
+										2 * A2($elm$core$Basics$min, t, b)) + 'px)')));
+							var newHeight = $mdgriffith$elm_ui$Element$htmlAttribute(
+								A2(
+									$elm$html$Html$Attributes$style,
+									'height',
+									'calc(1.0em + ' + ($elm$core$String$fromFloat(
+										2 * A2($elm$core$Basics$min, t, b)) + 'px)')));
+							var newBottom = b - A2($elm$core$Basics$min, t, b);
+							var reducedVerticalPadding = A2(
+								$mdgriffith$elm_ui$Internal$Model$StyleClass,
+								$mdgriffith$elm_ui$Internal$Flag$padding,
+								A5(
+									$mdgriffith$elm_ui$Internal$Model$PaddingStyle,
+									A4($mdgriffith$elm_ui$Internal$Model$paddingNameFloat, newTop, r, newBottom, l),
+									newTop,
+									r,
+									newBottom,
+									l));
+							return _Utils_update(
+								els,
+								{
+									cover: A2($elm$core$List$cons, attr, els.cover),
+									input: A2(
+										$elm$core$List$cons,
+										newHeight,
+										A2($elm$core$List$cons, newLineHeight, els.input)),
+									parent: A2($elm$core$List$cons, reducedVerticalPadding, els.parent)
+								});
+						}
+					case 'BorderWidth':
+						var _v3 = attr.b;
+						return _Utils_update(
+							els,
+							{
+								cover: A2($elm$core$List$cons, attr, els.cover),
+								parent: A2($elm$core$List$cons, attr, els.parent)
+							});
+					case 'Transform':
+						return _Utils_update(
+							els,
+							{
+								cover: A2($elm$core$List$cons, attr, els.cover),
+								parent: A2($elm$core$List$cons, attr, els.parent)
+							});
+					case 'FontSize':
+						return _Utils_update(
+							els,
+							{
+								fullParent: A2($elm$core$List$cons, attr, els.fullParent)
+							});
+					case 'FontFamily':
+						var _v4 = attr.b;
+						return _Utils_update(
+							els,
+							{
+								fullParent: A2($elm$core$List$cons, attr, els.fullParent)
+							});
+					default:
+						var flag = attr.a;
+						var cls = attr.b;
+						return _Utils_update(
+							els,
+							{
+								parent: A2($elm$core$List$cons, attr, els.parent)
+							});
+				}
+			case 'NoAttribute':
+				return els;
+			case 'Attr':
+				var a = attr.a;
+				return _Utils_update(
+					els,
+					{
+						input: A2($elm$core$List$cons, attr, els.input)
+					});
+			case 'Describe':
+				return _Utils_update(
+					els,
+					{
+						input: A2($elm$core$List$cons, attr, els.input)
+					});
+			case 'Class':
+				return _Utils_update(
+					els,
+					{
+						parent: A2($elm$core$List$cons, attr, els.parent)
+					});
+			default:
+				return _Utils_update(
+					els,
+					{
+						input: A2($elm$core$List$cons, attr, els.input)
+					});
+		}
+	});
+var $mdgriffith$elm_ui$Element$Input$redistribute = F3(
+	function (isMultiline, stacked, attrs) {
+		return function (redist) {
+			return {
+				cover: $elm$core$List$reverse(redist.cover),
+				fullParent: $elm$core$List$reverse(redist.fullParent),
+				input: $elm$core$List$reverse(redist.input),
+				parent: $elm$core$List$reverse(redist.parent),
+				wrapper: $elm$core$List$reverse(redist.wrapper)
+			};
+		}(
+			A3(
+				$elm$core$List$foldl,
+				A2($mdgriffith$elm_ui$Element$Input$redistributeOver, isMultiline, stacked),
+				{cover: _List_Nil, fullParent: _List_Nil, input: _List_Nil, parent: _List_Nil, wrapper: _List_Nil},
+				attrs));
+	});
+var $mdgriffith$elm_ui$Element$Input$renderBox = function (_v0) {
+	var top = _v0.top;
+	var right = _v0.right;
+	var bottom = _v0.bottom;
+	var left = _v0.left;
+	return $elm$core$String$fromInt(top) + ('px ' + ($elm$core$String$fromInt(right) + ('px ' + ($elm$core$String$fromInt(bottom) + ('px ' + ($elm$core$String$fromInt(left) + 'px'))))));
+};
+var $mdgriffith$elm_ui$Internal$Model$Transparency = F2(
+	function (a, b) {
+		return {$: 'Transparency', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$transparency = $mdgriffith$elm_ui$Internal$Flag$flag(0);
+var $mdgriffith$elm_ui$Element$alpha = function (o) {
+	var transparency = function (x) {
+		return 1 - x;
+	}(
+		A2(
+			$elm$core$Basics$min,
+			1.0,
+			A2($elm$core$Basics$max, 0.0, o)));
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$transparency,
+		A2(
+			$mdgriffith$elm_ui$Internal$Model$Transparency,
+			'transparency-' + $mdgriffith$elm_ui$Internal$Model$floatClass(transparency),
+			transparency));
+};
+var $mdgriffith$elm_ui$Element$Input$charcoal = A3($mdgriffith$elm_ui$Element$rgb, 136 / 255, 138 / 255, 133 / 255);
+var $mdgriffith$elm_ui$Element$rgba = $mdgriffith$elm_ui$Internal$Model$Rgba;
+var $mdgriffith$elm_ui$Element$Input$renderPlaceholder = F3(
+	function (_v0, forPlaceholder, on) {
+		var placeholderAttrs = _v0.a;
+		var placeholderEl = _v0.b;
+		return A2(
+			$mdgriffith$elm_ui$Element$el,
+			_Utils_ap(
+				forPlaceholder,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$color($mdgriffith$elm_ui$Element$Input$charcoal),
+							$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.noTextSelection + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.passPointerEvents)),
+							$mdgriffith$elm_ui$Element$clip,
+							$mdgriffith$elm_ui$Element$Border$color(
+							A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0)),
+							$mdgriffith$elm_ui$Element$Background$color(
+							A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0)),
+							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+							$mdgriffith$elm_ui$Element$alpha(
+							on ? 1 : 0)
+						]),
+					placeholderAttrs)),
+			placeholderEl);
+	});
+var $mdgriffith$elm_ui$Element$scrollbarY = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.scrollbarsY);
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$spellcheck = $elm$html$Html$Attributes$boolProperty('spellcheck');
+var $mdgriffith$elm_ui$Element$Input$spellcheck = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Attributes$spellcheck);
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $mdgriffith$elm_ui$Internal$Model$unstyled = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Unstyled, $elm$core$Basics$always);
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $mdgriffith$elm_ui$Element$Input$value = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Attributes$value);
+var $mdgriffith$elm_ui$Element$Input$textHelper = F3(
+	function (textInput, attrs, textOptions) {
+		var withDefaults = _Utils_ap($mdgriffith$elm_ui$Element$Input$defaultTextBoxStyle, attrs);
+		var redistributed = A3(
+			$mdgriffith$elm_ui$Element$Input$redistribute,
+			_Utils_eq(textInput.type_, $mdgriffith$elm_ui$Element$Input$TextArea),
+			$mdgriffith$elm_ui$Element$Input$isStacked(textOptions.label),
+			withDefaults);
+		var onlySpacing = function (attr) {
+			if ((attr.$ === 'StyleClass') && (attr.b.$ === 'SpacingStyle')) {
+				var _v9 = attr.b;
+				return true;
+			} else {
+				return false;
+			}
+		};
+		var heightConstrained = function () {
+			var _v7 = textInput.type_;
+			if (_v7.$ === 'TextInputNode') {
+				var inputType = _v7.a;
+				return false;
+			} else {
+				return A2(
+					$elm$core$Maybe$withDefault,
+					false,
+					A2(
+						$elm$core$Maybe$map,
+						$mdgriffith$elm_ui$Element$Input$isConstrained,
+						$elm$core$List$head(
+							$elm$core$List$reverse(
+								A2($elm$core$List$filterMap, $mdgriffith$elm_ui$Element$Input$getHeight, withDefaults)))));
+			}
+		}();
+		var getPadding = function (attr) {
+			if ((attr.$ === 'StyleClass') && (attr.b.$ === 'PaddingStyle')) {
+				var cls = attr.a;
+				var _v6 = attr.b;
+				var pad = _v6.a;
+				var t = _v6.b;
+				var r = _v6.c;
+				var b = _v6.d;
+				var l = _v6.e;
+				return $elm$core$Maybe$Just(
+					{
+						bottom: A2(
+							$elm$core$Basics$max,
+							0,
+							$elm$core$Basics$floor(b - 3)),
+						left: A2(
+							$elm$core$Basics$max,
+							0,
+							$elm$core$Basics$floor(l - 3)),
+						right: A2(
+							$elm$core$Basics$max,
+							0,
+							$elm$core$Basics$floor(r - 3)),
+						top: A2(
+							$elm$core$Basics$max,
+							0,
+							$elm$core$Basics$floor(t - 3))
+					});
+			} else {
+				return $elm$core$Maybe$Nothing;
+			}
+		};
+		var parentPadding = A2(
+			$elm$core$Maybe$withDefault,
+			{bottom: 0, left: 0, right: 0, top: 0},
+			$elm$core$List$head(
+				$elm$core$List$reverse(
+					A2($elm$core$List$filterMap, getPadding, withDefaults))));
+		var inputElement = A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asEl,
+			function () {
+				var _v3 = textInput.type_;
+				if (_v3.$ === 'TextInputNode') {
+					var inputType = _v3.a;
+					return $mdgriffith$elm_ui$Internal$Model$NodeName('input');
+				} else {
+					return $mdgriffith$elm_ui$Internal$Model$NodeName('textarea');
+				}
+			}(),
+			_Utils_ap(
+				function () {
+					var _v4 = textInput.type_;
+					if (_v4.$ === 'TextInputNode') {
+						var inputType = _v4.a;
+						return _List_fromArray(
+							[
+								$mdgriffith$elm_ui$Internal$Model$Attr(
+								$elm$html$Html$Attributes$type_(inputType)),
+								$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputText)
+							]);
+					} else {
+						return _List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$clip,
+								$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+								$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputMultiline),
+								$mdgriffith$elm_ui$Element$Input$calcMoveToCompensateForPadding(withDefaults),
+								$mdgriffith$elm_ui$Element$paddingEach(parentPadding),
+								$mdgriffith$elm_ui$Internal$Model$Attr(
+								A2(
+									$elm$html$Html$Attributes$style,
+									'margin',
+									$mdgriffith$elm_ui$Element$Input$renderBox(
+										$mdgriffith$elm_ui$Element$Input$negateBox(parentPadding)))),
+								$mdgriffith$elm_ui$Internal$Model$Attr(
+								A2($elm$html$Html$Attributes$style, 'box-sizing', 'content-box'))
+							]);
+					}
+				}(),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Input$value(textOptions.text),
+							$mdgriffith$elm_ui$Internal$Model$Attr(
+							$elm$html$Html$Events$onInput(textOptions.onChange)),
+							$mdgriffith$elm_ui$Element$Input$hiddenLabelAttribute(textOptions.label),
+							$mdgriffith$elm_ui$Element$Input$spellcheck(textInput.spellchecked),
+							A2(
+							$elm$core$Maybe$withDefault,
+							$mdgriffith$elm_ui$Internal$Model$NoAttribute,
+							A2($elm$core$Maybe$map, $mdgriffith$elm_ui$Element$Input$autofill, textInput.autofill))
+						]),
+					redistributed.input)),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(_List_Nil));
+		var wrappedInput = function () {
+			var _v0 = textInput.type_;
+			if (_v0.$ === 'TextArea') {
+				return A4(
+					$mdgriffith$elm_ui$Internal$Model$element,
+					$mdgriffith$elm_ui$Internal$Model$asEl,
+					$mdgriffith$elm_ui$Internal$Model$div,
+					_Utils_ap(
+						(heightConstrained ? $elm$core$List$cons($mdgriffith$elm_ui$Element$scrollbarY) : $elm$core$Basics$identity)(
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+									A2($elm$core$List$any, $mdgriffith$elm_ui$Element$Input$hasFocusStyle, withDefaults) ? $mdgriffith$elm_ui$Internal$Model$NoAttribute : $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.focusedWithin),
+									$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputMultilineWrapper)
+								])),
+						redistributed.parent),
+					$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+						_List_fromArray(
+							[
+								A4(
+								$mdgriffith$elm_ui$Internal$Model$element,
+								$mdgriffith$elm_ui$Internal$Model$asParagraph,
+								$mdgriffith$elm_ui$Internal$Model$div,
+								A2(
+									$elm$core$List$cons,
+									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+									A2(
+										$elm$core$List$cons,
+										$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+										A2(
+											$elm$core$List$cons,
+											$mdgriffith$elm_ui$Element$inFront(inputElement),
+											A2(
+												$elm$core$List$cons,
+												$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.inputMultilineParent),
+												redistributed.wrapper)))),
+								$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+									function () {
+										if (textOptions.text === '') {
+											var _v1 = textOptions.placeholder;
+											if (_v1.$ === 'Nothing') {
+												return _List_fromArray(
+													[
+														$mdgriffith$elm_ui$Element$text('\u00A0')
+													]);
+											} else {
+												var place = _v1.a;
+												return _List_fromArray(
+													[
+														A3($mdgriffith$elm_ui$Element$Input$renderPlaceholder, place, _List_Nil, textOptions.text === '')
+													]);
+											}
+										} else {
+											return _List_fromArray(
+												[
+													$mdgriffith$elm_ui$Internal$Model$unstyled(
+													A2(
+														$elm$html$Html$span,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class($mdgriffith$elm_ui$Internal$Style$classes.inputMultilineFiller)
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(textOptions.text + '\u00A0')
+															])))
+												]);
+										}
+									}()))
+							])));
+			} else {
+				var inputType = _v0.a;
+				return A4(
+					$mdgriffith$elm_ui$Internal$Model$element,
+					$mdgriffith$elm_ui$Internal$Model$asEl,
+					$mdgriffith$elm_ui$Internal$Model$div,
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						A2(
+							$elm$core$List$cons,
+							A2($elm$core$List$any, $mdgriffith$elm_ui$Element$Input$hasFocusStyle, withDefaults) ? $mdgriffith$elm_ui$Internal$Model$NoAttribute : $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.focusedWithin),
+							$elm$core$List$concat(
+								_List_fromArray(
+									[
+										redistributed.parent,
+										function () {
+										var _v2 = textOptions.placeholder;
+										if (_v2.$ === 'Nothing') {
+											return _List_Nil;
+										} else {
+											var place = _v2.a;
+											return _List_fromArray(
+												[
+													$mdgriffith$elm_ui$Element$behindContent(
+													A3($mdgriffith$elm_ui$Element$Input$renderPlaceholder, place, redistributed.cover, textOptions.text === ''))
+												]);
+										}
+									}()
+									])))),
+					$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+						_List_fromArray(
+							[inputElement])));
+			}
+		}();
+		return A3(
+			$mdgriffith$elm_ui$Element$Input$applyLabel,
+			A2(
+				$elm$core$List$cons,
+				A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$cursor, $mdgriffith$elm_ui$Internal$Style$classes.cursorText),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$Input$isHiddenLabel(textOptions.label) ? $mdgriffith$elm_ui$Internal$Model$NoAttribute : $mdgriffith$elm_ui$Element$spacing(5),
+					A2($elm$core$List$cons, $mdgriffith$elm_ui$Element$Region$announce, redistributed.fullParent))),
+			textOptions.label,
+			wrappedInput);
+	});
+var $mdgriffith$elm_ui$Element$Input$text = $mdgriffith$elm_ui$Element$Input$textHelper(
+	{
+		autofill: $elm$core$Maybe$Nothing,
+		spellchecked: false,
+		type_: $mdgriffith$elm_ui$Element$Input$TextInputNode('text')
+	});
+var $author$project$Main$WriteTextFile = {$: 'WriteTextFile'};
+var $author$project$Main$writeTextFileLogic = function (model) {
+	var _v0 = model.textFileContent;
+	if (_v0.$ === 'Just') {
+		return $author$project$Main$Pressed($author$project$Main$WriteTextFile);
+	} else {
+		return $author$project$Main$EnableTextBox;
+	}
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$mdgriffith$elm_ui$Element$layout,
@@ -13246,7 +14739,7 @@ var $author$project$Main$view = function (model) {
 					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
 						[
-							$mdgriffith$elm_ui$Element$spacing(7)
+							$mdgriffith$elm_ui$Element$spacing(9)
 						]),
 					_List_fromArray(
 						[
@@ -13259,30 +14752,12 @@ var $author$project$Main$view = function (model) {
 								]),
 							_List_fromArray(
 								[
-									A2(
-									$author$project$Main$button,
-									'Ask.',
-									$author$project$Main$Pressed($author$project$Main$Ask)),
-									A2(
-									$author$project$Main$button,
-									'Confirm',
-									$author$project$Main$Pressed($author$project$Main$Confirm)),
-									A2(
-									$author$project$Main$button,
-									'Message',
-									$author$project$Main$Pressed($author$project$Main$Message)),
-									A2(
-									$author$project$Main$button,
-									'Open Directories',
-									$author$project$Main$Pressed($author$project$Main$OpenDirectories)),
-									A2(
-									$author$project$Main$button,
-									'Open File',
-									$author$project$Main$Pressed($author$project$Main$OpenFile)),
-									A2(
-									$author$project$Main$button,
-									'Save',
-									$author$project$Main$Pressed($author$project$Main$Save))
+									$author$project$Main$button($author$project$Main$AskDialog),
+									$author$project$Main$button($author$project$Main$ConfirmDialog),
+									$author$project$Main$button($author$project$Main$MessageDialog),
+									$author$project$Main$button($author$project$Main$OpenDirectoriesDialog),
+									$author$project$Main$button($author$project$Main$OpenFileDialog),
+									$author$project$Main$button($author$project$Main$SaveDialog)
 								])),
 							$mdgriffith$elm_ui$Element$text(' '),
 							$mdgriffith$elm_ui$Element$text('FS'),
@@ -13294,24 +14769,70 @@ var $author$project$Main$view = function (model) {
 								]),
 							_List_fromArray(
 								[
+									$author$project$Main$button($author$project$Main$ReadTextFile),
+									$author$project$Main$button($author$project$Main$CopyFile),
+									$author$project$Main$button($author$project$Main$CheckExists),
+									$author$project$Main$button($author$project$Main$RemoveFile),
+									$author$project$Main$button($author$project$Main$RenameFile),
 									A2(
-									$author$project$Main$button,
-									'Read Text File',
-									$author$project$Main$Pressed($author$project$Main$ReadTextFile)),
-									A2(
-									$author$project$Main$button,
-									'Copy File',
-									$author$project$Main$Pressed($author$project$Main$CopyFile)),
-									A2(
-									$author$project$Main$button,
-									'Create Folder',
-									$author$project$Main$Pressed($author$project$Main$ChooseToCreateDir)),
-									A2(
-									$author$project$Main$button,
-									'Existence',
-									$author$project$Main$Pressed($author$project$Main$Exists))
+									$author$project$Main$greenButton,
+									'WriteTextFile',
+									$author$project$Main$writeTextFileLogic(model))
+								])),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$spacing(10)
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$button($author$project$Main$ChooseDir),
+									$author$project$Main$button($author$project$Main$ChooseToCreateDir),
+									$author$project$Main$button($author$project$Main$ReadDir),
+									$author$project$Main$button($author$project$Main$RemoveDir)
+								])),
+							$mdgriffith$elm_ui$Element$text(' '),
+							$mdgriffith$elm_ui$Element$text('Path'),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$spacing(10)
+								]),
+							_List_fromArray(
+								[
+									A2($author$project$Main$greenButton, 'Get Path...', $author$project$Main$ToggleShowPathButtons)
 								]))
 						])),
+					(!model.showPathButtons) ? $mdgriffith$elm_ui$Element$none : A2(
+					$mdgriffith$elm_ui$Element$column,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$spacing(5)
+						]),
+					A2(
+						$elm$core$List$map,
+						A2(
+							$elm$core$Basics$composeL,
+							$mdgriffith$elm_ui$Element$row(
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$spacing(5)
+									])),
+							$elm$core$List$map(
+								A2($elm$core$Basics$composeL, $author$project$Main$button, $author$project$Main$GetPath))),
+						_List_fromArray(
+							[
+								_List_fromArray(
+								[$author$project$Tauri$BaseDir$App, $author$project$Tauri$BaseDir$AppConfig, $author$project$Tauri$BaseDir$AppData, $author$project$Tauri$BaseDir$AppLocalData, $author$project$Tauri$BaseDir$AppLog]),
+								_List_fromArray(
+								[$author$project$Tauri$BaseDir$Audio, $author$project$Tauri$BaseDir$Cache, $author$project$Tauri$BaseDir$Config, $author$project$Tauri$BaseDir$Data, $author$project$Tauri$BaseDir$Desktop, $author$project$Tauri$BaseDir$Document]),
+								_List_fromArray(
+								[$author$project$Tauri$BaseDir$Download, $author$project$Tauri$BaseDir$Executable, $author$project$Tauri$BaseDir$Home, $author$project$Tauri$BaseDir$LocalData, $author$project$Tauri$BaseDir$Log, $author$project$Tauri$BaseDir$Picture]),
+								_List_fromArray(
+								[$author$project$Tauri$BaseDir$Public, $author$project$Tauri$BaseDir$Resource, $author$project$Tauri$BaseDir$Runtime, $author$project$Tauri$BaseDir$Temp, $author$project$Tauri$BaseDir$Template, $author$project$Tauri$BaseDir$Video])
+							]))),
 					A2(
 					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
@@ -13339,12 +14860,38 @@ var $author$project$Main$view = function (model) {
 										return A3($mdgriffith$elm_ui$Element$rgb255, 125, 208, 125);
 									case 'Bad':
 										return A3($mdgriffith$elm_ui$Element$rgb255, 210, 120, 142);
-									default:
+									case 'Neutral':
 										return A3($mdgriffith$elm_ui$Element$rgb255, 85, 116, 208);
+									default:
+										return A3($mdgriffith$elm_ui$Element$rgb255, 250, 0, 0);
 								}
 							}())
 						]),
-					$mdgriffith$elm_ui$Element$text(model.answerWas.text))
+					$mdgriffith$elm_ui$Element$text(model.answerWas.text)),
+					function () {
+					var _v1 = model.textFileContent;
+					if (_v1.$ === 'Nothing') {
+						return $mdgriffith$elm_ui$Element$none;
+					} else {
+						var content = _v1.a;
+						return A2(
+							$mdgriffith$elm_ui$Element$Input$text,
+							_List_Nil,
+							{
+								label: A2(
+									$mdgriffith$elm_ui$Element$Input$labelLeft,
+									_List_Nil,
+									$mdgriffith$elm_ui$Element$text('')),
+								onChange: $author$project$Main$EditedTextBox,
+								placeholder: $elm$core$Maybe$Just(
+									A2(
+										$mdgriffith$elm_ui$Element$Input$placeholder,
+										_List_Nil,
+										$mdgriffith$elm_ui$Element$text('Contents to write to text file.'))),
+								text: content
+							});
+					}
+				}()
 				])));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

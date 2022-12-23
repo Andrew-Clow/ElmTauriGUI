@@ -28,9 +28,10 @@
         "all": true
       },
       "dialog": {
-        "all": true,
-        "open": true,
-        "save": true
+        "all": true
+      },
+      "os": {
+        "all": true
       }
     },
     "bundle": {
@@ -75,7 +76,7 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 900,
         "resizable": true,
         "title": "Elm Tauri GUI",
         "width": 800

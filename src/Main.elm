@@ -7,10 +7,16 @@ import Element.Border
 import Element.Font
 import Element.Input
 import Html
-import Task
+import Json.Decode
+import Maybe.Extra
+import Task exposing (Task)
 import TaskPort
-import Tauri.Dialog
-import Tauri.FS
+import Tauri
+import Tauri.BaseDir as BaseDir exposing (BaseDir(..))
+import Tauri.Dialog as Dialog
+import Tauri.FS as FS
+import Tauri.FSInBaseDir as FSInBaseDir
+import Tauri.Path as Path
 
 
 main : Program () Model Msg
@@ -31,46 +37,78 @@ type alias Model =
     { answerWas : { text : String, good : Good }
     , readFilePath : Maybe FilePath
     , saveFilePath : Maybe FilePath
+    , directory : Maybe FilePath
+    , textFileContent : Maybe String
+    , showPathButtons : Bool
     }
+
+
+good : Model -> String -> Model
+good model text =
+    { model | answerWas = { text = text, good = Good } }
 
 
 type Good
     = Good
     | Bad
     | Neutral
+    | Broken
 
 
 type Button
-    = Ask
-    | Confirm
-    | Message
-    | OpenDirectories
-    | OpenFile
-    | Save
+    = AskDialog
+    | ConfirmDialog
+    | MessageDialog
+    | OpenDirectoriesDialog
+    | OpenFileDialog
+    | SaveDialog
     | ReadTextFile
     | CopyFile
     | ChooseToCreateDir
-    | Exists
+    | CheckExists
+    | ChooseDir
+    | ReadDir
+    | RemoveDir
+    | RemoveFile
+    | RenameFile
+    | WriteTextFile
+    | GetPath BaseDir.BaseDir
+    | TestbaseDirectoryIsTotal
 
 
 type Msg
     = Pressed Button
-    | YesNo (TaskPort.Result { pressedYes : Bool })
-    | OKCancel (TaskPort.Result { pressedOK : Bool })
-    | GotMaybeString (TaskPort.Result (Maybe String))
-    | GotMaybeStrings (TaskPort.Result (Maybe (List String)))
     | IgnoreTauriFeedback
-    | GotFilePath (TaskPort.Result (Maybe String))
-    | GotSaveFilePath (TaskPort.Result (Maybe String))
+    | InteropError TaskPort.InteropError
+    | JSReturnError TaskPort.JSError
+    | YesNo { pressedYes : Bool }
+    | OKCancel { pressedOK : Bool }
+    | GotMaybeString (Maybe String)
+    | GotMaybeStrings (Maybe (List String))
     | NoReadFileSpecified
+    | GotFilePath (Maybe String)
     | NoSaveFileSpecified
-    | GotFileContents (TaskPort.Result Tauri.FS.FileContents)
-    | ConfirmCopy { from : FilePath, to : FilePath } (Result TaskPort.Error { pressedYes : Bool })
+    | GotSaveFilePath (Maybe String)
+    | GotFileContents FS.FileContents
+    | ConfirmCopy { from : FilePath, to : FilePath } { pressedYes : Bool }
     | Copied { from : FilePath, to : FilePath }
-    | TaskPortError String
-    | CreateDir (TaskPort.Result (Maybe FilePath))
+    | CreateDir (Maybe FilePath)
     | Created FilePath
     | Existence FilePath Bool
+    | Directory FilePath
+    | NoFolderSpecified
+    | Folder FS.FolderContents
+    | ConfirmRemoveDir FilePath { pressedYes : Bool }
+    | Removed FilePath
+    | ConfirmRemoveFile FilePath { pressedYes : Bool }
+    | ConfirmRename { from : FilePath, to : FilePath } { pressedYes : Bool }
+    | Renamed { from : FilePath, to : FilePath }
+    | EnableTextBox
+    | WroteTextFile FilePath
+    | EditedTextBox String
+    | ToggleShowPathButtons
+    | GotPath BaseDir.BaseDir FilePath
+    | GotNumbers (List Int)
 
 
 init : flags -> ( Model, Cmd msg )
@@ -79,6 +117,9 @@ init =
         ( { answerWas = { text = "", good = Neutral }
           , readFilePath = Nothing
           , saveFilePath = Nothing
+          , directory = Nothing
+          , textFileContent = Nothing
+          , showPathButtons = False
           }
         , Cmd.none
         )
@@ -89,25 +130,52 @@ view model =
     Element.layout [ Element.padding 20 ] <|
         Element.column [ Element.spacing 25 ]
             [ Element.text "Hello! This is just to experiment with using Tauri with elm."
-            , Element.column [ Element.spacing 7 ]
+            , Element.column [ Element.spacing 9 ]
                 [ Element.text "Dialog"
                 , Element.row [ Element.spacing 10 ]
-                    [ button "Ask." <| Pressed Ask
-                    , button "Confirm" <| Pressed Confirm
-                    , button "Message" <| Pressed Message
-                    , button "Open Directories" <| Pressed OpenDirectories
-                    , button "Open File" <| Pressed OpenFile
-                    , button "Save" <| Pressed Save
+                    [ button AskDialog
+                    , button ConfirmDialog
+                    , button MessageDialog
+                    , button OpenDirectoriesDialog
+                    , button OpenFileDialog
+                    , button SaveDialog
                     ]
                 , Element.text " "
                 , Element.text "FS"
                 , Element.row [ Element.spacing 10 ]
-                    [ button "Read Text File" <| Pressed ReadTextFile
-                    , button "Copy File" <| Pressed CopyFile
-                    , button "Create Folder" <| Pressed ChooseToCreateDir
-                    , button "Existence" <| Pressed Exists
+                    [ button ReadTextFile
+                    , button CopyFile
+                    , button CheckExists
+                    , button RemoveFile
+                    , button RenameFile
+                    , greenButton "WriteTextFile" <| writeTextFileLogic model
+                    ]
+                , Element.row [ Element.spacing 10 ]
+                    [ button ChooseDir
+                    , button ChooseToCreateDir
+                    , button ReadDir
+                    , button RemoveDir
+                    ]
+                , Element.text " "
+                , Element.text "Path"
+                , Element.row [ Element.spacing 10 ]
+                    [ greenButton "Get Path..." ToggleShowPathButtons
                     ]
                 ]
+            , if not model.showPathButtons then
+                Element.none
+
+              else
+                Element.column [ Element.spacing 5 ] <|
+                    List.map
+                        (Element.row [ Element.spacing 5 ]
+                            << List.map (button << GetPath)
+                        )
+                        [ [ App, AppConfig, AppData, AppLocalData, AppLog ]
+                        , [ Audio, Cache, Config, Data, Desktop, Document ]
+                        , [ Download, Executable, Home, LocalData, Log, Picture ]
+                        , [ Public, Resource, Runtime, Temp, Template, Video ]
+                        ]
             , Element.column [ Element.spacing 7, Element.Font.color <| Element.rgb255 9 85 165 ]
                 [ Element.text <| "Read: " ++ Maybe.withDefault "" model.readFilePath
                 , Element.text <| "Save: " ++ Maybe.withDefault "" model.saveFilePath
@@ -123,100 +191,170 @@ view model =
 
                         Neutral ->
                             Element.rgb255 85 116 208
+
+                        Broken ->
+                            Element.rgb255 250 0 0
                 ]
               <|
                 Element.text model.answerWas.text
+            , case model.textFileContent of
+                Nothing ->
+                    Element.none
+
+                Just content ->
+                    Element.Input.text []
+                        { onChange = EditedTextBox
+                        , text = content
+                        , placeholder = Just (Element.Input.placeholder [] <| Element.text "Contents to write to text file.")
+                        , label = Element.Input.labelLeft [] <| Element.text ""
+                        }
             ]
+
+
+writeTextFileLogic : Model -> Msg
+writeTextFileLogic model =
+    case model.textFileContent of
+        Just _ ->
+            Pressed WriteTextFile
+
+        Nothing ->
+            EnableTextBox
+
+
+buttonName : Button -> String
+buttonName btn =
+    case btn of
+        AskDialog ->
+            "Ask"
+
+        ConfirmDialog ->
+            "Confirm"
+
+        MessageDialog ->
+            "Message"
+
+        OpenDirectoriesDialog ->
+            "Open Directories"
+
+        OpenFileDialog ->
+            "Open File"
+
+        SaveDialog ->
+            "Save"
+
+        ReadTextFile ->
+            "Read Text File"
+
+        CopyFile ->
+            "Copy File"
+
+        ChooseToCreateDir ->
+            "Create Dir"
+
+        CheckExists ->
+            "Exists"
+
+        ReadDir ->
+            "Read Dir"
+
+        ChooseDir ->
+            "Choose Dir"
+
+        RemoveDir ->
+            "Remove Dir"
+
+        RemoveFile ->
+            "Remove File"
+
+        RenameFile ->
+            "Rename File"
+
+        WriteTextFile ->
+            "Write File"
+
+        GetPath baseDir ->
+            BaseDir.toString baseDir
+
+        TestbaseDirectoryIsTotal ->
+            "Temp Test"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Pressed btn ->
-            ( { model | answerWas = { text = show btn, good = Neutral } }, press model btn )
+            ( good model <| buttonName btn, press model btn )
 
         YesNo result ->
-            ( { model | answerWas = boolResultToString result .pressedYes { true = "Yes", false = "No" } }, Cmd.none )
+            ( good model <| iff result.pressedYes "Yes" "No", Cmd.none )
 
         OKCancel result ->
-            ( { model | answerWas = boolResultToString result .pressedOK { true = "OK", false = "Cancel" } }, Cmd.none )
+            ( good model <| iff result.pressedOK "OK" "Cancel", Cmd.none )
 
         IgnoreTauriFeedback ->
             ( model, Cmd.none )
 
         GotMaybeString result ->
-            ( { model | answerWas = resultToString result showMaybe }, Cmd.none )
+            ( good model <| showMaybe result, Cmd.none )
 
         GotMaybeStrings result ->
-            ( { model | answerWas = resultToString result showMaybeList }, Cmd.none )
+            ( good model <| showMaybeList result, Cmd.none )
 
         GotFilePath result ->
-            ( { model | answerWas = resultToString result showMaybe, readFilePath = pathFromResult result }, Cmd.none )
+            ( good { model | readFilePath = result } <| showMaybe result, Cmd.none )
 
         GotSaveFilePath result ->
-            ( { model | answerWas = resultToString result showMaybe, saveFilePath = pathFromResult result }, Cmd.none )
+            ( good { model | saveFilePath = result } <| showMaybe result, Cmd.none )
 
         NoReadFileSpecified ->
             ( { model | answerWas = { text = "No file specified", good = Bad } }
-            , Tauri.Dialog.openFile
+            , Dialog.openFile
                 { defaultPath = Nothing
                 , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                 , title = Just "Please pick a text file"
                 }
-                GotFilePath
+                |> toCmd GotFilePath
             )
 
         NoSaveFileSpecified ->
             ( { model | answerWas = { text = "No save destination specified", good = Bad } }
-            , Tauri.Dialog.save
+            , Dialog.save
                 { defaultPath = Nothing
                 , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                 , title = Just "Please pick a text file to save to"
                 }
-                GotSaveFilePath
+                |> toCmd GotSaveFilePath
             )
 
         GotFileContents fileContents ->
             let
-                showFileContents : Tauri.FS.FileContents -> String
+                showFileContents : FS.FileContents -> String
                 showFileContents { filePath, contents } =
                     filePath ++ "\n\n" ++ contents
             in
-            ( { model | answerWas = resultToString fileContents showFileContents }, Cmd.none )
+            ( good model <| showFileContents fileContents, Cmd.none )
 
-        ConfirmCopy record result ->
-            case result of
-                Ok value ->
-                    if value.pressedYes then
-                        ( { model | answerWas = { text = "Copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }
-                        , Tauri.FS.copyFile record (always <| Copied record)
-                        )
+        ConfirmCopy record value ->
+            if value.pressedYes then
+                ( { model | answerWas = { text = "Copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }
+                , FS.copyFile record |> toCmd (always <| Copied record)
+                )
 
-                    else
-                        ( { model | answerWas = { text = "Not copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }, Cmd.none )
-
-                Err error ->
-                    ( { model | answerWas = { text = TaskPort.errorToString error, good = Bad } }, Cmd.none )
+            else
+                ( { model | answerWas = { text = "Not copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }, Cmd.none )
 
         Copied record ->
             ( { model | answerWas = { text = "Copied " ++ record.from ++ " to " ++ record.to, good = Good } }, Cmd.none )
 
-        TaskPortError string ->
-            ( { model | answerWas = { text = string, good = Bad } }, Cmd.none )
-
         CreateDir result ->
             case result of
-                Ok (Just filePath) ->
+                Just filePath ->
                     ( { model | answerWas = { text = "Saving as " ++ filePath, good = Good } }
-                    , Tauri.FS.createDirIn filePath Tauri.FS.home { createParentsIfAbsent = True } <|
-                        splitMsg (TaskPort.errorToString >> TaskPortError) (\_ -> Created filePath)
+                    , FS.createDir filePath |> toCmd (\_ -> Created filePath)
                     )
 
-                Ok Nothing ->
+                Nothing ->
                     ( { model | answerWas = { text = "Save cancelled", good = Neutral } }, Cmd.none )
-
-                Err err ->
-                    ( { model | answerWas = { text = TaskPort.errorToString err, good = Bad } }, Cmd.none )
 
         Created filePath ->
             ( { model | answerWas = { text = filePath, good = Good } }, Cmd.none )
@@ -225,6 +363,102 @@ update msg model =
             ( { model | answerWas = { text = filePath ++ iff bool " exists." " doesn't exist.", good = Good } }
             , Cmd.none
             )
+
+        Directory filePath ->
+            ( { model | directory = Just filePath, answerWas = { text = filePath, good = Good } }, Cmd.none )
+
+        NoFolderSpecified ->
+            ( { model | answerWas = { text = "No folder specified", good = Bad } }
+            , Dialog.openDirectory
+                { defaultPath = Nothing
+                , recursive = False
+                , title = Just "Please pick a folder"
+                }
+                |> toCmd (ignoreNothing Directory)
+            )
+
+        Folder folderContents ->
+            ( { model | answerWas = { text = showFolderContents folderContents, good = Good } }, Cmd.none )
+
+        InteropError interopError ->
+            ( { model | answerWas = { text = "Interop Error:\n" ++ TaskPort.interopErrorToString interopError, good = Broken } }, Cmd.none )
+
+        JSReturnError jSError ->
+            ( { model | answerWas = { text = "Error Returned from Javascript:\n" ++ TaskPort.errorToString (TaskPort.JSError jSError), good = Bad } }, Cmd.none )
+
+        ConfirmRemoveDir filePath value ->
+            if value.pressedYes then
+                ( { model | answerWas = { text = "Removing " ++ filePath, good = Neutral } }
+                , FS.removeDir filePath |> toCmd (always <| Removed filePath)
+                )
+
+            else
+                ( { model | answerWas = { text = "Not removing " ++ filePath, good = Neutral } }, Cmd.none )
+
+        Removed filePath ->
+            ( good model <| "Removed " ++ filePath, Cmd.none )
+
+        ConfirmRemoveFile filePath value ->
+            if value.pressedYes then
+                ( { model | answerWas = { text = "Removing " ++ filePath, good = Neutral } }
+                , FS.removeFile filePath |> toCmd (always <| Removed filePath)
+                )
+
+            else
+                ( { model | answerWas = { text = "Not removing " ++ filePath, good = Neutral } }, Cmd.none )
+
+        ConfirmRename record value ->
+            if value.pressedYes then
+                ( { model | answerWas = { text = "Rename " ++ record.from ++ " to " ++ record.to, good = Neutral } }
+                , FS.renameFile record |> toCmd (always <| Renamed record)
+                )
+
+            else
+                ( { model | answerWas = { text = "Not renaming " ++ record.from ++ " to " ++ record.to, good = Neutral } }, Cmd.none )
+
+        Renamed record ->
+            ( { model | answerWas = { text = "Renamed " ++ record.from ++ " to " ++ record.to, good = Good } }, Cmd.none )
+
+        EnableTextBox ->
+            ( { model | textFileContent = Just "" }, Cmd.none )
+
+        WroteTextFile filePath ->
+            ( good { model | textFileContent = Nothing } <| "Wrote text file " ++ filePath, Cmd.none )
+
+        EditedTextBox string ->
+            ( { model | textFileContent = Just string }, Cmd.none )
+
+        ToggleShowPathButtons ->
+            ( { model | showPathButtons = not model.showPathButtons }, Cmd.none )
+
+        GotPath baseDir filePath ->
+            ( good model <| BaseDir.toString baseDir ++ ":\n" ++ filePath, Cmd.none )
+
+        GotNumbers ints ->
+            ( good model <| String.join " " <| List.map String.fromInt ints, Cmd.none )
+
+
+showFolderContents : FS.FolderContents -> String
+showFolderContents (FS.FolderContents list) =
+    "\n" ++ (String.join "\n" <| List.map showFile list) ++ "\n"
+
+
+showFile : FS.FileEntry -> String
+showFile { folderContents, name, path } =
+    Maybe.withDefault "" name
+        ++ "  "
+        ++ path
+        ++ "  "
+        ++ (indent 4 <| Maybe.Extra.unwrap "" showFolderContents folderContents)
+
+
+indent : Int -> String -> String
+indent n string =
+    let
+        indentation =
+            "\n" ++ String.repeat n " "
+    in
+    String.join indentation <| String.lines string
 
 
 iff : Bool -> a -> a -> a
@@ -236,34 +470,29 @@ iff true x y =
         y
 
 
-pathFromResult : TaskPort.Result (Maybe FilePath) -> Maybe FilePath
-pathFromResult r =
-    case r of
-        Ok (Just fp) ->
-            Just fp
-
-        _ ->
-            Nothing
+toCmd : (a -> Msg) -> Task TaskPort.Error a -> Cmd Msg
+toCmd =
+    Tauri.toCmd3 InteropError JSReturnError
 
 
-splitMsg : (TaskPort.Error -> msg) -> (a -> msg) -> Result TaskPort.Error a -> msg
-splitMsg errToMsg toMsg r =
-    case r of
+tagErrorsOr : (a -> Msg) -> Result TaskPort.Error a -> Msg
+tagErrorsOr toMsg result =
+    case result of
         Ok value ->
             toMsg value
 
         Err error ->
-            errToMsg error
+            errorTags error
 
 
-replaceTaskPortResult : (String -> msg) -> msg -> Result TaskPort.Error a -> msg
-replaceTaskPortResult errToMsg okMsg result =
-    case result of
-        Ok _ ->
-            okMsg
+errorTags : TaskPort.Error -> Msg
+errorTags err =
+    case err of
+        TaskPort.InteropError interopError ->
+            InteropError interopError
 
-        Err error ->
-            errToMsg <| TaskPort.errorToString error
+        TaskPort.JSError jSError ->
+            JSReturnError jSError
 
 
 showMaybeList : Maybe (List String) -> String
@@ -281,148 +510,199 @@ showMaybe m =
     Maybe.withDefault "Nothing" m
 
 
-show : Button -> String
-show btn =
-    case btn of
-        Ask ->
-            "Ask"
-
-        Confirm ->
-            "Confirm"
-
-        Message ->
-            "Message"
-
-        OpenDirectories ->
-            "Open Directories"
-
-        OpenFile ->
-            "Open File"
-
-        Save ->
-            "Save"
-
-        ReadTextFile ->
-            "Read Text File"
-
-        CopyFile ->
-            "Copy File"
-
-        ChooseToCreateDir ->
-            "Create Folder"
-
-        Exists ->
-            "Exists"
-
-
 press : Model -> Button -> Cmd Msg
 press model btn =
     case btn of
-        Confirm ->
-            Tauri.Dialog.confirmOptions_WarningDoesNotActuallyGiveCancelOption "Is this really a confirmation question?"
+        ConfirmDialog ->
+            Dialog.confirmOptions_WarningDoesNotActuallyGiveCancelOption "Is this really a confirmation question?"
                 { title = Just "Confirm" -- defaults to the app name
-                , dialogType = Just Tauri.Dialog.Warning -- called type at the typescript end. Defaults to Info
+                , dialogType = Just Dialog.Warning -- called type at the typescript end. Defaults to Info
                 }
-                OKCancel
+                |> toCmd OKCancel
 
-        Ask ->
-            Tauri.Dialog.askOptions "Is this really a question?"
+        AskDialog ->
+            Dialog.askOptions "Is this really a question?"
                 { title = Nothing -- defaults to the app name
                 , dialogType = Nothing -- called type at the typescript end. Defaults to Info
                 }
-                YesNo
+                |> toCmd YesNo
 
-        Message ->
-            Tauri.Dialog.message "Here's a little message for you" <| always IgnoreTauriFeedback
+        MessageDialog ->
+            Dialog.message "Here's a little message for you" |> toCmd (always IgnoreTauriFeedback)
 
-        OpenDirectories ->
-            Tauri.Dialog.openDirectories
+        OpenDirectoriesDialog ->
+            Dialog.openDirectories
                 { defaultPath = Nothing
                 , recursive = True
                 , title = Just "Please pick a directory or directories"
                 }
-                GotMaybeStrings
+                |> toCmd GotMaybeStrings
 
-        OpenFile ->
-            Tauri.Dialog.openFile
+        OpenFileDialog ->
+            Dialog.openFile
                 { defaultPath = Nothing
                 , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                 , title = Just "Please pick a file"
                 }
-                GotFilePath
+                |> toCmd GotFilePath
 
-        Save ->
-            Tauri.Dialog.save
+        SaveDialog ->
+            Dialog.save
                 { defaultPath = Nothing
                 , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                 , title = Just "What do you want me to save it as?"
                 }
-                GotSaveFilePath
+                |> toCmd GotSaveFilePath
 
         ReadTextFile ->
             case model.readFilePath of
                 Nothing ->
-                    Task.succeed NoReadFileSpecified |> Task.perform identity
+                    cmdSucceed NoReadFileSpecified
 
                 Just filePath ->
-                    Tauri.FS.readTextFile filePath GotFileContents
+                    FS.readTextFile filePath |> toCmd GotFileContents
 
         CopyFile ->
             case ( model.readFilePath, model.saveFilePath ) of
                 ( Just from, Just to ) ->
-                    Tauri.Dialog.askOptions
+                    Dialog.askOptions
                         ("Are you sure you want to copy\n" ++ from ++ "\nto\n" ++ to ++ "\n?")
-                        { title = Just "Are you sure?", dialogType = Just Tauri.Dialog.Warning }
-                        (ConfirmCopy { from = from, to = to })
+                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                        |> toCmd (ConfirmCopy { from = from, to = to })
 
                 ( Nothing, a ) ->
-                    Task.succeed NoReadFileSpecified |> Task.perform identity
+                    cmdSucceed NoReadFileSpecified
 
                 ( Just _, Nothing ) ->
-                    Task.succeed NoSaveFileSpecified |> Task.perform identity
+                    cmdSucceed NoSaveFileSpecified
 
         ChooseToCreateDir ->
-            Tauri.Dialog.save { defaultPath = Nothing, filters = [], title = Just "Please enter the name of your new folder." } CreateDir
+            Dialog.save { defaultPath = Nothing, filters = [], title = Just "Please enter the name of your new folder." } |> toCmd CreateDir
 
-        Exists ->
+        CheckExists ->
             case model.saveFilePath of
                 Just saveFilePath ->
-                    Tauri.FS.exists saveFilePath (splitMsg (TaskPort.errorToString >> TaskPortError) (Existence saveFilePath))
+                    FS.exists saveFilePath |> toCmd (Existence saveFilePath)
 
                 Nothing ->
                     case model.readFilePath of
                         Just filePath ->
-                            Tauri.FS.exists filePath (splitMsg (TaskPort.errorToString >> TaskPortError) (Existence filePath))
+                            FS.exists filePath |> toCmd (Existence filePath)
 
                         Nothing ->
-                            Task.succeed NoReadFileSpecified |> Task.perform identity
+                            cmdSucceed NoReadFileSpecified
+
+        ChooseDir ->
+            Dialog.openDirectory { defaultPath = Nothing, recursive = False, title = Nothing } |> toCmd (ignoreNothing Directory)
+
+        ReadDir ->
+            case model.directory of
+                Just filePath ->
+                    FSInBaseDir.readDir Home { recursive = True } filePath |> toCmd Folder
+
+                Nothing ->
+                    cmdSucceed NoFolderSpecified
+
+        RemoveDir ->
+            case model.directory of
+                Just filePath ->
+                    Dialog.askOptions
+                        ("Are you sure you want to remove" ++ filePath ++ "?")
+                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                        |> toCmd (ConfirmRemoveDir filePath)
+
+                Nothing ->
+                    cmdSucceed NoFolderSpecified
+
+        RemoveFile ->
+            case model.readFilePath of
+                Just filePath ->
+                    Dialog.askOptions
+                        ("Are you sure you want to remove" ++ filePath ++ "?")
+                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                        |> toCmd (ConfirmRemoveFile filePath)
+
+                Nothing ->
+                    cmdSucceed NoReadFileSpecified
+
+        RenameFile ->
+            case ( model.readFilePath, model.saveFilePath ) of
+                ( Just from, Just to ) ->
+                    Dialog.askOptions
+                        ("Are you sure you want to rename\n" ++ from ++ "\nto\n" ++ to ++ "\n?")
+                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                        |> toCmd (ConfirmRename { from = from, to = to })
+
+                ( Nothing, a ) ->
+                    cmdSucceed NoReadFileSpecified
+
+                ( Just _, Nothing ) ->
+                    cmdSucceed NoSaveFileSpecified
+
+        WriteTextFile ->
+            case model.textFileContent of
+                Nothing ->
+                    cmdSucceed EnableTextBox
+
+                Just contents ->
+                    case model.saveFilePath of
+                        Just filePath ->
+                            FS.writeTextFile { filePath = filePath, contents = contents } |> toCmd (always <| WroteTextFile filePath)
+
+                        Nothing ->
+                            Dialog.save
+                                { defaultPath = Nothing
+                                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
+                                , title = Just "What do you want me to save it as?"
+                                }
+                                |> toCmd GotSaveFilePath
+
+        GetPath baseDir ->
+            Path.get baseDir |> toCmd (GotPath baseDir)
+
+        TestbaseDirectoryIsTotal ->
+            let
+                go baseDir =
+                    TaskPort.call
+                        { function = "BaseDirNo"
+                        , valueDecoder = Json.Decode.int
+                        , argsEncoder = BaseDir.encodeBaseDirectory
+                        }
+                        baseDir
+            in
+            toCmd GotNumbers <|
+                Task.sequence <|
+                    List.map go <|
+                        List.concat
+                            [ [ App, AppConfig, AppData, AppLocalData, AppLog ]
+                            , [ Audio, Cache, Config, Data, Desktop, Document ]
+                            , [ Download, Executable, Home, LocalData, Log, Picture ]
+                            , [ Public, Resource, Runtime, Temp, Template, Video ]
+                            ]
 
 
-resultToString : TaskPort.Result a -> (a -> String) -> { text : String, good : Good }
-resultToString result toString =
-    case result of
-        Ok value ->
-            { text = toString value, good = Good }
-
-        Err error ->
-            { text = TaskPort.errorToString error, good = Bad }
+cmdSucceed : msg -> Cmd msg
+cmdSucceed msg =
+    Task.succeed msg |> Task.perform identity
 
 
-boolResultToString : TaskPort.Result a -> (a -> Bool) -> { true : String, false : String } -> { text : String, good : Good }
-boolResultToString result toBool { true, false } =
-    let
-        decide a =
-            if toBool a then
-                true
+ignoreNothing : (a -> Msg) -> (Maybe a -> Msg)
+ignoreNothing toMsg m =
+    case m of
+        Just a ->
+            toMsg a
 
-            else
-                false
-    in
-    resultToString result decide
+        Nothing ->
+            IgnoreTauriFeedback
 
 
-button : String -> Msg -> Element Msg
-button string msg =
+button : Button -> Element Msg
+button b =
+    greenButton (buttonName b) (Pressed b)
+
+
+greenButton : String -> Msg -> Element Msg
+greenButton string msg =
     Element.Input.button
         [ Element.Background.color <| Element.rgb255 200 255 200
         , Element.Border.rounded 10

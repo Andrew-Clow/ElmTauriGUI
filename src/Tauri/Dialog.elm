@@ -41,7 +41,7 @@ module Tauri.Dialog exposing
 
 import Json.Decode
 import Json.Encode
-import Task
+import Task exposing (Task)
 import TaskPort
 
 
@@ -51,41 +51,38 @@ import TaskPort
 -- ask (Yes/No), confirm (OK/Cancel), message (())
 
 
-ask : String -> (Result TaskPort.Error { pressedYes : Bool } -> msg) -> Cmd msg
-ask question toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "ask"
-            , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
-            , argsEncoder = Json.Encode.string
-            }
-            question
+ask : String -> Task TaskPort.Error { pressedYes : Bool }
+ask question =
+    TaskPort.call
+        { function = "ask"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
+        , argsEncoder = Json.Encode.string
+        }
+        question
 
 
 
 -- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
 
 
-confirm_WarningDoesNotActuallyGiveCancelOption : String -> (Result TaskPort.Error { pressedOK : Bool } -> msg) -> Cmd msg
-confirm_WarningDoesNotActuallyGiveCancelOption question toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "confirm"
-            , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
-            , argsEncoder = Json.Encode.string
-            }
-            question
+confirm_WarningDoesNotActuallyGiveCancelOption : String -> Task TaskPort.Error { pressedOK : Bool }
+confirm_WarningDoesNotActuallyGiveCancelOption question =
+    TaskPort.call
+        { function = "confirm"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
+        , argsEncoder = Json.Encode.string
+        }
+        question
 
 
-message : String -> (Result TaskPort.Error () -> msg) -> Cmd msg
-message question toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "message"
-            , valueDecoder = Json.Decode.null ()
-            , argsEncoder = Json.Encode.string
-            }
-            question
+message : String -> Task TaskPort.Error ()
+message question =
+    TaskPort.call
+        { function = "message"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = Json.Encode.string
+        }
+        question
 
 
 type alias MessageDialogOptions =
@@ -100,41 +97,38 @@ type DialogType
     | Error
 
 
-askOptions : String -> MessageDialogOptions -> (Result TaskPort.Error { pressedYes : Bool } -> msg) -> Cmd msg
-askOptions question options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "askOptions"
-            , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
-            , argsEncoder = encodeMessageDialogOptions options
-            }
-            question
+askOptions : String -> MessageDialogOptions -> Task TaskPort.Error { pressedYes : Bool }
+askOptions question options =
+    TaskPort.call
+        { function = "askOptions"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
+        , argsEncoder = encodeMessageDialogOptions options
+        }
+        question
 
 
 
 -- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
 
 
-confirmOptions_WarningDoesNotActuallyGiveCancelOption : String -> MessageDialogOptions -> (Result TaskPort.Error { pressedOK : Bool } -> msg) -> Cmd msg
-confirmOptions_WarningDoesNotActuallyGiveCancelOption question options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "confirmOptions"
-            , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
-            , argsEncoder = encodeMessageDialogOptions options
-            }
-            question
+confirmOptions_WarningDoesNotActuallyGiveCancelOption : String -> MessageDialogOptions -> Task TaskPort.Error { pressedOK : Bool }
+confirmOptions_WarningDoesNotActuallyGiveCancelOption question options =
+    TaskPort.call
+        { function = "confirmOptions"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
+        , argsEncoder = encodeMessageDialogOptions options
+        }
+        question
 
 
-messageOptions : String -> MessageDialogOptions -> (Result TaskPort.Error () -> msg) -> Cmd msg
-messageOptions question options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "messageOptions"
-            , valueDecoder = Json.Decode.null ()
-            , argsEncoder = encodeMessageDialogOptions options
-            }
-            question
+messageOptions : String -> MessageDialogOptions -> Task TaskPort.Error ()
+messageOptions question options =
+    TaskPort.call
+        { function = "messageOptions"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = encodeMessageDialogOptions options
+        }
+        question
 
 
 
@@ -155,26 +149,24 @@ type alias FileDialogOptions =
     }
 
 
-openFile : FileDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
-openFile options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "openDlg"
-            , valueDecoder = Json.Decode.maybe Json.Decode.string
-            , argsEncoder = encodeFileDialogOptions { multiple = False }
-            }
-            options
+openFile : FileDialogOptions -> Task TaskPort.Error (Maybe String)
+openFile options =
+    TaskPort.call
+        { function = "openDlg"
+        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , argsEncoder = encodeFileDialogOptions { multiple = False }
+        }
+        options
 
 
-openFiles : FileDialogOptions -> (Result TaskPort.Error (Maybe (List String)) -> msg) -> Cmd msg
-openFiles options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "openDlg"
-            , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
-            , argsEncoder = encodeFileDialogOptions { multiple = True }
-            }
-            options
+openFiles : FileDialogOptions -> Task TaskPort.Error (Maybe (List String))
+openFiles options =
+    TaskPort.call
+        { function = "openDlg"
+        , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
+        , argsEncoder = encodeFileDialogOptions { multiple = True }
+        }
+        options
 
 
 
@@ -188,41 +180,38 @@ type alias DirectoryDialogOptions =
     }
 
 
-openDirectory : DirectoryDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
-openDirectory options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "openDlg"
-            , valueDecoder = Json.Decode.maybe Json.Decode.string
-            , argsEncoder = encodeDirectoryDialogOptions { multiple = False }
-            }
-            options
+openDirectory : DirectoryDialogOptions -> Task TaskPort.Error (Maybe String)
+openDirectory options =
+    TaskPort.call
+        { function = "openDlg"
+        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , argsEncoder = encodeDirectoryDialogOptions { multiple = False }
+        }
+        options
 
 
-openDirectories : DirectoryDialogOptions -> (Result TaskPort.Error (Maybe (List String)) -> msg) -> Cmd msg
-openDirectories options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "openDlg"
-            , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
-            , argsEncoder = encodeDirectoryDialogOptions { multiple = True }
-            }
-            options
+openDirectories : DirectoryDialogOptions -> Task TaskPort.Error (Maybe (List String))
+openDirectories options =
+    TaskPort.call
+        { function = "openDlg"
+        , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
+        , argsEncoder = encodeDirectoryDialogOptions { multiple = True }
+        }
+        options
 
 
 
 -- Save ----------------------------------------------------------------------------------------------------------------
 
 
-save : FileDialogOptions -> (Result TaskPort.Error (Maybe String) -> msg) -> Cmd msg
-save options toMsg =
-    Task.attempt toMsg <|
-        TaskPort.call
-            { function = "save"
-            , valueDecoder = Json.Decode.maybe Json.Decode.string
-            , argsEncoder = encodeFileDialogOptions { multiple = False }
-            }
-            options
+save : FileDialogOptions -> Task TaskPort.Error (Maybe String)
+save options =
+    TaskPort.call
+        { function = "save"
+        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , argsEncoder = encodeFileDialogOptions { multiple = False }
+        }
+        options
 
 
 

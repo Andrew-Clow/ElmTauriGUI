@@ -2,8 +2,16 @@ module Tauri.FS exposing (..)
 
 import Json.Decode
 import Json.Encode
-import Task
+import Task exposing (Task)
 import TaskPort
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+--
+--   Files
+--
+-- ---------------------------------------------------------------------------------------------------------------------
 
 
 type alias FilePath =
@@ -16,275 +24,229 @@ type alias FileContents =
     }
 
 
-home : BaseDirectory
-home =
-    Home
-
-
-appConfig : BaseDirectory
-appConfig =
-    AppConfig
-
-
-type BaseDirectory
-    = App
-    | AppConfig
-    | AppData
-    | AppLocalData
-    | AppLog
-    | Audio
-    | Cache
-    | Config
-    | Data
-    | Desktop
-    | Document
-    | Download
-    | Executable
-    | Home
-    | LocalData
-    | Log
-    | Picture
-    | Public
-    | Resource
-    | Runtime
-    | Temp
-    | Template
-    | Video
-
-
-
--- copyFile ------------------------------------------------------------------------------------------------------------
-
-
-copyFile : { from : FilePath, to : FilePath } -> (TaskPort.Result () -> msg) -> Cmd msg
-copyFile fromTo toMsg =
-    TaskPort.call
-        { function = "copyFile"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder = \args -> Json.Encode.list Json.Encode.string [ args.from, args.to ]
-        }
-        fromTo
-        |> Task.attempt toMsg
-
-
-copyFileIn : { from : FilePath, to : FilePath } -> BaseDirectory -> (TaskPort.Result () -> msg) -> Cmd msg
-copyFileIn fromTo baseDir toMsg =
-    TaskPort.call
-        { function = "copyFile"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder =
-            \args ->
-                Json.Encode.list identity
-                    [ Json.Encode.string args.from
-                    , Json.Encode.string args.to
-                    , Json.Encode.object [ ( "dir", encodeBaseDirectory baseDir ) ]
-                    ]
-        }
-        fromTo
-        |> Task.attempt toMsg
-
-
-
--- createDir -----------------------------------------------------------------------------------------------------------
-
-
-createDir : FilePath -> (TaskPort.Result () -> msg) -> Cmd msg
-createDir nameOfDirectory toMsg =
-    TaskPort.call
-        { function = "createDir"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder = Json.Encode.string
-        }
-        nameOfDirectory
-        |> Task.attempt toMsg
-
-
-createDirIn : FilePath -> BaseDirectory -> { createParentsIfAbsent : Bool } -> (TaskPort.Result () -> msg) -> Cmd msg
-createDirIn nameOfDirectory baseDir { createParentsIfAbsent } toMsg =
-    TaskPort.call
-        { function = "createDir"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder = fsDirOptions baseDir { recursive = createParentsIfAbsent }
-        }
-        nameOfDirectory
-        |> Task.attempt toMsg
-
-
 
 -- exists --------------------------------------------------------------------------------------------------------------
 
 
-exists : FilePath -> (TaskPort.Result Bool -> msg) -> Cmd msg
-exists filePath toMsg =
+exists : FilePath -> Task TaskPort.Error Bool
+exists filePath =
     TaskPort.call
         { function = "exists"
         , valueDecoder = Json.Decode.bool
         , argsEncoder = Json.Encode.string
         }
         filePath
-        |> Task.attempt toMsg
-
-
-existsIn : FilePath -> BaseDirectory -> (TaskPort.Result Bool -> msg) -> Cmd msg
-existsIn filePath baseDir toMsg =
-    TaskPort.call
-        { function = "exists"
-        , valueDecoder = Json.Decode.bool
-        , argsEncoder = fsOptions baseDir
-        }
-        filePath
-        |> Task.attempt toMsg
 
 
 
--- readDir --------------------------------------------------------------------------------------------------------------
-
-
-type alias FileEntry =
-    { children : Maybe FileEntry
-    , name : Maybe String
-    , path : FilePath
-    }
-
-
-
-{-
-   readDir : FilePath -> (Result TaskPort.Error (List FileEntry) -> msg) -> Cmd msg
-   readDir filePath toMsg =
-       TaskPort.call
-           { function = "readDir"
-           , valueDecoder = Json.Decode.list decodeFileEntry
-           , argsEncoder = Json.Encode.string
-           }
-           filePath
-           |> Task.attempt toMsg
--}
-{-
-   "readDir": true,
-   "removeDir": true,
-   "removeFile": true,
-   "renameFile": true,
-   "writeTextFile": true
--}
 -- readTextFile --------------------------------------------------------------------------------------------------------
 
 
-readTextFile : String -> (TaskPort.Result FileContents -> msg) -> Cmd msg
-readTextFile filePath toMsg =
+readTextFile : FilePath -> Task TaskPort.Error FileContents
+readTextFile filePath =
     TaskPort.call
         { function = "readTextFile"
         , valueDecoder = Json.Decode.string |> Json.Decode.map (\content -> { filePath = filePath, contents = content })
         , argsEncoder = Json.Encode.string
         }
         filePath
-        |> Task.attempt toMsg
+
+
+
+-- writeTextFile -------------------------------------------------------------------------------------------------------
+
+
+writeTextFile : { filePath : FilePath, contents : String } -> Task TaskPort.Error ()
+writeTextFile fileContents =
+    TaskPort.call
+        { function = "writeTextFile"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = encodeFileContents
+        }
+        fileContents
+
+
+
+-- renameFile ----------------------------------------------------------------------------------------------------------
+
+
+renameFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error ()
+renameFile fromTo =
+    TaskPort.call
+        { function = "renameFile"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = encodeFromTo
+        }
+        fromTo
+
+
+
+-- copyFile ------------------------------------------------------------------------------------------------------------
+
+
+copyFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error ()
+copyFile fromTo =
+    TaskPort.call
+        { function = "copyFile"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = \args -> Json.Encode.list Json.Encode.string [ args.from, args.to ]
+        }
+        fromTo
+
+
+
+-- removeFile ----------------------------------------------------------------------------------------------------------
+
+
+removeFile : FilePath -> Task TaskPort.Error ()
+removeFile filePath =
+    TaskPort.call
+        { function = "removeFile"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = Json.Encode.string
+        }
+        filePath
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+--
+--   Directories
+--
+-- ---------------------------------------------------------------------------------------------------------------------
+
+
+type alias FileEntry =
+    { name : Maybe String
+    , path : FilePath
+    , folderContents : Maybe FolderContents
+    }
+
+
+type FolderContents
+    = FolderContents (List FileEntry)
+
+
+
+-- readDir --------------------------------------------------------------------------------------------------------------
+
+
+readDir : FilePath -> Task TaskPort.Error FolderContents
+readDir filePath =
+    TaskPort.call
+        { function = "readDir"
+        , valueDecoder = Json.Decode.map FolderContents <| Json.Decode.list decodeFileEntry
+        , argsEncoder = Json.Encode.string
+        }
+        filePath
+
+
+
+-- createDir -----------------------------------------------------------------------------------------------------------
+
+
+createDir : FilePath -> Task TaskPort.Error ()
+createDir nameOfDirectory =
+    TaskPort.call
+        { function = "createDir"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = Json.Encode.string
+        }
+        nameOfDirectory
+
+
+
+-- removeDir -----------------------------------------------------------------------------------------------------------
+
+
+removeDir : FilePath -> Task TaskPort.Error ()
+removeDir filePath =
+    TaskPort.call
+        { function = "removeDir"
+        , valueDecoder = Json.Decode.null ()
+        , argsEncoder = Json.Encode.string
+        }
+        filePath
 
 
 
 {-
    ------------------------------------------------------------------------------------------------------------------------
 
+
+
      Encoding / Decoding
 
-     Boring unexported bit where we encode all the arguments.
+     Boring bit where we encode/decode all the arguments.
+
+
 
    ------------------------------------------------------------------------------------------------------------------------
 -}
 
 
-fsOptions : BaseDirectory -> FilePath -> Json.Encode.Value
-fsOptions baseDir filePath =
-    Json.Encode.list identity
-        [ Json.Encode.string filePath
-        , Json.Encode.object [ ( "dir", encodeBaseDirectory baseDir ) ]
-        ]
+encodeFromTo : { from : FilePath, to : FilePath } -> Json.Encode.Value
+encodeFromTo fromTo =
+    Json.Encode.list Json.Encode.string [ fromTo.from, fromTo.to ]
 
 
-fsDirOptions : BaseDirectory -> { recursive : Bool } -> FilePath -> Json.Encode.Value
-fsDirOptions baseDir { recursive } filePath =
-    Json.Encode.list identity
-        [ Json.Encode.string filePath
-        , Json.Encode.object
-            [ ( "dir", encodeBaseDirectory baseDir )
-            , ( "recursive", Json.Encode.bool recursive )
-            ]
-        ]
+encodeFileContents : { filePath : FilePath, contents : String } -> Json.Encode.Value
+encodeFileContents fileContents =
+    Json.Encode.list Json.Encode.string [ fileContents.filePath, fileContents.contents ]
 
 
 
---decodeFileEntry : Json.Decode.Decoder FileEntry
---decodeFileEntry = Json.Decode.
+{-
+
+   type alias FileEntry =
+       { children : Maybe Children
+       , name : Maybe String
+       , path : FilePath
+       }
 
 
-encodeBaseDirectory : BaseDirectory -> Json.Encode.Value
-encodeBaseDirectory b =
-    Json.Encode.string <|
-        case b of
-            App ->
-                "App"
+   type Children
+       = Children (List FileEntry)
 
-            AppConfig ->
-                "AppConfig"
 
-            AppData ->
-                "AppData"
 
-            AppLocalData ->
-                "AppLocalData"
+-}
 
-            AppLog ->
-                "AppLog"
 
-            Audio ->
-                "Audio"
+decodeFileEntry : Json.Decode.Decoder FileEntry
+decodeFileEntry =
+    Json.Decode.map3 (\c n p -> { name = n, path = p, folderContents = c })
+        (Json.Decode.maybe <| Json.Decode.field "children" decodeChildren)
+        (Json.Decode.maybe <| Json.Decode.field "name" Json.Decode.string)
+        (Json.Decode.field "path" Json.Decode.string)
 
-            Cache ->
-                "Cache"
 
-            Config ->
-                "Config"
+decodeChildren : Json.Decode.Decoder FolderContents
+decodeChildren =
+    Json.Decode.map FolderContents <| Json.Decode.list <| Json.Decode.lazy <| \_ -> decodeFileEntry
 
-            Data ->
-                "Data"
 
-            Desktop ->
-                "Desktop"
 
-            Document ->
-                "Document"
+-- Debugging -----------------------------------------------------------------------------------------------------------
+{-
+   logValue : Json.Encode.Value -> Json.Encode.Value
+   logValue a =
+       Debug.log (Result.Extra.unpack identity identity <| Json.Print.prettyValue { indent = 2, columns = 120 } a) a
 
-            Download ->
-                "Download"
 
-            Executable ->
-                "Executable"
+   debugDecode : Json.Decode.Decoder a -> Json.Decode.Decoder a
+   debugDecode decoder =
+       Json.Decode.value
+           |> Json.Decode.andThen
+               (\value ->
+                   Debug.log (Debug.toString value)
+                       (case Json.Decode.decodeValue decoder value of
+                           Ok y ->
+                               Json.Decode.succeed y
 
-            Home ->
-                "Home"
+                           Err n ->
+                               Json.Decode.fail <| Json.Decode.errorToString n
+                       )
+               )
 
-            LocalData ->
-                "LocalData"
-
-            Log ->
-                "Log"
-
-            Picture ->
-                "Picture"
-
-            Public ->
-                "Public"
-
-            Resource ->
-                "Resource"
-
-            Runtime ->
-                "Runtime"
-
-            Temp ->
-                "Temp"
-
-            Template ->
-                "Template"
-
-            Video ->
-                "Video"
+-}

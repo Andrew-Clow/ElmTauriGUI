@@ -4,25 +4,103 @@
   <title>Main</title>
   <script src="main.js"></script>
 </head>
+<script src="./taskport.2.0.1.min.js"></script>
 
-<body>
-  <script src="./taskport.2.0.1.min.js"></script>
-  <script>
+<script>
     TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
-    TaskPort.register("createDir", (args) => {return window.__TAURI__.fs.createDir(args)});
-    TaskPort.register("copyFile", (args) => {return window.__TAURI__.fs.copyFile(args[0],args[1])});
-    TaskPort.register("exists", (args) => {return window.__TAURI__.fs.exists(args)});
-    TaskPort.register("readTextFile", (args) => {return window.__TAURI__.fs.readTextFile(args)});
-    TaskPort.register("open", (args) => {return window.__TAURI__.dialog.open(args)});
-    TaskPort.register("ask", (args) => {return window.__TAURI__.dialog.ask(args)});
-    TaskPort.register("askOptions", (args) => {return window.__TAURI__.dialog.ask(args[0],{ title:args[1].title,type:args[1].type })});
-    TaskPort.register("confirm", (args) => {return window.__TAURI__.dialog.confirm(args)});
-    TaskPort.register("confirmOptions", (args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
-    TaskPort.register("message", (args) => {return window.__TAURI__.dialog.confirm(args)});
-    TaskPort.register("messageOptions", (args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
-    TaskPort.register("openDlg", (args) => {return window.__TAURI__.dialog.open({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
-    TaskPort.register("save", (args) => {return window.__TAURI__.dialog.save({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
+
+    //FS
+    TaskPort.register("exists",     	(args) => {return window.__TAURI__.fs.exists(args)});
+    TaskPort.register("readTextFile",  	(args) => {return window.__TAURI__.fs.readTextFile(args)});
+    TaskPort.register("writeTextFile", 	(args) => {return window.__TAURI__.fs.writeTextFile(args[0],args[1])});
+    TaskPort.register("renameFile",    	(args) => {return window.__TAURI__.fs.renameFile(args[0],args[1])});
+    TaskPort.register("copyFile",    	(args) => {return window.__TAURI__.fs.copyFile(args[0],args[1])});
+    TaskPort.register("removeFile",    	(args) => {return window.__TAURI__.fs.removeFile(args)});
+    TaskPort.register("readDir",    	(args) => {return window.__TAURI__.fs.readDir(args)});
+    TaskPort.register("createDir",    	(args) => {return window.__TAURI__.fs.createDir(args)});
+    TaskPort.register("removeDir",    	(args) => {return window.__TAURI__.fs.removeDir(args)});
+
+    // Broken - needs a function with a switch statement to get {dir: AppConfig} to work with data that came through as json. Data isn't functions.
+    TaskPort.register("existsOptions",      	(args) => {return window.__TAURI__.fs.exists(args[0],{ dir: baseDir(args[1].dir) })});
+    TaskPort.register("readTextFileOptions", 	(args) => {return window.__TAURI__.fs.readTextFile(args[0],{ dir: baseDir(args[1].dir) })});
+    TaskPort.register("writeTextFileOptions", 	(args) => {return window.__TAURI__.fs.writeTextFile(args[0],args[1],{ dir: baseDir(args[2].dir) })});
+    TaskPort.register("renameFileOptions",  	(args) => {return window.__TAURI__.fs.renameFile(args[0],args[1],{ dir: baseDir(args[2].dir) })});
+    TaskPort.register("copyFileOptions",    	(args) => {return window.__TAURI__.fs.copyFile(args[0],args[1],{ dir: baseDir(args[2].dir) })});
+    TaskPort.register("removeFileOptions",   	(args) => {return window.__TAURI__.fs.removeFile(args[0],{ dir: baseDir(args[1].dir) })});
+    TaskPort.register("readDirOptions",     	(args) => {return window.__TAURI__.fs.readDir(args[0],{dir: baseDir(args[1].dir),recursive: args[1].recursive})});
+    TaskPort.register("createDirOptions",     	(args) => {return window.__TAURI__.fs.createDir(args[0],{dir: baseDir(args[1].dir),recursive: args[1].recursive})});
+    TaskPort.register("removeDirOptions",     	(args) => {return window.__TAURI__.fs.removeDir(args[0],{dir: baseDir(args[1].dir),recursive: args[1].recursive})});
+
+    //Dialog
+    TaskPort.register("open",    		(args) => {return window.__TAURI__.dialog.open(args)});
+    TaskPort.register("ask",    		(args) => {return window.__TAURI__.dialog.ask(args)});
+    TaskPort.register("askOptions",		(args) => {return window.__TAURI__.dialog.ask(args[0],{ title:args[1].title,type:args[1].type })});
+    TaskPort.register("confirm",   		(args) => {return window.__TAURI__.dialog.confirm(args)});
+    TaskPort.register("confirmOptions",	(args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
+    TaskPort.register("message",    	(args) => {return window.__TAURI__.dialog.confirm(args)});
+    TaskPort.register("messageOptions",	(args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
+    TaskPort.register("openDlg",   		(args) => {return window.__TAURI__.dialog.open({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
+    TaskPort.register("save",    		(args) => {return window.__TAURI__.dialog.save({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
+
+    //Path
+    TaskPort.register("appDir",       	(args) => {return window.__TAURI__.path.appDir()});
+    TaskPort.register("appConfigDir",  	(args) => {return window.__TAURI__.path.appConfigDir()});
+    TaskPort.register("appDataDir",   	(args) => {return window.__TAURI__.path.appDataDir()});
+    TaskPort.register("appLocalDataDir", (args) => {return window.__TAURI__.path.appLocalDataDir()});
+    TaskPort.register("appLogDir",   	(args) => {return window.__TAURI__.path.appLogDir()});
+    TaskPort.register("audioDir",   	(args) => {return window.__TAURI__.path.audioDir()});
+    TaskPort.register("cacheDir",   	(args) => {return window.__TAURI__.path.cacheDir()});
+    TaskPort.register("configDir",   	(args) => {return window.__TAURI__.path.configDir()});
+    TaskPort.register("dataDir",    	(args) => {return window.__TAURI__.path.dataDir()});
+    TaskPort.register("desktopDir",   	(args) => {return window.__TAURI__.path.desktopDir()});
+    TaskPort.register("documentDir",   	(args) => {return window.__TAURI__.path.documentDir()});
+    TaskPort.register("downloadDir",   	(args) => {return window.__TAURI__.path.downloadDir()});
+    TaskPort.register("executableDir", 	(args) => {return window.__TAURI__.path.executableDir()});
+    TaskPort.register("homeDir",    	(args) => {return window.__TAURI__.path.homeDir()});
+    TaskPort.register("localDataDir",  	(args) => {return window.__TAURI__.path.localDataDir()});
+    TaskPort.register("logDir",     	(args) => {return window.__TAURI__.path.logDir()});
+    TaskPort.register("pictureDir",   	(args) => {return window.__TAURI__.path.pictureDir()});
+    TaskPort.register("publicDir",   	(args) => {return window.__TAURI__.path.publicDir()});
+    TaskPort.register("resourceDir",   	(args) => {return window.__TAURI__.path.resourceDir()});
+    TaskPort.register("runtimeDir",   	(args) => {return window.__TAURI__.path.runtimeDir()});
+    TaskPort.register("templateDir",   	(args) => {return window.__TAURI__.path.templateDir()});
+    TaskPort.register("videoDir",   	(args) => {return window.__TAURI__.path.videoDir()});
+
+    //os
+    TaskPort.register("tempDir", (args) => {return window.__TAURI__.os.tempdir()});
+
+    TaskPort.register("BaseDirNo", (args) => {return baseDir(args)});
+    //BaseDirectories
+    function baseDir(baseDir) {
+        switch(baseDir) {
+            case "App":     	return window.__TAURI__.fs.BaseDirectory.App;
+            case "AppConfig":  	return window.__TAURI__.fs.BaseDirectory.AppConfig;
+            case "AppData":    	return window.__TAURI__.fs.BaseDirectory.AppData;
+            case "AppLocalData": return window.__TAURI__.fs.BaseDirectory.AppLocalData;
+            case "AppLog":    	return window.__TAURI__.fs.BaseDirectory.AppLog;
+            case "Audio":    	return window.__TAURI__.fs.BaseDirectory.Audio;
+            case "Cache":    	return window.__TAURI__.fs.BaseDirectory.Cache;
+            case "Config":    	return window.__TAURI__.fs.BaseDirectory.Config;
+            case "Data":    	return window.__TAURI__.fs.BaseDirectory.Data;
+            case "Desktop":    	return window.__TAURI__.fs.BaseDirectory.Desktop;
+            case "Document":   	return window.__TAURI__.fs.BaseDirectory.Document;
+            case "Download":   	return window.__TAURI__.fs.BaseDirectory.Download;
+            case "Executable": 	return window.__TAURI__.fs.BaseDirectory.Executable;
+            case "Home":    	return window.__TAURI__.fs.BaseDirectory.Home;
+            case "LocalData":  	return window.__TAURI__.fs.BaseDirectory.LocalData;
+            case "Log":     	return window.__TAURI__.fs.BaseDirectory.Log;
+            case "Picture":    	return window.__TAURI__.fs.BaseDirectory.Picture;
+            case "Public":    	return window.__TAURI__.fs.BaseDirectory.Public;
+            case "Resource":  	return window.__TAURI__.fs.BaseDirectory.Resource;
+            case "Runtime":    	return window.__TAURI__.fs.BaseDirectory.Runtime;
+            case "Temp":    	return window.__TAURI__.fs.BaseDirectory.Temp;
+            case "Template":   	return window.__TAURI__.fs.BaseDirectory.Template;
+            case "Video":    	return window.__TAURI__.fs.BaseDirectory.Video;
+            default: throw ("Error: BaseDirectory does not have an entry called " + baseDir)
+        }
+    }
   </script>
+<body>
 
   <div id="myapp"></div>
   <script>
