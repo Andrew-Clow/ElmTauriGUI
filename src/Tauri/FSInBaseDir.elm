@@ -115,7 +115,7 @@ removeFile baseDir filePath =
 readDir : BaseDir -> { recursive : Bool } -> FilePath -> Task TaskPort.Error FolderContents
 readDir baseDir { recursive } filePath =
     TaskPort.call
-        { function = "readDirOptionsOptions"
+        { function = "readDirOptions"
         , valueDecoder = Json.Decode.map FolderContents <| Json.Decode.list decodeFileEntry
         , argsEncoder = encodeFsDirOptions baseDir { recursive = recursive }
         }

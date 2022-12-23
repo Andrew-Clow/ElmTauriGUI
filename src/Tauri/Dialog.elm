@@ -2,8 +2,8 @@ module Tauri.Dialog exposing
     ( DialogType(..)
     , ask
     , askOptions
-    , confirmOptions_WarningDoesNotActuallyGiveCancelOption
-    , confirm_WarningDoesNotActuallyGiveCancelOption
+    , confirm
+    , confirmOptions
     , message
     , messageOptions
     , openDirectories
@@ -51,40 +51,6 @@ import TaskPort
 -- ask (Yes/No), confirm (OK/Cancel), message (())
 
 
-ask : String -> Task TaskPort.Error { pressedYes : Bool }
-ask question =
-    TaskPort.call
-        { function = "ask"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
-        , argsEncoder = Json.Encode.string
-        }
-        question
-
-
-
--- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
-
-
-confirm_WarningDoesNotActuallyGiveCancelOption : String -> Task TaskPort.Error { pressedOK : Bool }
-confirm_WarningDoesNotActuallyGiveCancelOption question =
-    TaskPort.call
-        { function = "confirm"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
-        , argsEncoder = Json.Encode.string
-        }
-        question
-
-
-message : String -> Task TaskPort.Error ()
-message question =
-    TaskPort.call
-        { function = "message"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder = Json.Encode.string
-        }
-        question
-
-
 type alias MessageDialogOptions =
     { title : Maybe String -- defaults to the app name
     , dialogType : Maybe DialogType -- called type at the typescript end. Defaults to Info
@@ -95,6 +61,16 @@ type DialogType
     = Info
     | Warning
     | Error
+
+
+ask : String -> Task TaskPort.Error { pressedYes : Bool }
+ask question =
+    TaskPort.call
+        { function = "ask"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
+        , argsEncoder = Json.Encode.string
+        }
+        question
 
 
 askOptions : String -> MessageDialogOptions -> Task TaskPort.Error { pressedYes : Bool }
@@ -111,8 +87,18 @@ askOptions question options =
 -- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
 
 
-confirmOptions_WarningDoesNotActuallyGiveCancelOption : String -> MessageDialogOptions -> Task TaskPort.Error { pressedOK : Bool }
-confirmOptions_WarningDoesNotActuallyGiveCancelOption question options =
+confirm : String -> Task TaskPort.Error { pressedOK : Bool }
+confirm question =
+    TaskPort.call
+        { function = "confirm"
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
+        , argsEncoder = Json.Encode.string
+        }
+        question
+
+
+confirmOptions : String -> MessageDialogOptions -> Task TaskPort.Error { pressedOK : Bool }
+confirmOptions question options =
     TaskPort.call
         { function = "confirmOptions"
         , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
@@ -121,11 +107,21 @@ confirmOptions_WarningDoesNotActuallyGiveCancelOption question options =
         question
 
 
+message : String -> Task TaskPort.Error ()
+message question =
+    TaskPort.call
+        { function = "message"
+        , valueDecoder = Json.Decode.succeed () -- should be Json.Decode.null (), but it's returning true for some reason.
+        , argsEncoder = Json.Encode.string
+        }
+        question
+
+
 messageOptions : String -> MessageDialogOptions -> Task TaskPort.Error ()
 messageOptions question options =
     TaskPort.call
         { function = "messageOptions"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.succeed () -- should be Json.Decode.null (), but it's returning true for some reason.
         , argsEncoder = encodeMessageDialogOptions options
         }
         question

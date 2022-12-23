@@ -74,6 +74,7 @@ type Button
     | WriteTextFile
     | GetPath BaseDir.BaseDir
     | TestbaseDirectoryIsTotal
+    | NewCopyFile
 
 
 type Msg
@@ -136,7 +137,9 @@ view model =
                     [ button AskDialog
                     , button ConfirmDialog
                     , button MessageDialog
-                    , button OpenDirectoriesDialog
+                    ]
+                , Element.row [ Element.spacing 10 ]
+                    [ button OpenDirectoriesDialog
                     , button OpenFileDialog
                     , button SaveDialog
                     ]
@@ -144,14 +147,14 @@ view model =
                 , Element.text "FS"
                 , Element.row [ Element.spacing 10 ]
                     [ button ReadTextFile
-                    , button CopyFile
-                    , button CheckExists
+                    , button NewCopyFile
                     , button RemoveFile
                     , button RenameFile
                     , greenButton "WriteTextFile" <| writeTextFileLogic model
                     ]
                 , Element.row [ Element.spacing 10 ]
-                    [ button ChooseDir
+                    [ button CheckExists
+                    , button ChooseDir
                     , button ChooseToCreateDir
                     , button ReadDir
                     , button RemoveDir
@@ -225,22 +228,22 @@ buttonName : Button -> String
 buttonName btn =
     case btn of
         AskDialog ->
-            "Ask"
+            "Ask Dialog"
 
         ConfirmDialog ->
-            "Confirm"
+            "Confirm Dialog"
 
         MessageDialog ->
-            "Message"
+            "Message Dialog"
 
         OpenDirectoriesDialog ->
-            "Open Directories"
+            "Open Directories Dialog"
 
         OpenFileDialog ->
-            "Open File"
+            "Open File Dialog"
 
         SaveDialog ->
-            "Save"
+            "Save Dialog"
 
         ReadTextFile ->
             "Read Text File"
@@ -252,7 +255,7 @@ buttonName btn =
             "Create Dir"
 
         CheckExists ->
-            "Exists"
+            "Check Exists"
 
         ReadDir ->
             "Read Dir"
@@ -277,6 +280,9 @@ buttonName btn =
 
         TestbaseDirectoryIsTotal ->
             "Temp Test"
+
+        NewCopyFile ->
+            "Copy File"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -475,26 +481,6 @@ toCmd =
     Tauri.toCmd3 InteropError JSReturnError
 
 
-tagErrorsOr : (a -> Msg) -> Result TaskPort.Error a -> Msg
-tagErrorsOr toMsg result =
-    case result of
-        Ok value ->
-            toMsg value
-
-        Err error ->
-            errorTags error
-
-
-errorTags : TaskPort.Error -> Msg
-errorTags err =
-    case err of
-        TaskPort.InteropError interopError ->
-            InteropError interopError
-
-        TaskPort.JSError jSError ->
-            JSReturnError jSError
-
-
 showMaybeList : Maybe (List String) -> String
 showMaybeList m =
     case m of
@@ -514,7 +500,7 @@ press : Model -> Button -> Cmd Msg
 press model btn =
     case btn of
         ConfirmDialog ->
-            Dialog.confirmOptions_WarningDoesNotActuallyGiveCancelOption "Is this really a confirmation question?"
+            Dialog.confirmOptions "Is this really a confirmation question?"
                 { title = Just "Confirm" -- defaults to the app name
                 , dialogType = Just Dialog.Warning -- called type at the typescript end. Defaults to Info
                 }
@@ -560,7 +546,8 @@ press model btn =
                     cmdSucceed NoReadFileSpecified
 
                 Just filePath ->
-                    FS.readTextFile filePath |> toCmd GotFileContents
+                    FS.readTextFile filePath
+                        |> toCmd GotFileContents
 
         CopyFile ->
             case ( model.readFilePath, model.saveFilePath ) of
@@ -570,7 +557,7 @@ press model btn =
                         { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
                         |> toCmd (ConfirmCopy { from = from, to = to })
 
-                ( Nothing, a ) ->
+                ( Nothing, _ ) ->
                     cmdSucceed NoReadFileSpecified
 
                 ( Just _, Nothing ) ->
@@ -582,18 +569,21 @@ press model btn =
         CheckExists ->
             case model.saveFilePath of
                 Just saveFilePath ->
-                    FS.exists saveFilePath |> toCmd (Existence saveFilePath)
+                    FS.exists saveFilePath
+                        |> toCmd (Existence saveFilePath)
 
                 Nothing ->
                     case model.readFilePath of
                         Just filePath ->
-                            FS.exists filePath |> toCmd (Existence filePath)
+                            FS.exists filePath
+                                |> toCmd (Existence filePath)
 
                         Nothing ->
                             cmdSucceed NoReadFileSpecified
 
         ChooseDir ->
-            Dialog.openDirectory { defaultPath = Nothing, recursive = False, title = Nothing } |> toCmd (ignoreNothing Directory)
+            Dialog.openDirectory { defaultPath = Nothing, recursive = False, title = Nothing }
+                |> toCmd (ignoreNothing Directory)
 
         ReadDir ->
             case model.directory of
@@ -633,7 +623,7 @@ press model btn =
                         { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
                         |> toCmd (ConfirmRename { from = from, to = to })
 
-                ( Nothing, a ) ->
+                ( Nothing, _ ) ->
                     cmdSucceed NoReadFileSpecified
 
                 ( Just _, Nothing ) ->
@@ -647,7 +637,8 @@ press model btn =
                 Just contents ->
                     case model.saveFilePath of
                         Just filePath ->
-                            FS.writeTextFile { filePath = filePath, contents = contents } |> toCmd (always <| WroteTextFile filePath)
+                            FS.writeTextFile { filePath = filePath, contents = contents }
+                                |> toCmd (always <| WroteTextFile filePath)
 
                         Nothing ->
                             Dialog.save
@@ -658,7 +649,8 @@ press model btn =
                                 |> toCmd GotSaveFilePath
 
         GetPath baseDir ->
-            Path.get baseDir |> toCmd (GotPath baseDir)
+            Path.get baseDir
+                |> toCmd (GotPath baseDir)
 
         TestbaseDirectoryIsTotal ->
             let
@@ -679,6 +671,25 @@ press model btn =
                             , [ Download, Executable, Home, LocalData, Log, Picture ]
                             , [ Public, Resource, Runtime, Temp, Template, Video ]
                             ]
+
+        NewCopyFile ->
+            Dialog.openFile { defaultPath = Nothing, filters = [], title = Just "File to copy?" }
+                |> Task.andThen
+                    (Maybe.Extra.unwrap (Task.succeed IgnoreTauriFeedback)
+                        -- succeed is a misnomer there
+                        (\source ->
+                            Dialog.save { defaultPath = Nothing, filters = [], title = Just "File to save?" }
+                                |> Task.andThen
+                                    (Maybe.Extra.unwrap (Task.succeed IgnoreTauriFeedback)
+                                        -- succeed is a misnomer there too
+                                        (\target ->
+                                            FS.copyFile { from = source, to = target }
+                                                |> Task.map (always <| Copied { from = source, to = target })
+                                        )
+                                    )
+                        )
+                    )
+                |> toCmd identity
 
 
 cmdSucceed : msg -> Cmd msg

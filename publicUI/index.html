@@ -36,8 +36,8 @@
     TaskPort.register("ask",    		(args) => {return window.__TAURI__.dialog.ask(args)});
     TaskPort.register("askOptions",		(args) => {return window.__TAURI__.dialog.ask(args[0],{ title:args[1].title,type:args[1].type })});
     TaskPort.register("confirm",   		(args) => {return window.__TAURI__.dialog.confirm(args)});
-    TaskPort.register("confirmOptions",	(args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
-    TaskPort.register("message",    	(args) => {return window.__TAURI__.dialog.confirm(args)});
+    TaskPort.register("confirmOptions",	(args) => {return window.__TAURI__.dialog.confirm(args[0],{ title:args[1].title,type:args[1].type })});
+    TaskPort.register("message",    	(args) => {return window.__TAURI__.dialog.message(args)});
     TaskPort.register("messageOptions",	(args) => {return window.__TAURI__.dialog.message(args[0],{ title:args[1].title,type:args[1].type })});
     TaskPort.register("openDlg",   		(args) => {return window.__TAURI__.dialog.open({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
     TaskPort.register("save",    		(args) => {return window.__TAURI__.dialog.save({defaultPath:args.defaultPath,directory:args.directory,filters:args.filters,multiple:args.multiple,recursive:args.recursive,title:args.title})});
