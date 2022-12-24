@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Config exposing (Config, ConfigMsg(..), PersistentConfig)
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -40,6 +41,7 @@ type alias Model =
     , directory : Maybe FilePath
     , textFileContent : Maybe String
     , showPathButtons : Bool
+    , config : PersistentConfig
     }
 
 
@@ -75,6 +77,7 @@ type Button
     | GetPath BaseDir.BaseDir
     | TestbaseDirectoryIsTotal
     | NewCopyFile
+    | ConfigMsg Config.ConfigMsg
 
 
 type Msg
@@ -110,9 +113,10 @@ type Msg
     | ToggleShowPathButtons
     | GotPath BaseDir.BaseDir FilePath
     | GotNumbers (List Int)
+    | GotConfig (Result String Config.PersistentConfig)
 
 
-init : flags -> ( Model, Cmd msg )
+init : flags -> ( Model, Cmd Msg )
 init =
     \_ ->
         ( { answerWas = { text = "", good = Neutral }
@@ -121,8 +125,9 @@ init =
           , directory = Nothing
           , textFileContent = Nothing
           , showPathButtons = False
+          , config = Config.default
           }
-        , Cmd.none
+        , Config.init GotConfig
         )
 
 
@@ -164,6 +169,16 @@ view model =
                 , Element.row [ Element.spacing 10 ]
                     [ greenButton "Get Path..." ToggleShowPathButtons
                     ]
+                , Element.text " "
+                , Element.text "Persistence"
+                , Element.row [ Element.spacing 10 ]
+                    [ button <| ConfigMsg (ChangeCheesePerPageBy 1)
+                    , button <| ConfigMsg (ChangeCheesePerPageBy -1)
+                    ]
+                , Element.row [ Element.spacing 10 ]
+                    [ button <| ConfigMsg (AddCheese <| Config.Hard "Gorgonzola")
+                    , button <| ConfigMsg (RemoveCheese <| Config.Hard "Gorgonzola")
+                    ]
                 ]
             , if not model.showPathButtons then
                 Element.none
@@ -175,7 +190,7 @@ view model =
                             << List.map (button << GetPath)
                         )
                         [ [ App, AppConfig, AppData, AppLocalData, AppLog ]
-                        , [ Audio, Cache, Config, Data, Desktop, Document ]
+                        , [ Audio, Cache, BaseDir.Config, Data, Desktop, Document ]
                         , [ Download, Executable, Home, LocalData, Log, Picture ]
                         , [ Public, Resource, Runtime, Temp, Template, Video ]
                         ]
@@ -283,6 +298,9 @@ buttonName btn =
 
         NewCopyFile ->
             "Copy File"
+
+        ConfigMsg configMsg ->
+            Config.configMsgToString configMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -442,6 +460,20 @@ update msg model =
 
         GotNumbers ints ->
             ( good model <| String.join " " <| List.map String.fromInt ints, Cmd.none )
+
+        GotConfig result ->
+            case result of
+                Ok newConfig ->
+                    ( good { model | config = newConfig } <|
+                        "saved config: \n cheesesPerPage = "
+                            ++ String.fromInt (Config.getCheesesPerPage newConfig)
+                            ++ "\n cheeses = \n   "
+                            ++ String.join "\n   " (List.map Config.cheeseToString <| Config.getCheeses newConfig)
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    ( { model | answerWas = { text = error, good = Bad } }, Cmd.none )
 
 
 showFolderContents : FS.FolderContents -> String
@@ -667,7 +699,7 @@ press model btn =
                     List.map go <|
                         List.concat
                             [ [ App, AppConfig, AppData, AppLocalData, AppLog ]
-                            , [ Audio, Cache, Config, Data, Desktop, Document ]
+                            , [ Audio, Cache, BaseDir.Config, Data, Desktop, Document ]
                             , [ Download, Executable, Home, LocalData, Log, Picture ]
                             , [ Public, Resource, Runtime, Temp, Template, Video ]
                             ]
@@ -690,6 +722,9 @@ press model btn =
                         )
                     )
                 |> toCmd identity
+
+        ConfigMsg configMsg ->
+            Config.updateFromDisk GotConfig configMsg
 
 
 cmdSucceed : msg -> Cmd msg

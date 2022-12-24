@@ -604,7 +604,7 @@ ${variant}`;
   var VERSION = "1.1.1";
   var TARGET_NAME = "My target name";
   var INITIAL_ELM_COMPILED_TIMESTAMP = Number(
-    "1671839139797"
+    "1671920138012"
   );
   var ORIGINAL_COMPILATION_MODE = "standard";
   var ORIGINAL_BROWSER_UI_POSITION = "BottomLeft";
@@ -8487,191 +8487,52 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$GotConfig = function (a) {
+	return {$: 'GotConfig', a: a};
+};
 var $author$project$Main$Neutral = {$: 'Neutral'};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Main$init = function (_v0) {
-	return _Utils_Tuple2(
+var $author$project$Tauri$Persistence$PersistentData = function (a) {
+	return {$: 'PersistentData', a: a};
+};
+var $author$project$Tauri$Persistence$default = function (persist) {
+	return $author$project$Tauri$Persistence$PersistentData(persist._default);
+};
+var $author$project$Config$Hard = function (a) {
+	return {$: 'Hard', a: a};
+};
+var $author$project$Config$Soft = function (a) {
+	return {$: 'Soft', a: a};
+};
+var $miniBill$elm_codec$Codec$Codec = function (a) {
+	return {$: 'Codec', a: a};
+};
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $miniBill$elm_codec$Codec$buildObject = function (_v0) {
+	var om = _v0.a;
+	return $miniBill$elm_codec$Codec$Codec(
 		{
-			answerWas: {good: $author$project$Main$Neutral, text: ''},
-			directory: $elm$core$Maybe$Nothing,
-			readFilePath: $elm$core$Maybe$Nothing,
-			saveFilePath: $elm$core$Maybe$Nothing,
-			showPathButtons: false,
-			textFileContent: $elm$core$Maybe$Nothing
-		},
-		$elm$core$Platform$Cmd$none);
+			decoder: om.decoder,
+			encoder: function (v) {
+				return $elm$json$Json$Encode$object(
+					om.encoder(v));
+			}
+		});
 };
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$Bad = {$: 'Bad'};
-var $author$project$Main$Broken = {$: 'Broken'};
-var $author$project$Main$Copied = function (a) {
-	return {$: 'Copied', a: a};
-};
-var $author$project$Main$Created = function (a) {
-	return {$: 'Created', a: a};
-};
-var $author$project$Main$Directory = function (a) {
-	return {$: 'Directory', a: a};
-};
-var $author$project$Main$Good = {$: 'Good'};
-var $author$project$Main$GotFilePath = function (a) {
-	return {$: 'GotFilePath', a: a};
-};
-var $author$project$Main$GotSaveFilePath = function (a) {
-	return {$: 'GotSaveFilePath', a: a};
-};
-var $lobanov$elm_taskport$TaskPort$JSError = function (a) {
-	return {$: 'JSError', a: a};
-};
-var $author$project$Main$Removed = function (a) {
-	return {$: 'Removed', a: a};
-};
-var $author$project$Main$Renamed = function (a) {
-	return {$: 'Renamed', a: a};
-};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $author$project$Tauri$BaseDir$toString = function (b) {
-	switch (b.$) {
-		case 'App':
-			return 'App';
-		case 'AppConfig':
-			return 'AppConfig';
-		case 'AppData':
-			return 'AppData';
-		case 'AppLocalData':
-			return 'AppLocalData';
-		case 'AppLog':
-			return 'AppLog';
-		case 'Audio':
-			return 'Audio';
-		case 'Cache':
-			return 'Cache';
-		case 'Config':
-			return 'Config';
-		case 'Data':
-			return 'Data';
-		case 'Desktop':
-			return 'Desktop';
-		case 'Document':
-			return 'Document';
-		case 'Download':
-			return 'Download';
-		case 'Executable':
-			return 'Executable';
-		case 'Home':
-			return 'Home';
-		case 'LocalData':
-			return 'LocalData';
-		case 'Log':
-			return 'Log';
-		case 'Picture':
-			return 'Picture';
-		case 'Public':
-			return 'Public';
-		case 'Resource':
-			return 'Resource';
-		case 'Runtime':
-			return 'Runtime';
-		case 'Temp':
-			return 'Temp';
-		case 'Template':
-			return 'Template';
-		default:
-			return 'Video';
-	}
-};
-var $author$project$Main$buttonName = function (btn) {
-	switch (btn.$) {
-		case 'AskDialog':
-			return 'Ask Dialog';
-		case 'ConfirmDialog':
-			return 'Confirm Dialog';
-		case 'MessageDialog':
-			return 'Message Dialog';
-		case 'OpenDirectoriesDialog':
-			return 'Open Directories Dialog';
-		case 'OpenFileDialog':
-			return 'Open File Dialog';
-		case 'SaveDialog':
-			return 'Save Dialog';
-		case 'ReadTextFile':
-			return 'Read Text File';
-		case 'CopyFile':
-			return 'Copy File';
-		case 'ChooseToCreateDir':
-			return 'Create Dir';
-		case 'CheckExists':
-			return 'Check Exists';
-		case 'ReadDir':
-			return 'Read Dir';
-		case 'ChooseDir':
-			return 'Choose Dir';
-		case 'RemoveDir':
-			return 'Remove Dir';
-		case 'RemoveFile':
-			return 'Remove File';
-		case 'RenameFile':
-			return 'Rename File';
-		case 'WriteTextFile':
-			return 'Write File';
-		case 'GetPath':
-			var baseDir = btn.a;
-			return $author$project$Tauri$BaseDir$toString(baseDir);
-		case 'TestbaseDirectoryIsTotal':
-			return 'Temp Test';
-		default:
-			return 'Copy File';
-	}
-};
-var $lobanov$elm_taskport$TaskPort$DefaultNS = function (a) {
-	return {$: 'DefaultNS', a: a};
-};
-var $lobanov$elm_taskport$TaskPort$moduleVersion = '2.0.1';
-var $lobanov$elm_taskport$TaskPort$buildCallUrl = function (_function) {
-	if (_function.$ === 'DefaultNS') {
-		var name = _function.a;
-		return 'elmtaskport:///' + (name + ('?v=' + $lobanov$elm_taskport$TaskPort$moduleVersion));
-	} else {
-		var ns = _function.a;
-		var nsVersion = _function.b;
-		var name = _function.c;
-		return 'elmtaskport://' + (ns + ('/' + (name + ('?v=' + ($lobanov$elm_taskport$TaskPort$moduleVersion + ('&nsv=' + nsVersion))))));
-	}
-};
-var $elm$http$Http$BadStatus_ = F2(
-	function (a, b) {
-		return {$: 'BadStatus_', a: a, b: b};
-	});
-var $elm$http$Http$BadUrl_ = function (a) {
-	return {$: 'BadUrl_', a: a};
-};
-var $elm$http$Http$GoodStatus_ = F2(
-	function (a, b) {
-		return {$: 'GoodStatus_', a: a, b: b};
-	});
-var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
-var $elm$http$Http$Receiving = function (a) {
-	return {$: 'Receiving', a: a};
-};
-var $elm$http$Http$Sending = function (a) {
-	return {$: 'Sending', a: a};
-};
-var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$core$Maybe$isJust = function (maybe) {
-	if (maybe.$ === 'Just') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
@@ -8704,6 +8565,53 @@ var $elm$core$Dict$get = F2(
 			}
 		}
 	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $miniBill$elm_codec$Codec$buildCustom = function (_v0) {
+	var am = _v0.a;
+	return $miniBill$elm_codec$Codec$Codec(
+		{
+			decoder: A2(
+				$elm$json$Json$Decode$andThen,
+				function (tag) {
+					var _v1 = A2($elm$core$Dict$get, tag, am.decoder);
+					if (_v1.$ === 'Nothing') {
+						return $elm$json$Json$Decode$fail('tag ' + (tag + 'did not match'));
+					} else {
+						var dec = _v1.a;
+						return A2($elm$json$Json$Decode$field, 'args', dec);
+					}
+				},
+				A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string)),
+			encoder: function (v) {
+				return am.match(v);
+			}
+		});
+};
+var $miniBill$elm_codec$Codec$CustomCodec = function (a) {
+	return {$: 'CustomCodec', a: a};
+};
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $miniBill$elm_codec$Codec$custom = function (match) {
+	return $miniBill$elm_codec$Codec$CustomCodec(
+		{decoder: $elm$core$Dict$empty, match: match});
+};
+var $miniBill$elm_codec$Codec$build = F2(
+	function (encoder_, decoder_) {
+		return $miniBill$elm_codec$Codec$Codec(
+			{decoder: decoder_, encoder: encoder_});
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $miniBill$elm_codec$Codec$string = A2($miniBill$elm_codec$Codec$build, $elm$json$Json$Encode$string, $elm$json$Json$Decode$string);
+var $miniBill$elm_codec$Codec$decoder = function (_v0) {
+	var m = _v0.a;
+	return m.decoder;
+};
+var $miniBill$elm_codec$Codec$encoder = function (_v0) {
+	var m = _v0.a;
+	return m.encoder;
+};
+var $elm$json$Json$Decode$index = _Json_decodeIndex;
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
@@ -8812,6 +8720,259 @@ var $elm$core$Dict$insert = F3(
 			return x;
 		}
 	});
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $miniBill$elm_codec$Codec$variant = F4(
+	function (name, matchPiece, decoderPiece, _v0) {
+		var am = _v0.a;
+		var enc = function (v) {
+			return $elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'tag',
+						$elm$json$Json$Encode$string(name)),
+						_Utils_Tuple2(
+						'args',
+						A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, v))
+					]));
+		};
+		return $miniBill$elm_codec$Codec$CustomCodec(
+			{
+				decoder: A3($elm$core$Dict$insert, name, decoderPiece, am.decoder),
+				match: am.match(
+					matchPiece(enc))
+			});
+	});
+var $miniBill$elm_codec$Codec$variant1 = F3(
+	function (name, ctor, m1) {
+		return A3(
+			$miniBill$elm_codec$Codec$variant,
+			name,
+			F2(
+				function (c, v) {
+					return c(
+						_List_fromArray(
+							[
+								A2($miniBill$elm_codec$Codec$encoder, m1, v)
+							]));
+				}),
+			A2(
+				$elm$json$Json$Decode$map,
+				ctor,
+				A2(
+					$elm$json$Json$Decode$index,
+					0,
+					$miniBill$elm_codec$Codec$decoder(m1))));
+	});
+var $author$project$Config$cheeseCodec = $miniBill$elm_codec$Codec$buildCustom(
+	A4(
+		$miniBill$elm_codec$Codec$variant1,
+		'Soft',
+		$author$project$Config$Soft,
+		$miniBill$elm_codec$Codec$string,
+		A4(
+			$miniBill$elm_codec$Codec$variant1,
+			'Hard',
+			$author$project$Config$Hard,
+			$miniBill$elm_codec$Codec$string,
+			$miniBill$elm_codec$Codec$custom(
+				F3(
+					function (hard, soft, value) {
+						if (value.$ === 'Hard') {
+							var c = value.a;
+							return hard(c);
+						} else {
+							var c = value.a;
+							return soft(c);
+						}
+					})))));
+var $miniBill$elm_codec$Codec$ObjectCodec = function (a) {
+	return {$: 'ObjectCodec', a: a};
+};
+var $miniBill$elm_codec$Codec$field = F4(
+	function (name, getter, codec, _v0) {
+		var ocodec = _v0.a;
+		return $miniBill$elm_codec$Codec$ObjectCodec(
+			{
+				decoder: A3(
+					$elm$json$Json$Decode$map2,
+					F2(
+						function (f, x) {
+							return f(x);
+						}),
+					ocodec.decoder,
+					A2(
+						$elm$json$Json$Decode$field,
+						name,
+						$miniBill$elm_codec$Codec$decoder(codec))),
+				encoder: function (v) {
+					return A2(
+						$elm$core$List$cons,
+						_Utils_Tuple2(
+							name,
+							A2(
+								$miniBill$elm_codec$Codec$encoder,
+								codec,
+								getter(v))),
+						ocodec.encoder(v));
+				}
+			});
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $miniBill$elm_codec$Codec$int = A2($miniBill$elm_codec$Codec$build, $elm$json$Json$Encode$int, $elm$json$Json$Decode$int);
+var $miniBill$elm_codec$Codec$composite = F3(
+	function (enc, dec, _v0) {
+		var codec = _v0.a;
+		return $miniBill$elm_codec$Codec$Codec(
+			{
+				decoder: dec(codec.decoder),
+				encoder: enc(codec.encoder)
+			});
+	});
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $miniBill$elm_codec$Codec$list = A2($miniBill$elm_codec$Codec$composite, $elm$json$Json$Encode$list, $elm$json$Json$Decode$list);
+var $miniBill$elm_codec$Codec$object = function (ctor) {
+	return $miniBill$elm_codec$Codec$ObjectCodec(
+		{
+			decoder: $elm$json$Json$Decode$succeed(ctor),
+			encoder: function (_v0) {
+				return _List_Nil;
+			}
+		});
+};
+var $author$project$Config$configCodec = $miniBill$elm_codec$Codec$buildObject(
+	A4(
+		$miniBill$elm_codec$Codec$field,
+		'cheeses',
+		function ($) {
+			return $.cheeses;
+		},
+		$miniBill$elm_codec$Codec$list($author$project$Config$cheeseCodec),
+		A4(
+			$miniBill$elm_codec$Codec$field,
+			'cheesesPerPage',
+			function ($) {
+				return $.cheesesPerPage;
+			},
+			$miniBill$elm_codec$Codec$int,
+			$miniBill$elm_codec$Codec$object(
+				F2(
+					function (cheesesPerPage, cheeses) {
+						return {cheeses: cheeses, cheesesPerPage: cheesesPerPage};
+					})))));
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Config$updateConfig = F2(
+	function (msg, config) {
+		switch (msg.$) {
+			case 'ChangeCheesePerPageBy':
+				var _int = msg.a;
+				return _Utils_update(
+					config,
+					{cheesesPerPage: config.cheesesPerPage + _int});
+			case 'AddCheese':
+				var cheese = msg.a;
+				return _Utils_update(
+					config,
+					{
+						cheeses: A2($elm$core$List$cons, cheese, config.cheeses)
+					});
+			default:
+				var cheese = msg.a;
+				return _Utils_update(
+					config,
+					{
+						cheeses: A2(
+							$elm$core$List$filter,
+							$elm$core$Basics$neq(cheese),
+							config.cheeses)
+					});
+		}
+	});
+var $author$project$Config$persist = {
+	_default: {
+		cheeses: _List_fromArray(
+			[
+				$author$project$Config$Hard('Cheddar'),
+				$author$project$Config$Hard('Red Leicester'),
+				$author$project$Config$Hard('Double Gloucester'),
+				$author$project$Config$Hard('Lancashire'),
+				$author$project$Config$Hard('Emmental'),
+				$author$project$Config$Hard('Gruyere'),
+				$author$project$Config$Soft('Brie'),
+				$author$project$Config$Soft('Camembert'),
+				$author$project$Config$Soft('Aiket')
+			]),
+		cheesesPerPage: 4
+	},
+	filename: 'config.json',
+	jsonCodec: $author$project$Config$configCodec,
+	update: $author$project$Config$updateConfig
+};
+var $author$project$Config$default = $author$project$Tauri$Persistence$default($author$project$Config$persist);
+var $author$project$Tauri$BaseDir$AppConfig = {$: 'AppConfig'};
+var $author$project$Tauri$Persistence$appConfig = $author$project$Tauri$BaseDir$AppConfig;
+var $lobanov$elm_taskport$TaskPort$DefaultNS = function (a) {
+	return {$: 'DefaultNS', a: a};
+};
+var $lobanov$elm_taskport$TaskPort$moduleVersion = '2.0.1';
+var $lobanov$elm_taskport$TaskPort$buildCallUrl = function (_function) {
+	if (_function.$ === 'DefaultNS') {
+		var name = _function.a;
+		return 'elmtaskport:///' + (name + ('?v=' + $lobanov$elm_taskport$TaskPort$moduleVersion));
+	} else {
+		var ns = _function.a;
+		var nsVersion = _function.b;
+		var name = _function.c;
+		return 'elmtaskport://' + (ns + ('/' + (name + ('?v=' + ($lobanov$elm_taskport$TaskPort$moduleVersion + ('&nsv=' + nsVersion))))));
+	}
+};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
 var $elm$core$Dict$getMin = function (dict) {
 	getMin:
 	while (true) {
@@ -9198,6 +9359,9 @@ var $lobanov$elm_taskport$TaskPort$CannotDecodeValue = F2(
 var $lobanov$elm_taskport$TaskPort$InteropError = function (a) {
 	return {$: 'InteropError', a: a};
 };
+var $lobanov$elm_taskport$TaskPort$JSError = function (a) {
+	return {$: 'JSError', a: a};
+};
 var $lobanov$elm_taskport$TaskPort$NotCompatible = function (a) {
 	return {$: 'NotCompatible', a: a};
 };
@@ -9220,19 +9384,15 @@ var $lobanov$elm_taskport$TaskPort$JSErrorRecord = F4(
 	function (name, message, stackLines, cause) {
 		return {cause: cause, message: message, name: name, stackLines: stackLines};
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$lazy = function (thunk) {
 	return A2(
 		$elm$json$Json$Decode$andThen,
 		thunk,
 		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
 };
-var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$map4 = _Json_map4;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 function $lobanov$elm_taskport$TaskPort$cyclic$jsErrorDecoder() {
 	return $elm$json$Json$Decode$oneOf(
@@ -9395,42 +9555,100 @@ var $lobanov$elm_taskport$TaskPort$call = F2(
 			},
 			args);
 	});
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Tauri$FS$copyFile = function (fromTo) {
-	return A2(
-		$lobanov$elm_taskport$TaskPort$call,
-		{
-			argsEncoder: function (args) {
-				return A2(
-					$elm$json$Json$Encode$list,
-					$elm$json$Json$Encode$string,
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $author$project$Tauri$BaseDir$toString = function (b) {
+	switch (b.$) {
+		case 'App':
+			return 'App';
+		case 'AppConfig':
+			return 'AppConfig';
+		case 'AppData':
+			return 'AppData';
+		case 'AppLocalData':
+			return 'AppLocalData';
+		case 'AppLog':
+			return 'AppLog';
+		case 'Audio':
+			return 'Audio';
+		case 'Cache':
+			return 'Cache';
+		case 'Config':
+			return 'Config';
+		case 'Data':
+			return 'Data';
+		case 'Desktop':
+			return 'Desktop';
+		case 'Document':
+			return 'Document';
+		case 'Download':
+			return 'Download';
+		case 'Executable':
+			return 'Executable';
+		case 'Home':
+			return 'Home';
+		case 'LocalData':
+			return 'LocalData';
+		case 'Log':
+			return 'Log';
+		case 'Picture':
+			return 'Picture';
+		case 'Public':
+			return 'Public';
+		case 'Resource':
+			return 'Resource';
+		case 'Runtime':
+			return 'Runtime';
+		case 'Temp':
+			return 'Temp';
+		case 'Template':
+			return 'Template';
+		default:
+			return 'Video';
+	}
+};
+var $author$project$Tauri$BaseDir$encodeBaseDirectory = function (b) {
+	return $elm$json$Json$Encode$string(
+		$author$project$Tauri$BaseDir$toString(b));
+};
+var $author$project$Tauri$FSInBaseDir$encodeBaseDir = function (baseDir) {
+	return _Utils_Tuple2(
+		'dir',
+		$author$project$Tauri$BaseDir$encodeBaseDirectory(baseDir));
+};
+var $author$project$Tauri$FSInBaseDir$encodeFsDirOptions = F3(
+	function (baseDir, _v0, filePath) {
+		var recursive = _v0.recursive;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(filePath),
+					$elm$json$Json$Encode$object(
 					_List_fromArray(
-						[args.from, args.to]));
+						[
+							$author$project$Tauri$FSInBaseDir$encodeBaseDir(baseDir),
+							_Utils_Tuple2(
+							'recursive',
+							$elm$json$Json$Encode$bool(recursive))
+						]))
+				]));
+	});
+var $author$project$Tauri$FSInBaseDir$createDir = F3(
+	function (baseDir, _v0, nameOfDirectory) {
+		var createParentsIfAbsent = _v0.createParentsIfAbsent;
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: A2(
+					$author$project$Tauri$FSInBaseDir$encodeFsDirOptions,
+					baseDir,
+					{recursive: createParentsIfAbsent}),
+				_function: 'createDirOptions',
+				valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
 			},
-			_function: 'copyFile',
-			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
-		},
-		fromTo);
-};
-var $author$project$Tauri$FS$createDir = function (nameOfDirectory) {
-	return A2(
-		$lobanov$elm_taskport$TaskPort$call,
-		{
-			argsEncoder: $elm$json$Json$Encode$string,
-			_function: 'createDir',
-			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
-		},
-		nameOfDirectory);
-};
+			nameOfDirectory);
+	});
 var $lobanov$elm_taskport$TaskPort$interopErrorToString = function (error) {
 	switch (error.$) {
 		case 'NotInstalled':
@@ -9496,6 +9714,369 @@ var $lobanov$elm_taskport$TaskPort$errorToString = function (error) {
 		return $lobanov$elm_taskport$TaskPort$jsErrorToString(e);
 	}
 };
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Tauri$FSInBaseDir$encodeBaseDirAndString = F2(
+	function (baseDir, string) {
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(string),
+					$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							$author$project$Tauri$FSInBaseDir$encodeBaseDir(baseDir)
+						]))
+				]));
+	});
+var $author$project$Tauri$FSInBaseDir$exists = F2(
+	function (baseDir, filePath) {
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: $author$project$Tauri$FSInBaseDir$encodeBaseDirAndString(baseDir),
+				_function: 'existsOptions',
+				valueDecoder: $elm$json$Json$Decode$bool
+			},
+			filePath);
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$mapError = F2(
+	function (convert, task) {
+		return A2(
+			$elm$core$Task$onError,
+			A2($elm$core$Basics$composeL, $elm$core$Task$fail, convert),
+			task);
+	});
+var $author$project$Tauri$Persistence$ensureAppConfigDirExists = A2(
+	$elm$core$Task$mapError,
+	$lobanov$elm_taskport$TaskPort$errorToString,
+	A2(
+		$elm$core$Task$andThen,
+		function (existence) {
+			return existence ? $elm$core$Task$succeed(_Utils_Tuple0) : A3(
+				$author$project$Tauri$FSInBaseDir$createDir,
+				$author$project$Tauri$Persistence$appConfig,
+				{createParentsIfAbsent: true},
+				'');
+		},
+		A2($author$project$Tauri$FSInBaseDir$exists, $author$project$Tauri$Persistence$appConfig, '')));
+var $miniBill$elm_codec$Codec$decodeString = function (codec) {
+	return $elm$json$Json$Decode$decodeString(
+		$miniBill$elm_codec$Codec$decoder(codec));
+};
+var $author$project$Tauri$FSInBaseDir$readTextFile = F2(
+	function (baseDir, filePath) {
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: $author$project$Tauri$FSInBaseDir$encodeBaseDirAndString(baseDir),
+				_function: 'readTextFileOptions',
+				valueDecoder: A2(
+					$elm$json$Json$Decode$map,
+					function (content) {
+						return {contents: content, filePath: filePath};
+					},
+					$elm$json$Json$Decode$string)
+			},
+			filePath);
+	});
+var $author$project$Tauri$Persistence$read = function (persist) {
+	return A2(
+		$elm$core$Task$andThen,
+		function (fileContents) {
+			var _v0 = A2($miniBill$elm_codec$Codec$decodeString, persist.jsonCodec, fileContents.contents);
+			if (_v0.$ === 'Ok') {
+				var value = _v0.a;
+				return $elm$core$Task$succeed(
+					$author$project$Tauri$Persistence$PersistentData(value));
+			} else {
+				var decodeErr = _v0.a;
+				return $elm$core$Task$fail(
+					'Persistence.init error: ' + $elm$json$Json$Decode$errorToString(decodeErr));
+			}
+		},
+		A2(
+			$elm$core$Task$mapError,
+			function (e) {
+				return 'Persistence.init error: ' + $lobanov$elm_taskport$TaskPort$errorToString(e);
+			},
+			A2($author$project$Tauri$FSInBaseDir$readTextFile, $author$project$Tauri$Persistence$appConfig, persist.filename)));
+};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $miniBill$elm_codec$Codec$encodeToString = F2(
+	function (indentation, codec) {
+		return A2(
+			$elm$core$Basics$composeR,
+			$miniBill$elm_codec$Codec$encoder(codec),
+			$elm$json$Json$Encode$encode(indentation));
+	});
+var $author$project$Tauri$FSInBaseDir$encodeBaseDirAndRecord2 = F4(
+	function (baseDir, field1, field2, r) {
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(
+					field1(r)),
+					$elm$json$Json$Encode$string(
+					field2(r)),
+					$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							$author$project$Tauri$FSInBaseDir$encodeBaseDir(baseDir)
+						]))
+				]));
+	});
+var $author$project$Tauri$FSInBaseDir$writeTextFile = F2(
+	function (baseDir, fileContents) {
+		return A2(
+			$lobanov$elm_taskport$TaskPort$call,
+			{
+				argsEncoder: A3(
+					$author$project$Tauri$FSInBaseDir$encodeBaseDirAndRecord2,
+					baseDir,
+					function ($) {
+						return $.filePath;
+					},
+					function ($) {
+						return $.contents;
+					}),
+				_function: 'writeTextFileOptions',
+				valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+			},
+			fileContents);
+	});
+var $author$project$Tauri$Persistence$write = F2(
+	function (persist, pData) {
+		return A2(
+			$elm$core$Task$map,
+			function (_v0) {
+				return $author$project$Tauri$Persistence$PersistentData(pData);
+			},
+			A2(
+				$elm$core$Task$mapError,
+				function (e) {
+					return 'Persistence.saveDefault error: ' + $lobanov$elm_taskport$TaskPort$errorToString(e);
+				},
+				A2(
+					$author$project$Tauri$FSInBaseDir$writeTextFile,
+					$author$project$Tauri$Persistence$appConfig,
+					{
+						contents: A3($miniBill$elm_codec$Codec$encodeToString, 2, persist.jsonCodec, pData),
+						filePath: persist.filename
+					})));
+	});
+var $author$project$Tauri$Persistence$writeDefault = function (persist) {
+	return A2($author$project$Tauri$Persistence$write, persist, persist._default);
+};
+var $author$project$Tauri$Persistence$init = function (persist) {
+	return A2(
+		$elm$core$Task$andThen,
+		function (exists) {
+			return exists ? $author$project$Tauri$Persistence$read(persist) : A2(
+				$elm$core$Task$andThen,
+				function (_v0) {
+					return $author$project$Tauri$Persistence$writeDefault(persist);
+				},
+				$author$project$Tauri$Persistence$ensureAppConfigDirExists);
+		},
+		A2(
+			$elm$core$Task$mapError,
+			function (e) {
+				return 'Persistence.init error: ' + $lobanov$elm_taskport$TaskPort$errorToString(e);
+			},
+			A2($author$project$Tauri$FSInBaseDir$exists, $author$project$Tauri$Persistence$appConfig, persist.filename)));
+};
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			$elm$core$Task$Perform(
+				A2(
+					$elm$core$Task$onError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Err),
+					A2(
+						$elm$core$Task$andThen,
+						A2(
+							$elm$core$Basics$composeL,
+							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+							$elm$core$Result$Ok),
+						task))));
+	});
+var $author$project$Tauri$Persistence$toCmd1 = F2(
+	function (toMsg, task) {
+		return A2($elm$core$Task$attempt, toMsg, task);
+	});
+var $author$project$Config$init = function (toMsg) {
+	return A2(
+		$author$project$Tauri$Persistence$toCmd1,
+		toMsg,
+		$author$project$Tauri$Persistence$init($author$project$Config$persist));
+};
+var $author$project$Main$init = function (_v0) {
+	return _Utils_Tuple2(
+		{
+			answerWas: {good: $author$project$Main$Neutral, text: ''},
+			config: $author$project$Config$default,
+			directory: $elm$core$Maybe$Nothing,
+			readFilePath: $elm$core$Maybe$Nothing,
+			saveFilePath: $elm$core$Maybe$Nothing,
+			showPathButtons: false,
+			textFileContent: $elm$core$Maybe$Nothing
+		},
+		$author$project$Config$init($author$project$Main$GotConfig));
+};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$Bad = {$: 'Bad'};
+var $author$project$Main$Broken = {$: 'Broken'};
+var $author$project$Main$Copied = function (a) {
+	return {$: 'Copied', a: a};
+};
+var $author$project$Main$Created = function (a) {
+	return {$: 'Created', a: a};
+};
+var $author$project$Main$Directory = function (a) {
+	return {$: 'Directory', a: a};
+};
+var $author$project$Main$Good = {$: 'Good'};
+var $author$project$Main$GotFilePath = function (a) {
+	return {$: 'GotFilePath', a: a};
+};
+var $author$project$Main$GotSaveFilePath = function (a) {
+	return {$: 'GotSaveFilePath', a: a};
+};
+var $author$project$Main$Removed = function (a) {
+	return {$: 'Removed', a: a};
+};
+var $author$project$Main$Renamed = function (a) {
+	return {$: 'Renamed', a: a};
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $author$project$Config$cheeseToString = function (c) {
+	if (c.$ === 'Hard') {
+		var string = c.a;
+		return 'Hard ' + string;
+	} else {
+		var string = c.a;
+		return 'Soft ' + string;
+	}
+};
+var $author$project$Config$configMsgToString = function (cmsg) {
+	switch (cmsg.$) {
+		case 'ChangeCheesePerPageBy':
+			var _int = cmsg.a;
+			return 'Change Cheese per page by ' + $elm$core$String$fromInt(_int);
+		case 'AddCheese':
+			var cheese = cmsg.a;
+			return 'Add cheese: ' + $author$project$Config$cheeseToString(cheese);
+		default:
+			var cheese = cmsg.a;
+			return 'Remove cheese: ' + $author$project$Config$cheeseToString(cheese);
+	}
+};
+var $author$project$Main$buttonName = function (btn) {
+	switch (btn.$) {
+		case 'AskDialog':
+			return 'Ask Dialog';
+		case 'ConfirmDialog':
+			return 'Confirm Dialog';
+		case 'MessageDialog':
+			return 'Message Dialog';
+		case 'OpenDirectoriesDialog':
+			return 'Open Directories Dialog';
+		case 'OpenFileDialog':
+			return 'Open File Dialog';
+		case 'SaveDialog':
+			return 'Save Dialog';
+		case 'ReadTextFile':
+			return 'Read Text File';
+		case 'CopyFile':
+			return 'Copy File';
+		case 'ChooseToCreateDir':
+			return 'Create Dir';
+		case 'CheckExists':
+			return 'Check Exists';
+		case 'ReadDir':
+			return 'Read Dir';
+		case 'ChooseDir':
+			return 'Choose Dir';
+		case 'RemoveDir':
+			return 'Remove Dir';
+		case 'RemoveFile':
+			return 'Remove File';
+		case 'RenameFile':
+			return 'Rename File';
+		case 'WriteTextFile':
+			return 'Write File';
+		case 'GetPath':
+			var baseDir = btn.a;
+			return $author$project$Tauri$BaseDir$toString(baseDir);
+		case 'TestbaseDirectoryIsTotal':
+			return 'Temp Test';
+		case 'NewCopyFile':
+			return 'Copy File';
+		default:
+			var configMsg = btn.a;
+			return $author$project$Config$configMsgToString(configMsg);
+	}
+};
+var $author$project$Tauri$FS$copyFile = function (fromTo) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: function (args) {
+				return A2(
+					$elm$json$Json$Encode$list,
+					$elm$json$Json$Encode$string,
+					_List_fromArray(
+						[args.from, args.to]));
+			},
+			_function: 'copyFile',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		fromTo);
+};
+var $author$project$Tauri$FS$createDir = function (nameOfDirectory) {
+	return A2(
+		$lobanov$elm_taskport$TaskPort$call,
+		{
+			argsEncoder: $elm$json$Json$Encode$string,
+			_function: 'createDir',
+			valueDecoder: $elm$json$Json$Decode$null(_Utils_Tuple0)
+		},
+		nameOfDirectory);
+};
+var $author$project$Tauri$Persistence$get = F2(
+	function (field, _v0) {
+		var pData = _v0.a;
+		return field(pData);
+	});
+var $author$project$Config$getCheeses = $author$project$Tauri$Persistence$get(
+	function ($) {
+		return $.cheeses;
+	});
+var $author$project$Config$getCheesesPerPage = $author$project$Tauri$Persistence$get(
+	function ($) {
+		return $.cheesesPerPage;
+	});
 var $author$project$Main$good = F2(
 	function (model, text) {
 		return _Utils_update(
@@ -9518,8 +10099,9 @@ var $author$project$Main$ignoreNothing = F2(
 			return $author$project$Main$IgnoreTauriFeedback;
 		}
 	});
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$not = _Basics_not;
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
 	function (encoder, maybe) {
@@ -9530,19 +10112,6 @@ var $author$project$Tauri$Dialog$encodeNothingAsNull = F2(
 			return encoder(a);
 		}
 	});
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
 var $author$project$Tauri$Dialog$encodeDirectoryDialogOptions = F2(
 	function (isMultiSelect, options) {
 		return $elm$json$Json$Encode$object(
@@ -9633,7 +10202,6 @@ var $author$project$Tauri$Dialog$openFile = function (options) {
 		options);
 };
 var $author$project$Tauri$BaseDir$App = {$: 'App'};
-var $author$project$Tauri$BaseDir$AppConfig = {$: 'AppConfig'};
 var $author$project$Tauri$BaseDir$AppData = {$: 'AppData'};
 var $author$project$Tauri$BaseDir$AppLocalData = {$: 'AppLocalData'};
 var $author$project$Tauri$BaseDir$AppLog = {$: 'AppLog'};
@@ -9708,7 +10276,6 @@ var $author$project$Main$WroteTextFile = function (a) {
 var $author$project$Main$YesNo = function (a) {
 	return {$: 'YesNo', a: a};
 };
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Tauri$Dialog$encodeDialogType = function (dialogType) {
 	return $elm$json$Json$Encode$string(
 		function () {
@@ -9793,10 +10360,6 @@ var $author$project$Tauri$Dialog$confirmOptions = F2(
 			},
 			question);
 	});
-var $author$project$Tauri$BaseDir$encodeBaseDirectory = function (b) {
-	return $elm$json$Json$Encode$string(
-		$author$project$Tauri$BaseDir$toString(b));
-};
 var $author$project$Tauri$FS$exists = function (filePath) {
 	return A2(
 		$lobanov$elm_taskport$TaskPort$call,
@@ -9830,7 +10393,6 @@ var $author$project$Tauri$Path$get = function (baseDir) {
 		},
 		_Utils_Tuple0);
 };
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Tauri$Dialog$message = function (question) {
 	return A2(
 		$lobanov$elm_taskport$TaskPort$call,
@@ -9894,30 +10456,6 @@ try {
 	};
 } catch ($) {
 	throw 'Some top-level definitions from `Tauri.FS` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeFileEntry\n  │     ↓\n  │    decodeChildren\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
-var $author$project$Tauri$FSInBaseDir$encodeBaseDir = function (baseDir) {
-	return _Utils_Tuple2(
-		'dir',
-		$author$project$Tauri$BaseDir$encodeBaseDirectory(baseDir));
-};
-var $author$project$Tauri$FSInBaseDir$encodeFsDirOptions = F3(
-	function (baseDir, _v0, filePath) {
-		var recursive = _v0.recursive;
-		return A2(
-			$elm$json$Json$Encode$list,
-			$elm$core$Basics$identity,
-			_List_fromArray(
-				[
-					$elm$json$Json$Encode$string(filePath),
-					$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							$author$project$Tauri$FSInBaseDir$encodeBaseDir(baseDir),
-							_Utils_Tuple2(
-							'recursive',
-							$elm$json$Json$Encode$bool(recursive))
-						]))
-				]));
-	});
 var $author$project$Tauri$FSInBaseDir$readDir = F3(
 	function (baseDir, _v0, filePath) {
 		var recursive = _v0.recursive;
@@ -9968,30 +10506,6 @@ var $author$project$Main$InteropError = function (a) {
 var $author$project$Main$JSReturnError = function (a) {
 	return {$: 'JSReturnError', a: a};
 };
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$Task$onError = _Scheduler_onError;
-var $elm$core$Task$attempt = F2(
-	function (resultToMessage, task) {
-		return $elm$core$Task$command(
-			$elm$core$Task$Perform(
-				A2(
-					$elm$core$Task$onError,
-					A2(
-						$elm$core$Basics$composeL,
-						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-						$elm$core$Result$Err),
-					A2(
-						$elm$core$Task$andThen,
-						A2(
-							$elm$core$Basics$composeL,
-							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-							$elm$core$Result$Ok),
-						task))));
-	});
 var $author$project$Tauri$toCmd3 = F4(
 	function (tagInteropError, tagJSError, toMsg, task) {
 		var toMessage = function (result) {
@@ -10020,6 +10534,28 @@ var $elm_community$maybe_extra$Maybe$Extra$unwrap = F3(
 			var a = m.a;
 			return f(a);
 		}
+	});
+var $author$project$Tauri$Persistence$updateFromCurrentValue = F3(
+	function (persist, msg, _v0) {
+		var data = _v0.a;
+		return A2(
+			$author$project$Tauri$Persistence$write,
+			persist,
+			A2(persist.update, msg, data));
+	});
+var $author$project$Tauri$Persistence$updateFromDisk = F2(
+	function (persist, msg) {
+		return A2(
+			$elm$core$Task$andThen,
+			A2($author$project$Tauri$Persistence$updateFromCurrentValue, persist, msg),
+			$author$project$Tauri$Persistence$read(persist));
+	});
+var $author$project$Config$updateFromDisk = F2(
+	function (toMsg, msg) {
+		return A2(
+			$author$project$Tauri$Persistence$toCmd1,
+			toMsg,
+			A2($author$project$Tauri$Persistence$updateFromDisk, $author$project$Config$persist, msg));
 	});
 var $author$project$Tauri$FS$encodeFileContents = function (fileContents) {
 	return A2(
@@ -10321,7 +10857,7 @@ var $author$project$Main$press = F2(
 										_List_fromArray(
 										[$author$project$Tauri$BaseDir$Public, $author$project$Tauri$BaseDir$Resource, $author$project$Tauri$BaseDir$Runtime, $author$project$Tauri$BaseDir$Temp, $author$project$Tauri$BaseDir$Template, $author$project$Tauri$BaseDir$Video])
 									])))));
-			default:
+			case 'NewCopyFile':
 				return A2(
 					$author$project$Main$toCmd,
 					$elm$core$Basics$identity,
@@ -10358,6 +10894,9 @@ var $author$project$Main$press = F2(
 								filters: _List_Nil,
 								title: $elm$core$Maybe$Just('File to copy?')
 							})));
+			default:
+				var configMsg = btn.a;
+				return A2($author$project$Config$updateFromDisk, $author$project$Main$GotConfig, configMsg);
 		}
 	});
 var $author$project$Tauri$FS$removeDir = function (filePath) {
@@ -10828,7 +11367,7 @@ var $author$project$Main$update = F2(
 						model,
 						$author$project$Tauri$BaseDir$toString(baseDir) + (':\n' + filePath)),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'GotNumbers':
 				var ints = msg.a;
 				return _Utils_Tuple2(
 					A2(
@@ -10839,12 +11378,50 @@ var $author$project$Main$update = F2(
 							' ',
 							A2($elm$core$List$map, $elm$core$String$fromInt, ints))),
 					$elm$core$Platform$Cmd$none);
+			default:
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var newConfig = result.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$good,
+							_Utils_update(
+								model,
+								{config: newConfig}),
+							'saved config: \n cheesesPerPage = ' + ($elm$core$String$fromInt(
+								$author$project$Config$getCheesesPerPage(newConfig)) + ('\n cheeses = \n   ' + A2(
+								$elm$core$String$join,
+								'\n   ',
+								A2(
+									$elm$core$List$map,
+									$author$project$Config$cheeseToString,
+									$author$project$Config$getCheeses(newConfig)))))),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var error = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								answerWas: {good: $author$project$Main$Bad, text: error}
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 		}
 	});
+var $author$project$Config$AddCheese = function (a) {
+	return {$: 'AddCheese', a: a};
+};
 var $author$project$Main$AskDialog = {$: 'AskDialog'};
+var $author$project$Config$ChangeCheesePerPageBy = function (a) {
+	return {$: 'ChangeCheesePerPageBy', a: a};
+};
 var $author$project$Main$CheckExists = {$: 'CheckExists'};
 var $author$project$Main$ChooseDir = {$: 'ChooseDir'};
 var $author$project$Main$ChooseToCreateDir = {$: 'ChooseToCreateDir'};
+var $author$project$Main$ConfigMsg = function (a) {
+	return {$: 'ConfigMsg', a: a};
+};
 var $author$project$Main$ConfirmDialog = {$: 'ConfirmDialog'};
 var $author$project$Main$EditedTextBox = function (a) {
 	return {$: 'EditedTextBox', a: a};
@@ -10858,6 +11435,9 @@ var $author$project$Main$OpenDirectoriesDialog = {$: 'OpenDirectoriesDialog'};
 var $author$project$Main$OpenFileDialog = {$: 'OpenFileDialog'};
 var $author$project$Main$ReadDir = {$: 'ReadDir'};
 var $author$project$Main$ReadTextFile = {$: 'ReadTextFile'};
+var $author$project$Config$RemoveCheese = function (a) {
+	return {$: 'RemoveCheese', a: a};
+};
 var $author$project$Main$RemoveDir = {$: 'RemoveDir'};
 var $author$project$Main$RemoveFile = {$: 'RemoveFile'};
 var $author$project$Main$RenameFile = {$: 'RenameFile'};
@@ -14196,17 +14776,6 @@ var $mdgriffith$elm_ui$Internal$Model$adjust = F3(
 	function (size, height, vertical) {
 		return {height: height / size, size: size, vertical: vertical};
 	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -14227,7 +14796,6 @@ var $elm$core$List$minimum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $mdgriffith$elm_ui$Internal$Model$convertAdjustment = function (adjustment) {
 	var lines = _List_fromArray(
 		[adjustment.capital, adjustment.baseline, adjustment.descender, adjustment.lowercase]);
@@ -16334,7 +16902,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $mdgriffith$elm_ui$Element$Events$onClick = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onClick);
-var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };
@@ -17965,6 +18532,40 @@ var $author$project$Main$view = function (model) {
 							_List_fromArray(
 								[
 									A2($author$project$Main$greenButton, 'Get Path...', $author$project$Main$ToggleShowPathButtons)
+								])),
+							$mdgriffith$elm_ui$Element$text(' '),
+							$mdgriffith$elm_ui$Element$text('Persistence'),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$spacing(10)
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$button(
+									$author$project$Main$ConfigMsg(
+										$author$project$Config$ChangeCheesePerPageBy(1))),
+									$author$project$Main$button(
+									$author$project$Main$ConfigMsg(
+										$author$project$Config$ChangeCheesePerPageBy(-1)))
+								])),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$spacing(10)
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$button(
+									$author$project$Main$ConfigMsg(
+										$author$project$Config$AddCheese(
+											$author$project$Config$Hard('Gorgonzola')))),
+									$author$project$Main$button(
+									$author$project$Main$ConfigMsg(
+										$author$project$Config$RemoveCheese(
+											$author$project$Config$Hard('Gorgonzola'))))
 								]))
 						])),
 					(!model.showPathButtons) ? $mdgriffith$elm_ui$Element$none : A2(
