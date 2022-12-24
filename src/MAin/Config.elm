@@ -1,4 +1,4 @@
-module Config exposing (..)
+module Main.Config exposing (..)
 
 import Codec exposing (Codec)
 import Tauri.Persistence as Persistence exposing (Persist, PersistentData)

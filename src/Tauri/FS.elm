@@ -1,9 +1,21 @@
-module Tauri.FS exposing (..)
+module Tauri.FS exposing
+    ( copyFile
+    , createDir
+    , decodeFileEntry
+    , exists
+    , readDir
+    , readTextFile
+    , removeDir
+    , removeFile
+    , renameFile
+    , writeTextFile
+    )
 
 import Json.Decode
 import Json.Encode
 import Task exposing (Task)
 import TaskPort
+import Tauri exposing (FileContents, FileEntry, FilePath, FolderContents(..))
 
 
 
@@ -12,19 +24,6 @@ import TaskPort
 --   Files
 --
 -- ---------------------------------------------------------------------------------------------------------------------
-
-
-type alias FilePath =
-    String
-
-
-type alias FileContents =
-    { filePath : FilePath
-    , contents : String
-    }
-
-
-
 -- exists --------------------------------------------------------------------------------------------------------------
 
 
@@ -114,20 +113,6 @@ removeFile filePath =
 --   Directories
 --
 -- ---------------------------------------------------------------------------------------------------------------------
-
-
-type alias FileEntry =
-    { name : Maybe String
-    , path : FilePath
-    , folderContents : Maybe FolderContents
-    }
-
-
-type FolderContents
-    = FolderContents (List FileEntry)
-
-
-
 -- readDir --------------------------------------------------------------------------------------------------------------
 
 

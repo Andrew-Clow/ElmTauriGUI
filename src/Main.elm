@@ -1,7 +1,6 @@
 module Main exposing (..)
 
 import Browser
-import Config exposing (Config, ConfigMsg(..), PersistentConfig)
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -9,6 +8,7 @@ import Element.Font
 import Element.Input
 import Html
 import Json.Decode
+import Main.Config as Config exposing (Config, ConfigMsg(..), PersistentConfig)
 import Maybe.Extra
 import Task exposing (Task)
 import TaskPort
@@ -93,7 +93,7 @@ type Msg
     | GotFilePath (Maybe String)
     | NoSaveFileSpecified
     | GotSaveFilePath (Maybe String)
-    | GotFileContents FS.FileContents
+    | GotFileContents Tauri.FileContents
     | ConfirmCopy { from : FilePath, to : FilePath } { pressedYes : Bool }
     | Copied { from : FilePath, to : FilePath }
     | CreateDir (Maybe FilePath)
@@ -101,7 +101,7 @@ type Msg
     | Existence FilePath Bool
     | Directory FilePath
     | NoFolderSpecified
-    | Folder FS.FolderContents
+    | Folder Tauri.FolderContents
     | ConfirmRemoveDir FilePath { pressedYes : Bool }
     | Removed FilePath
     | ConfirmRemoveFile FilePath { pressedYes : Bool }
@@ -229,6 +229,27 @@ view model =
             ]
 
 
+button : Button -> Element Msg
+button b =
+    greenButton (buttonName b) (Pressed b)
+
+
+greenButton : String -> Msg -> Element Msg
+greenButton string msg =
+    Element.Input.button
+        [ Element.Background.color <| Element.rgb255 200 255 200
+        , Element.Border.rounded 10
+        , Element.padding 8
+        , Element.Border.shadow
+            { offset = ( 2, 2 )
+            , size = 2
+            , blur = 2
+            , color = Element.rgb255 150 244 150
+            }
+        ]
+        { onPress = Just msg, label = Element.text string }
+
+
 writeTextFileLogic : Model -> Msg
 writeTextFileLogic model =
     case model.textFileContent of
@@ -303,6 +324,11 @@ buttonName btn =
             Config.configMsgToString configMsg
 
 
+toCmd : (a -> Msg) -> Task TaskPort.Error a -> Cmd Msg
+toCmd =
+    Tauri.toCmd3 InteropError JSReturnError
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -352,7 +378,7 @@ update msg model =
 
         GotFileContents fileContents ->
             let
-                showFileContents : FS.FileContents -> String
+                showFileContents : Tauri.FileContents -> String
                 showFileContents { filePath, contents } =
                     filePath ++ "\n\n" ++ contents
             in
@@ -476,29 +502,6 @@ update msg model =
                     ( { model | answerWas = { text = error, good = Bad } }, Cmd.none )
 
 
-showFolderContents : FS.FolderContents -> String
-showFolderContents (FS.FolderContents list) =
-    "\n" ++ (String.join "\n" <| List.map showFile list) ++ "\n"
-
-
-showFile : FS.FileEntry -> String
-showFile { folderContents, name, path } =
-    Maybe.withDefault "" name
-        ++ "  "
-        ++ path
-        ++ "  "
-        ++ (indent 4 <| Maybe.Extra.unwrap "" showFolderContents folderContents)
-
-
-indent : Int -> String -> String
-indent n string =
-    let
-        indentation =
-            "\n" ++ String.repeat n " "
-    in
-    String.join indentation <| String.lines string
-
-
 iff : Bool -> a -> a -> a
 iff true x y =
     if true then
@@ -506,26 +509,6 @@ iff true x y =
 
     else
         y
-
-
-toCmd : (a -> Msg) -> Task TaskPort.Error a -> Cmd Msg
-toCmd =
-    Tauri.toCmd3 InteropError JSReturnError
-
-
-showMaybeList : Maybe (List String) -> String
-showMaybeList m =
-    case m of
-        Nothing ->
-            "Nothing"
-
-        Just list ->
-            String.join "\n" list
-
-
-showMaybe : Maybe String -> String
-showMaybe m =
-    Maybe.withDefault "Nothing" m
 
 
 press : Model -> Button -> Cmd Msg
@@ -742,22 +725,39 @@ ignoreNothing toMsg m =
             IgnoreTauriFeedback
 
 
-button : Button -> Element Msg
-button b =
-    greenButton (buttonName b) (Pressed b)
+showFolderContents : Tauri.FolderContents -> String
+showFolderContents (Tauri.FolderContents list) =
+    "\n" ++ (String.join "\n" <| List.map showFile list) ++ "\n"
 
 
-greenButton : String -> Msg -> Element Msg
-greenButton string msg =
-    Element.Input.button
-        [ Element.Background.color <| Element.rgb255 200 255 200
-        , Element.Border.rounded 10
-        , Element.padding 8
-        , Element.Border.shadow
-            { offset = ( 2, 2 )
-            , size = 2
-            , blur = 2
-            , color = Element.rgb255 150 244 150
-            }
-        ]
-        { onPress = Just msg, label = Element.text string }
+showFile : Tauri.FileEntry -> String
+showFile { folderContents, name, path } =
+    Maybe.withDefault "" name
+        ++ "  "
+        ++ path
+        ++ "  "
+        ++ (indent 4 <| Maybe.Extra.unwrap "" showFolderContents folderContents)
+
+
+indent : Int -> String -> String
+indent n string =
+    let
+        indentation =
+            "\n" ++ String.repeat n " "
+    in
+    String.join indentation <| String.lines string
+
+
+showMaybeList : Maybe (List String) -> String
+showMaybeList m =
+    case m of
+        Nothing ->
+            "Nothing"
+
+        Just list ->
+            String.join "\n" list
+
+
+showMaybe : Maybe String -> String
+showMaybe m =
+    Maybe.withDefault "Nothing" m

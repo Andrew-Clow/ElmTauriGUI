@@ -4,8 +4,8 @@ import Json.Decode
 import Json.Encode
 import Task exposing (Task)
 import TaskPort
+import Tauri exposing (FilePath)
 import Tauri.BaseDir exposing (BaseDir(..))
-import Tauri.FS exposing (FilePath)
 
 
 get : BaseDir -> Task TaskPort.Error FilePath

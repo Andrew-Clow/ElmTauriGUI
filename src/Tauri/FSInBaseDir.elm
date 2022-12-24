@@ -1,23 +1,22 @@
-module Tauri.FSInBaseDir exposing (..)
-
--- Literally none of this is working as intended.
--- The only bits that are working at all are working by supplying duff data to tauri,
--- which then omits the {dir:BaseDirectory.AppConfig} because it's null.
+module Tauri.FSInBaseDir exposing
+    ( copyFile
+    , createDir
+    , exists
+    , readDir
+    , readTextFile
+    , removeDir
+    , removeFile
+    , renameFile
+    , writeTextFile
+    )
 
 import Json.Decode
 import Json.Encode
 import Task exposing (Task)
 import TaskPort
+import Tauri exposing (FileContents, FileEntry, FilePath, FolderContents(..))
 import Tauri.BaseDir exposing (BaseDir(..))
-import Tauri.FS exposing (FileContents, FolderContents(..), decodeFileEntry)
-
-
-
--- type alias FilePath = String
-
-
-type alias FilePath =
-    Tauri.FS.FilePath
+import Tauri.FS
 
 
 
@@ -116,7 +115,7 @@ readDir : BaseDir -> { recursive : Bool } -> FilePath -> Task TaskPort.Error Fol
 readDir baseDir { recursive } filePath =
     TaskPort.call
         { function = "readDirOptions"
-        , valueDecoder = Json.Decode.map FolderContents <| Json.Decode.list decodeFileEntry
+        , valueDecoder = Json.Decode.map FolderContents <| Json.Decode.list Tauri.FS.decodeFileEntry
         , argsEncoder = encodeFsDirOptions baseDir { recursive = recursive }
         }
         filePath

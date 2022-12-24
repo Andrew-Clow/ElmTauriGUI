@@ -1,8 +1,18 @@
 # Elm Tauri Example
 
-This uses Tauri.app via lobanov/elm-taskport to connect your elm app to the file system etc.
+Connects elm to the file system etc using Tauri.app via lobanov/elm-taskport.
+There's an App in Main.elm with persistent Main/Congfig.elm.
+If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
 
-## How to set everything up
+    "package": {
+        "productName": "ElmTauriGUI",
+    "tauri": {
+        ...
+        ...
+        "identifier": "Andrew-Clow.ElmTauriGUI",
+
+
+## How to set everything up for Elm talking to Tauri via TaskPort:
 
 1. Follow https://tauri.app/v1/guides/getting-started/setup/
 2. elm init
@@ -44,8 +54,6 @@ This uses Tauri.app via lobanov/elm-taskport to connect your elm app to the file
 * npx elm-watch hot
 * cargo tauri dev
 
-## TODO:
+## Todo
 
-* Maybe provide three `toMsg` functions, one for interop failure, one for tauri failure and one for tauri success.
-  This might be good particularly for the Dialogs because the bad path is cluttering up the Msg type.
-* Provide a Task interface as well as a Cmd interface, perhaps with confirm stuff using `andThen`.  
+I haven't tested _all_ of the functions! Sorry. I've tested most of them, and more than listed here.

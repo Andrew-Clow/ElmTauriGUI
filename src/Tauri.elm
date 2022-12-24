@@ -31,6 +31,36 @@ import TaskPort
             -- `type JSError` section in https://package.elm-lang.org/packages/lobanov/elm-taskport/latest/TaskPort#JSError
 
 -}
+-- Files
+
+
+type alias FilePath =
+    String
+
+
+type alias FileContents =
+    { filePath : FilePath
+    , contents : String
+    }
+
+
+
+-- Folders
+
+
+type alias FileEntry =
+    { name : Maybe String
+    , path : FilePath
+    , folderContents : Maybe FolderContents
+    }
+
+
+type FolderContents
+    = FolderContents (List FileEntry)
+
+
+
+-- Turn your Tasks into Cmds:
 
 
 toCmd1 : (Result TaskPort.Error a -> msg) -> Task TaskPort.Error a -> Cmd msg

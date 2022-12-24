@@ -83,10 +83,6 @@ askOptions question options =
         question
 
 
-
--- Warning: Tauri suggests that this will have OK and Cancel buttons, but I could only get OK.
-
-
 confirm : String -> Task TaskPort.Error { pressedOK : Bool }
 confirm question =
     TaskPort.call
@@ -129,7 +125,7 @@ messageOptions question options =
 
 
 -- Open ----------------------------------------------------------------------------------------------------------------
--- Files
+-- open Files
 
 
 type alias DialogFilter =
@@ -166,7 +162,7 @@ openFiles options =
 
 
 
--- Directories
+-- open Directories
 
 
 type alias DirectoryDialogOptions =
@@ -214,9 +210,11 @@ save options =
 {-
    ------------------------------------------------------------------------------------------------------------------------
 
+
      Encoding
 
      Boring unexported bit where we encode all the arguments.
+
 
    ------------------------------------------------------------------------------------------------------------------------
 -}
