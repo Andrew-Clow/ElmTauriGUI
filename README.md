@@ -29,13 +29,13 @@ If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
 6. Make a viable Main.elm
 7. Create index.html from the Elm guide with Taskport entries for Tauri stuff, like
 
-         <script src="./taskport.min.js"></script>
-         <script>
-            TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
-            TaskPort.register("readTextFile", (args) => {return window.__TAURI__.fs.readTextFile(args)});
-            TaskPort.register("open", (args) => {return window.__TAURI__.dialog.open(args)});
-            TaskPort.register("ask", (args) => {return window.__TAURI__.dialog.ask(args)});
-         </script>
+       <script src="./taskport.min.js"></script>
+       <script>
+          TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
+          TaskPort.register("readTextFile", (args) => {return window.__TAURI__.fs.readTextFile(args)});
+          TaskPort.register("open", (args) => {return window.__TAURI__.dialog.open(args)});
+          TaskPort.register("ask", (args) => {return window.__TAURI__.dialog.ask(args)});
+       </script>
 
    Note that if you get an interop error like TaskPort Not Installed, you probably just have a typo in the javascript above. 
    If it says Not Found, it's probably because you omitted that line altogether or commented it out and didn't reinstate it.
