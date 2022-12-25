@@ -1,6 +1,6 @@
 # Elm Tauri Example
 
-Connects elm to the file system etc using Tauri.app via lobanov/elm-taskport.
+Connects elm to the file system etc using Tauri.app via lobanov/elm-taskport. Mini HowTo below.
 
 There's an example app with LOTS of buttons in Main.elm with persistent Main/Congfig.elm.
 
@@ -40,11 +40,11 @@ If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
    Note that if you get an interop error like `Not Installed`, you probably just have a typo in the javascript above. 
    If it says `Not Found`, it's probably because you omitted that line altogether or commented it out and didn't reinstate it.
 8. `cargo tauri init`
-     - dev server ../publicUI
+     - dev server `../publicUI`
      - dev command `elm make src/Main.elm --output=publicUI/main.js`
      - build command `elm make src/Main.elm --output=publicUI/main.js --optimize`
      - On Windows you may need to edit the borked `tauri.conf.json` to include the = sign instead of UUencoded nonsense in what you just typed. 
-9. Add `FS` and `Path` and `Dialog` stuff on `allowlist` in `tauri.conf.json`. See this one for examples.
+9. Add `FS` and `Path` and `Dialog` stuff on `allowlist` in `tauri.conf.json`. See the one here for examples.
      * Note the `["$APPCONFIG/*","$APPCONFIG", ... ]` to workaround the lack of access to root directory malfeature in Tauri.
 10. Add `"withGlobalTauri": true` into the build section of `tauri.conf.json` to enable all that `window.__TAURI__.` stuff.    
 11. `cargo tauri dev` to check it's working
