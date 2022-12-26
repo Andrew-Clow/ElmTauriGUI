@@ -142,6 +142,29 @@ toCommand3 tagInteropError tagJSError toMsg task =
 
 
 
+-- FileWas - for only writing files when they changed in writeFileIfDifferent - useful for keeping timestamps unchanged for ftp purposes.
+
+
+type FileWas
+    = WasDifferent
+    | WasSame
+    | WasAbsent
+
+
+fileWasToString : FileWas -> String
+fileWasToString fw =
+    case fw of
+        WasDifferent ->
+            "was different so I saved the new version"
+
+        WasSame ->
+            "was the same so I didn't do anything"
+
+        WasAbsent ->
+            "was absent so I saved it"
+
+
+
 -- Reexporting some TaskPort stuff:
 
 

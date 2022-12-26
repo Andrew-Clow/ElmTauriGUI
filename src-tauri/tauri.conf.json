@@ -76,10 +76,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 900,
+        "height": 950,
         "resizable": true,
         "title": "Elm Tauri GUI",
-        "width": 800
+        "width": 850
       }
     ]
   }

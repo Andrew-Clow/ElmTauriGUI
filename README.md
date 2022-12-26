@@ -19,7 +19,9 @@ If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
 
 # How to set everything up for Elm talking to Tauri via TaskPort:
 
-1. Follow https://tauri.app/v1/guides/getting-started/setup/
+1. Follow 
+   - https://tauri.app/v1/guides/getting-started/prerequisites
+   - https://tauri.app/v1/guides/getting-started/setup/
 2. elm init
 3. (create IDE project from existing sources)
 4. Install elm modules:

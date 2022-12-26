@@ -108,7 +108,7 @@ type Msg
     | ConfirmRename { from : FilePath, to : FilePath } { pressedYes : Bool }
     | Renamed { from : FilePath, to : FilePath }
     | EnableTextBox
-    | WroteTextFile FilePath
+    | WroteTextFile FilePath Tauri.FileWas
     | EditedTextBox String
     | ToggleShowPathButtons
     | GotPath BaseDir.BaseDir FilePath
@@ -150,12 +150,14 @@ view model =
                     ]
                 , Element.text " "
                 , Element.text "FS"
+                , Element.text "Note that if I open a dialog to ask for something,"
+                , Element.text "you need to press the button again afterwards."
                 , Element.row [ Element.spacing 10 ]
                     [ button ReadTextFile
                     , button NewCopyFile
                     , button RemoveFile
                     , button RenameFile
-                    , greenButton "WriteTextFile" <| writeTextFileLogic model
+                    , greenButton "Write Text File (if different)" <| writeTextFileLogic model
                     ]
                 , Element.row [ Element.spacing 10 ]
                     [ button CheckExists
@@ -176,8 +178,8 @@ view model =
                     , button <| ConfigMsg (ChangeCheesePerPageBy -1)
                     ]
                 , Element.row [ Element.spacing 10 ]
-                    [ button <| ConfigMsg (AddCheese <| Config.Hard "Gorgonzola")
-                    , button <| ConfigMsg (RemoveCheese <| Config.Hard "Gorgonzola")
+                    [ button <| ConfigMsg (AddCheese <| Config.Hard "Gruyere")
+                    , button <| ConfigMsg (RemoveCheese <| Config.Hard "Gruyere")
                     ]
                 ]
             , if not model.showPathButtons then
@@ -309,7 +311,7 @@ buttonName btn =
             "Rename File"
 
         WriteTextFile ->
-            "Write File"
+            "Write File (if different)"
 
         GetPath baseDir ->
             BaseDir.toString baseDir
@@ -472,8 +474,8 @@ update msg model =
         EnableTextBox ->
             ( { model | textFileContent = Just "" }, Cmd.none )
 
-        WroteTextFile filePath ->
-            ( good { model | textFileContent = Nothing } <| "Wrote text file " ++ filePath, Cmd.none )
+        WroteTextFile filePath fileWas ->
+            ( good { model | textFileContent = Nothing } <| filePath ++ " " ++ Tauri.fileWasToString fileWas, Cmd.none )
 
         EditedTextBox string ->
             ( { model | textFileContent = Just string }, Cmd.none )
@@ -652,8 +654,8 @@ press model btn =
                 Just contents ->
                     case model.saveFilePath of
                         Just filePath ->
-                            FS.writeTextFile { filePath = filePath, contents = contents }
-                                |> toCmd (always <| WroteTextFile filePath)
+                            FSInBaseDir.writeTextFileIfDifferent Home { filePath = filePath, contents = contents }
+                                |> toCmd (WroteTextFile filePath)
 
                         Nothing ->
                             Dialog.save

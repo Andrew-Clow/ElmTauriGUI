@@ -41,13 +41,7 @@ persist =
     { default =
         { cheesesPerPage = 4
         , cheeses =
-            [ Hard "Cheddar"
-            , Hard "Red Leicester"
-            , Hard "Double Gloucester"
-            , Hard "Lancashire"
-            , Hard "Emmental"
-            , Hard "Gruyere"
-            , Soft "Brie"
+            [ Hard "Double Gloucester"
             , Soft "Camembert"
             , Soft "Aiket"
             ]

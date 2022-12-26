@@ -8,13 +8,14 @@ module Tauri.FSInBaseDir exposing
     , removeFile
     , renameFile
     , writeTextFile
+    , writeTextFileIfDifferent
     )
 
 import Json.Decode
 import Json.Encode
 import Task exposing (Task)
 import TaskPort
-import Tauri exposing (FileContents, FileEntry, FilePath, FolderContents(..))
+import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..))
 import Tauri.BaseDir exposing (BaseDir(..))
 import Tauri.FS
 
@@ -59,6 +60,29 @@ writeTextFile baseDir fileContents =
         , argsEncoder = encodeBaseDirAndRecord2 baseDir .filePath .contents
         }
         fileContents
+
+
+writeTextFileIfDifferent : BaseDir -> { filePath : FilePath, contents : String } -> Task TaskPort.Error FileWas
+writeTextFileIfDifferent baseDir fileContents =
+    exists baseDir fileContents.filePath
+        |> Task.andThen
+            (\itAlreadyExists ->
+                if itAlreadyExists then
+                    readTextFile baseDir fileContents.filePath
+                        |> Task.andThen
+                            (\currentContents ->
+                                if fileContents.contents /= currentContents.contents then
+                                    writeTextFile baseDir fileContents
+                                        |> Task.map (always WasDifferent)
+
+                                else
+                                    Task.succeed WasSame
+                            )
+
+                else
+                    writeTextFile baseDir fileContents
+                        |> Task.map (always WasAbsent)
+            )
 
 
 
