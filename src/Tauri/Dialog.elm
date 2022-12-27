@@ -11,6 +11,7 @@ module Tauri.Dialog exposing
     , openFile
     , openFiles
     , save
+    , warnCheckBefore
     )
 
 {-
@@ -81,6 +82,27 @@ askOptions question options =
         , argsEncoder = encodeMessageDialogOptions options
         }
         question
+
+
+warnCheckBefore :
+    { title : Maybe String
+    , question : String
+    , wasCancelled : msg
+    , errorMsg : TaskPort.Error -> err
+    , taskIfYes : Task err msg
+    }
+    -> Task err msg
+warnCheckBefore { title, question, wasCancelled, errorMsg, taskIfYes } =
+    askOptions question { title = title, dialogType = Just Warning }
+        |> Task.mapError errorMsg
+        |> Task.andThen
+            (\{ pressedYes } ->
+                if pressedYes then
+                    taskIfYes
+
+                else
+                    Task.succeed wasCancelled
+            )
 
 
 confirm : String -> Task TaskPort.Error { pressedOK : Bool }
