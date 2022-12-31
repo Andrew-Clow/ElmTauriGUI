@@ -4,6 +4,10 @@ module Tauri.Dialog exposing
     , askOptions
     , confirm
     , confirmOptions
+    , ifOK
+    , ifPickedOne
+    , ifPickedSome
+    , ifYes
     , message
     , messageOptions
     , openDirectories
@@ -42,13 +46,18 @@ module Tauri.Dialog exposing
 
 import Json.Decode
 import Json.Encode
+import Maybe.Extra
 import Task exposing (Task)
 import TaskPort
 
 
 
--- Messages and Questions ----------------------------------------------------------------------------------------------
---
+{- ---------------------------------------------------------------------------------------------------------------------
+
+    Message and Question Dialogs
+
+   ---------------------------------------------------------------------------------------------------------------------
+-}
 -- ask (Yes/No), confirm (OK/Cancel), message (())
 
 
@@ -62,6 +71,10 @@ type DialogType
     = Info
     | Warning
     | Error
+
+
+
+-- ask -----------------------------------------------------------------------------------------------------------------
 
 
 ask : String -> Task TaskPort.Error { pressedYes : Bool }
@@ -82,6 +95,23 @@ askOptions question options =
         , argsEncoder = encodeMessageDialogOptions options
         }
         question
+
+
+
+-- ask "do this thing" |> ifYes (this thing)
+
+
+ifYes : Task TaskPort.Error intentedOutput -> Task TaskPort.Error { pressedYes : Bool } -> Task TaskPort.Error (Maybe intentedOutput)
+ifYes taskIfYes questionTask =
+    questionTask
+        |> Task.andThen
+            (\{ pressedYes } ->
+                if pressedYes then
+                    Task.map Just taskIfYes
+
+                else
+                    Task.succeed Nothing
+            )
 
 
 warnCheckBefore :
@@ -105,6 +135,10 @@ warnCheckBefore { title, question, wasCancelled, errorMsg, taskIfYes } =
             )
 
 
+
+-- confirm -------------------------------------------------------------------------------------------------------------
+
+
 confirm : String -> Task TaskPort.Error { pressedOK : Bool }
 confirm question =
     TaskPort.call
@@ -123,6 +157,23 @@ confirmOptions question options =
         , argsEncoder = encodeMessageDialogOptions options
         }
         question
+
+
+ifOK : Task TaskPort.Error intentedOutput -> Task TaskPort.Error { pressedOK : Bool } -> Task TaskPort.Error (Maybe intentedOutput)
+ifOK taskIfYes questionTask =
+    questionTask
+        |> Task.andThen
+            (\{ pressedOK } ->
+                if pressedOK then
+                    Task.map Just taskIfYes
+
+                else
+                    Task.succeed Nothing
+            )
+
+
+
+-- message -------------------------------------------------------------------------------------------------------------
 
 
 message : String -> Task TaskPort.Error ()
@@ -146,7 +197,12 @@ messageOptions question options =
 
 
 
--- Open ----------------------------------------------------------------------------------------------------------------
+{- ---------------------------------------------------------------------------------------------------------------------
+
+    Open Dialogs
+
+   ---------------------------------------------------------------------------------------------------------------------
+-}
 -- open Files
 
 
@@ -226,6 +282,43 @@ save options =
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
+
+
+
+-- ifPickedOne is to simplify handling the Maybe from picking a single file or directory.
+-- eg:
+-- save {defaultPath = Nothing, filters = [], title = Just "Save as.."}
+--    |> ifPickedOne (\filename -> ....)
+
+
+ifPickedOne : (s -> Task TaskPort.Error output) -> Task TaskPort.Error (Maybe s) -> Task TaskPort.Error (Maybe output)
+ifPickedOne taskWithString pickTask =
+    pickTask
+        |> Task.andThen
+            (\maybeS ->
+                case maybeS of
+                    Nothing ->
+                        Task.succeed Nothing
+
+                    Just s ->
+                        Task.map Just <| taskWithString s
+            )
+
+
+ifPickedSome : (s -> Task TaskPort.Error output) -> Task TaskPort.Error (Maybe (List s)) -> Task TaskPort.Error (Maybe (List output))
+ifPickedSome taskWithString pickTask =
+    pickTask
+        |> Task.andThen
+            (\maybeS ->
+                case maybeS of
+                    Nothing ->
+                        Task.succeed Nothing
+
+                    Just ss ->
+                        Task.map Just <|
+                            Task.sequence <|
+                                List.map taskWithString ss
+            )
 
 
 

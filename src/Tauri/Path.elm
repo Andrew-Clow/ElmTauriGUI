@@ -19,6 +19,24 @@ get baseDir =
 
 
 
+-- For your convenience, I have provided a slightly hacky filename from filepath function, so you don't have to call out to Tauri.
+-- It replaces the windows \ with the posix / and then splits on that delimiter.
+-- In my mind this is justified in that / is an invalid character in a filename in windows,
+-- so it ought not to be there anyway so we can't break a filename inappropriately by additionally breaking on / in windows.
+--
+-- filePathToFileName "home/this\\that/theother/\\filename.txt" == "filename.txt"
+
+
+filePathToFileName : FilePath -> String
+filePathToFileName filePath =
+    String.replace "\\" "/" filePath
+        |> String.split "/"
+        |> List.reverse
+        |> List.head
+        |> Maybe.withDefault ""
+
+
+
 {-
 
    type BaseDirectory
