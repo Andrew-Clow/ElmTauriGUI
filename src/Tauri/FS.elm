@@ -107,14 +107,15 @@ renameFile fromTo =
 -- copyFile ------------------------------------------------------------------------------------------------------------
 
 
-copyFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error ()
+copyFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error { from : FilePath, to : FilePath }
 copyFile fromTo =
-    TaskPort.call
-        { function = "copyFile"
-        , valueDecoder = Json.Decode.null ()
-        , argsEncoder = \args -> Json.Encode.list Json.Encode.string [ args.from, args.to ]
-        }
-        fromTo
+    Task.map (always fromTo) <|
+        TaskPort.call
+            { function = "copyFile"
+            , valueDecoder = Json.Decode.null ()
+            , argsEncoder = \args -> Json.Encode.list Json.Encode.string [ args.from, args.to ]
+            }
+            fromTo
 
 
 

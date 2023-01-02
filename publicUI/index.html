@@ -10,6 +10,9 @@
 <script>
     TaskPort.install(); // can pass a settings object as a parameter, see https://elm.dmy.fr/packages/lobanov/elm-taskport/latest/
 
+    const { invoke } = window.__TAURI__.tauri;
+    TaskPort.register("modifiedTime",   (args) => {return invoke('modified_time',{filePath: args})});
+
     //FS
     TaskPort.register("exists",     	(args) => {return window.__TAURI__.fs.exists(args)});
     TaskPort.register("readTextFile",  	(args) => {return window.__TAURI__.fs.readTextFile(args)});

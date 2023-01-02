@@ -14,10 +14,13 @@ import Task exposing (Task)
 import TaskPort
 import Tauri
 import Tauri.BaseDir as BaseDir exposing (BaseDir(..))
+import Tauri.DateTime as DateTime exposing (DateTime)
 import Tauri.Dialog as Dialog
 import Tauri.FS as FS
 import Tauri.FSInBaseDir as FSInBaseDir
+import Tauri.Modified as Modified
 import Tauri.Path as Path
+import Time
 
 
 main : Program () Model Msg
@@ -42,6 +45,7 @@ type alias Model =
     , textFileContent : Maybe String
     , showPathButtons : Bool
     , config : PersistentConfig
+    , zone : Time.Zone
     }
 
 
@@ -78,6 +82,7 @@ type Button
     | TestbaseDirectoryIsTotal
     | NewCopyFile
     | ConfigMsg Config.ConfigMsg
+    | GetModified
 
 
 type Msg
@@ -93,7 +98,7 @@ type Msg
     | GotFilePath (Maybe String)
     | NoSaveFileSpecified
     | GotSaveFilePath (Maybe String)
-    | GotFileContents Tauri.FileContents
+    | GotFileContents (Maybe Tauri.FileContents)
     | ConfirmCopy { from : FilePath, to : FilePath } { pressedYes : Bool }
     | Copied { from : FilePath, to : FilePath }
     | CreateDir (Maybe FilePath)
@@ -114,6 +119,8 @@ type Msg
     | GotPath BaseDir.BaseDir FilePath
     | GotNumbers (List Int)
     | GotConfig (Result String Config.PersistentConfig)
+    | GotTimeZone Time.Zone
+    | GotModified (Maybe { filePath : FilePath, modified : DateTime })
 
 
 init : flags -> ( Model, Cmd Msg )
@@ -126,8 +133,12 @@ init =
           , textFileContent = Nothing
           , showPathButtons = False
           , config = Config.default
+          , zone = Time.utc
           }
-        , Config.init GotConfig
+        , Cmd.batch
+            [ Config.init GotConfig
+            , Task.perform GotTimeZone Time.here
+            ]
         )
 
 
@@ -167,11 +178,6 @@ view model =
                     , button RemoveDir
                     ]
                 , Element.text " "
-                , Element.text "Path"
-                , Element.row [ Element.spacing 10 ]
-                    [ greenButton "Get Path..." ToggleShowPathButtons
-                    ]
-                , Element.text " "
                 , Element.text "Persistence"
                 , Element.row [ Element.spacing 10 ]
                     [ button <| ConfigMsg (ChangeCheesePerPageBy 1)
@@ -180,6 +186,21 @@ view model =
                 , Element.row [ Element.spacing 10 ]
                     [ button <| ConfigMsg (AddCheese <| Config.Hard "Gruyere")
                     , button <| ConfigMsg (RemoveCheese <| Config.Hard "Gruyere")
+                    ]
+                , Element.text " "
+                , Element.row [ Element.spacing 30 ]
+                    [ Element.column [ Element.spacing 10 ]
+                        [ Element.text "Path"
+                        , Element.row [ Element.spacing 10 ]
+                            [ greenButton "Get Path..." ToggleShowPathButtons
+                            ]
+                        ]
+                    , Element.column [ Element.spacing 10 ]
+                        [ Element.text "Modified"
+                        , Element.row [ Element.spacing 10 ]
+                            [ button GetModified
+                            ]
+                        ]
                     ]
                 ]
             , if not model.showPathButtons then
@@ -325,6 +346,9 @@ buttonName btn =
         ConfigMsg configMsg ->
             Config.configMsgToString configMsg
 
+        GetModified ->
+            "Get File Modified Date/Time"
+
 
 toCmd : (a -> Msg) -> Task TaskPort.Error a -> Cmd Msg
 toCmd =
@@ -378,13 +402,18 @@ update msg model =
                 |> toCmd GotSaveFilePath
             )
 
-        GotFileContents fileContents ->
-            let
-                showFileContents : Tauri.FileContents -> String
-                showFileContents { filePath, contents } =
-                    filePath ++ "\n\n" ++ contents
-            in
-            ( good model <| showFileContents fileContents, Cmd.none )
+        GotFileContents maybeFileContents ->
+            case maybeFileContents of
+                Nothing ->
+                    ( { model | answerWas = { text = "Cancelled Read File", good = Neutral } }, Cmd.none )
+
+                Just fileContents ->
+                    let
+                        showFileContents : Tauri.FileContents -> String
+                        showFileContents { filePath, contents } =
+                            filePath ++ "\n\n" ++ contents
+                    in
+                    ( good model <| showFileContents fileContents, Cmd.none )
 
         ConfirmCopy record value ->
             if value.pressedYes then
@@ -503,6 +532,17 @@ update msg model =
                 Err error ->
                     ( { model | answerWas = { text = error, good = Bad } }, Cmd.none )
 
+        GotTimeZone zone ->
+            ( { model | zone = zone }, Cmd.none )
+
+        GotModified maybeModified ->
+            case maybeModified of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just modified ->
+                    ( good model <| modified.filePath ++ "\n" ++ DateTime.dateTimeToString modified.modified, Cmd.none )
+
 
 iff : Bool -> a -> a -> a
 iff true x y =
@@ -558,15 +598,34 @@ press model btn =
                 |> toCmd GotSaveFilePath
 
         ReadTextFile ->
-            case model.readFilePath of
-                Nothing ->
-                    cmdSucceed NoReadFileSpecified
-
-                Just filePath ->
-                    FS.readTextFile filePath
-                        |> toCmd GotFileContents
+            Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to read" }
+                |> Dialog.ifPickedOne FS.readTextFile
+                |> toCmd GotFileContents
 
         CopyFile ->
+            {-
+               let
+                   fromTo from maybeTo =
+                       case maybeTo of
+                           Nothing ->
+                               Nothing
+
+                           Just to ->
+                               Just { from = from, to = to }
+               in
+               Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to copy" }
+                   |> Dialog.ifPickedOne
+                       (\fromFilePath ->
+                           Dialog.save { defaultPath = Nothing, filters = [], title = Just "What should I save it as?" }
+                               |> Dialog.ifPickedOne
+                                   (\toFilePath ->
+                                       Dialog.askOptions ("Are you sure you want to copy\n" ++ fromFilePath ++ "\nto\n" ++ toFilePath ++ "\n?")
+                                           { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                                           |> Dialog.ifYes (FS.copyFile { from = fromFilePath, to = toFilePath })
+                                   )
+                       )
+                   |> toCmd Copied
+            -}
             case ( model.readFilePath, model.saveFilePath ) of
                 ( Just from, Just to ) ->
                     Dialog.askOptions
@@ -710,6 +769,11 @@ press model btn =
 
         ConfigMsg configMsg ->
             Config.updateFromDisk GotConfig configMsg
+
+        GetModified ->
+            Dialog.openFile { defaultPath = Nothing, filters = [], title = Just "Pick a file to see when it was last modified." }
+                |> Dialog.ifPickedOne (Modified.getFileModifiedDateTime model.zone)
+                |> toCmd GotModified
 
 
 cmdSucceed : msg -> Cmd msg
