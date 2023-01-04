@@ -17,7 +17,6 @@ import Json.Encode
 import Task exposing (Task)
 import TaskPort exposing (Error)
 import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..), iff)
-import Tauri.Constant exposing (..)
 
 
 
@@ -67,7 +66,7 @@ writeTextFile fileContents ok =
         fileContents
 
 
-writeTextFileIfDifferent : { filePath : FilePath, contents : String } -> Task Error FileWas
+writeTextFileIfDifferent : { filePath : FilePath, contents : String } -> Task Error { filePath : FilePath, fileWas : FileWas }
 writeTextFileIfDifferent fileContents =
     exists fileContents.filePath { yes = always True, no = always False }
         |> Tauri.boolTask
@@ -76,13 +75,13 @@ writeTextFileIfDifferent fileContents =
                     |> Task.andThen
                         (\currentContents ->
                             if fileContents.contents /= currentContents.contents then
-                                writeTextFile fileContents WasDifferent
+                                writeTextFile fileContents { filePath = fileContents.filePath, fileWas = WasDifferent }
 
                             else
-                                Task.succeed WasSame
+                                Task.succeed { filePath = fileContents.filePath, fileWas = WasSame }
                         )
             , false =
-                writeTextFile fileContents WasNew
+                writeTextFile fileContents { filePath = fileContents.filePath, fileWas = WasNew }
             }
 
 

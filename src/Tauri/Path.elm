@@ -27,8 +27,8 @@ get baseDir =
 -- filePathToFileName "home/this\\that/theother/\\filename.txt" == "filename.txt"
 
 
-filePathToFileName : FilePath -> String
-filePathToFileName filePath =
+toFileName : FilePath -> String
+toFileName filePath =
     String.replace "\\" "/" filePath
         |> String.split "/"
         |> List.reverse

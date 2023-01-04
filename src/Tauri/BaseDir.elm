@@ -3,6 +3,10 @@ module Tauri.BaseDir exposing (..)
 import Json.Encode
 
 
+
+-- see Path.get
+
+
 type BaseDir
     = App
     | AppConfig

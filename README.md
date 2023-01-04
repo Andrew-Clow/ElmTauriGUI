@@ -6,7 +6,7 @@ There's an example app with LOTS of buttons in Main.elm with persistent Main/Con
 
 ![screenshot showing many buttons like "Open Dialog" "Copy File" etc](screenshot.png?raw=true "Screenshot")
 
-If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
+If you're cloning it to edit, you'll certainly want to edit tauri.conf.json from what I put:
 
     "package": {
         "productName": "ElmTauriGUI",
@@ -50,8 +50,9 @@ If you're cloning it to edit, you'll certainly want to edit tauri.conf.json:
 9. Add `FS` and `Path` and `Dialog` stuff on `allowlist` in `tauri.conf.json`. See the one here for examples.
      * Note the `["$APPCONFIG/*","$APPCONFIG", ... ]` to workaround the lack of access to root directory malfeature in Tauri.
 10. Add `"withGlobalTauri": true` into the build section of `tauri.conf.json` to enable all that `window.__TAURI__.` stuff.    
-11. `cargo tauri dev` to check it's working
-12. Antivirus: Norton AV panics about build-script-build.exe. Restore it.
+11. `cargo tauri dev` to check it's working.
+12. The stuff in Tauri.Modified requires edits to your src-tauri/main.rs to give the rust code backing that up as it's not part of tauri.
+13. Antivirus: Norton AV panics about build-script-build.exe. Restore it.
     * Exclude the whole folder from further interruption:
     * https://support.norton.com/sp/en/us/home/current/solutions/v3672136
 

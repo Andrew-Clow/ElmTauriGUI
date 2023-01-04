@@ -194,8 +194,8 @@ andThen nextTask firstTask =
     firstTask |> resultTask (Err >> Task.succeed) nextTask
 
 
-andThenDefinitely : (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
-andThenDefinitely nextTask firstTask =
+andThenWithoutResult : (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
+andThenWithoutResult nextTask firstTask =
     firstTask |> resultTask (Err >> Task.succeed) (nextTask >> Task.map Ok)
 
 
@@ -244,8 +244,8 @@ mapBoth mapE mapO task =
     task |> Task.map (Result.mapError mapE >> Result.map mapO)
 
 
-bothResults : Task TaskPort.Error (Result msg msg) -> Task TaskPort.Error msg
-bothResults task =
+resultsAreMsgs : Task TaskPort.Error (Result msg msg) -> Task TaskPort.Error msg
+resultsAreMsgs task =
     task |> Task.map (Result.Extra.unpack identity identity)
 
 
@@ -268,11 +268,11 @@ iff t f bool =
         f
 
 
-fromMaybe : Task TaskPort.Error (Maybe a) -> answer -> (a -> answer) -> Task TaskPort.Error answer
-fromMaybe task nothing just =
-    task |> Task.map (Maybe.Extra.unwrap nothing just)
+combineResults : Result a a -> a
+combineResults result =
+    case result of
+        Ok a ->
+            a
 
-
-fromResult : Task TaskPort.Error (Result nope yup) -> (nope -> answer) -> (yup -> answer) -> Task TaskPort.Error answer
-fromResult task err ok =
-    task |> Task.map (Result.Extra.unpack err ok)
+        Err a ->
+            a

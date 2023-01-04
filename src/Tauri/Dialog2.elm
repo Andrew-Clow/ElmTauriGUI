@@ -28,11 +28,9 @@ module Tauri.Dialog2 exposing (..)
 
 import Json.Decode
 import Json.Encode
-import Maybe.Extra
 import Task exposing (Task)
 import TaskPort exposing (Error)
 import Tauri exposing (FilePath)
-import Tauri.Constant exposing (..)
 
 
 
@@ -47,7 +45,7 @@ import Tauri.Constant exposing (..)
 
 type alias MessageDialogOptions =
     { title : Maybe String -- defaults to the app name
-    , dialogType : Maybe InfoWarningOrError -- called type at the typescript end. Defaults to Info
+    , dialogType : InfoWarningOrError -- called type at the typescript end.
     }
 
 
@@ -66,21 +64,12 @@ type TitleOrAppName
 -- ask -----------------------------------------------------------------------------------------------------------------
 
 
-iff : answer -> answer -> Bool -> answer
-iff y n bool =
-    if bool then
-        y
-
-    else
-        n
-
-
-ask : String -> TitleOrAppName -> InfoWarningOrError -> { yes : answer, no : answer } -> Task Error answer
-ask question titleOrAppName infoWarningOrError answers =
+ask : String -> { title : Maybe String, dialogType : InfoWarningOrError } -> { yes : answer, no : answer } -> Task Error answer
+ask question options answers =
     TaskPort.call
         { function = "askOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (iff answers.yes answers.no)
-        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (Tauri.iff answers.yes answers.no)
+        , argsEncoder = encodeMessageDialogOptions options
         }
         question
 
@@ -99,12 +88,12 @@ ask question titleOrAppName infoWarningOrError answers =
 -- confirm -------------------------------------------------------------------------------------------------------------
 
 
-confirm : String -> TitleOrAppName -> InfoWarningOrError -> answer -> answer -> Task Error answer
-confirm question titleOrAppName infoWarningOrError ok cancel =
+confirm : String -> { title : Maybe String, dialogType : InfoWarningOrError } -> { ok : answer, cancel : answer } -> Task Error answer
+confirm question options { ok, cancel } =
     TaskPort.call
         { function = "confirmOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (iff ok cancel)
-        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (Tauri.iff ok cancel)
+        , argsEncoder = encodeMessageDialogOptions options
         }
         question
 
@@ -119,12 +108,12 @@ confirm question titleOrAppName infoWarningOrError ok cancel =
 -- message -------------------------------------------------------------------------------------------------------------
 
 
-message : String -> TitleOrAppName -> InfoWarningOrError -> answer -> Task Error answer
-message question titleOrAppName infoWarningOrError ok =
+message : String -> { title : Maybe String, dialogType : InfoWarningOrError } -> answer -> Task Error answer
+message question options ok =
     TaskPort.call
         { function = "messageOptions"
         , valueDecoder = Json.Decode.succeed ok -- should be Json.Decode.null (), but it's returning true for some reason.
-        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
+        , argsEncoder = encodeMessageDialogOptions options
         }
         question
 
@@ -152,42 +141,26 @@ type alias FileDialogOptions =
     }
 
 
-jsonDecodeResult : err -> Json.Decode.Decoder a -> Json.Decode.Decoder (Result err a)
-jsonDecodeResult err decoder =
-    Json.Decode.maybe decoder
-        |> Json.Decode.map (Result.fromMaybe err)
-
-
-decodeMaybeString : Json.Decode.Decoder (Maybe String)
-decodeMaybeString =
-    Json.Decode.maybe Json.Decode.string
-
-
-decodeMaybeStrings : Json.Decode.Decoder (Maybe (List String))
-decodeMaybeStrings =
-    Json.Decode.maybe (Json.Decode.list Json.Decode.string)
-
-
-openFile : FileDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
-openFile options =
+openFile : FileDialogOptions -> { cancelled : answer, chose : FilePath -> answer } -> Task Error answer
+openFile options { cancelled, chose } =
     TaskPort.call
         { function = "openDlg"
         , valueDecoder = decodeMaybeString
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
-        |> Tauri.fromMaybe
+        |> Tauri.maybeToMsg cancelled chose
 
 
-openFiles : FileDialogOptions -> answer -> (List FilePath -> answer) -> Task Error answer
-openFiles options =
+openFiles : FileDialogOptions -> { cancelled : answer, chose : List FilePath -> answer } -> Task Error answer
+openFiles options { cancelled, chose } =
     TaskPort.call
         { function = "openDlg"
         , valueDecoder = decodeMaybeStrings
         , argsEncoder = encodeFileDialogOptions { multiple = True }
         }
         options
-        |> Tauri.fromMaybe
+        |> Tauri.maybeToMsg cancelled chose
 
 
 
@@ -201,41 +174,41 @@ type alias DirectoryDialogOptions =
     }
 
 
-openDirectory : DirectoryDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
-openDirectory options =
+openDirectory : DirectoryDialogOptions -> { cancelled : answer, chose : FilePath -> answer } -> Task Error answer
+openDirectory options { cancelled, chose } =
     TaskPort.call
         { function = "openDlg"
         , valueDecoder = decodeMaybeString
         , argsEncoder = encodeDirectoryDialogOptions { multiple = False }
         }
         options
-        |> Tauri.fromMaybe
+        |> Tauri.maybeToMsg cancelled chose
 
 
-openDirectories : DirectoryDialogOptions -> answer -> (List FilePath -> answer) -> Task Error answer
-openDirectories options =
+openDirectories : DirectoryDialogOptions -> { cancelled : answer, chose : List FilePath -> answer } -> Task Error answer
+openDirectories options { cancelled, chose } =
     TaskPort.call
         { function = "openDlg"
         , valueDecoder = decodeMaybeStrings
         , argsEncoder = encodeDirectoryDialogOptions { multiple = True }
         }
         options
-        |> Tauri.fromMaybe
+        |> Tauri.maybeToMsg cancelled chose
 
 
 
 -- Save ----------------------------------------------------------------------------------------------------------------
 
 
-save : FileDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
-save options =
+save : FileDialogOptions -> { cancelled : answer, chose : FilePath -> answer } -> Task Error answer
+save options { cancelled, chose } =
     TaskPort.call
         { function = "save"
         , valueDecoder = decodeMaybeString
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
-        |> Tauri.fromMaybe
+        |> Tauri.maybeToMsg cancelled chose
 
 
 
@@ -441,23 +414,13 @@ encodeNothingAsNull encoder maybe =
 -}
 
 
-titleToString : TitleOrAppName -> Maybe String
-titleToString t =
-    case t of
-        Title string ->
-            Just string
-
-        AppNameAsTitle ->
-            Nothing
-
-
-encodeMessageDialogOptions : TitleOrAppName -> InfoWarningOrError -> String -> Json.Encode.Value
-encodeMessageDialogOptions titleOrAppName infoWarningOrError msg =
+encodeMessageDialogOptions : MessageDialogOptions -> String -> Json.Encode.Value
+encodeMessageDialogOptions options msg =
     Json.Encode.list identity
         [ Json.Encode.string msg
         , Json.Encode.object
-            [ ( "title", encodeNothingAsNull Json.Encode.string (titleToString titleOrAppName) )
-            , ( "type", encodeDialogType infoWarningOrError )
+            [ ( "title", encodeNothingAsNull Json.Encode.string options.title )
+            , ( "type", encodeDialogType options.dialogType )
             ]
         ]
 
@@ -569,3 +532,17 @@ encodeFilter df =
         [ ( "extensions", Json.Encode.list Json.Encode.string df.extensions )
         , ( "name", Json.Encode.string df.name )
         ]
+
+
+
+-- Decoding Strings ------------------------------------------
+
+
+decodeMaybeString : Json.Decode.Decoder (Maybe String)
+decodeMaybeString =
+    Json.Decode.maybe Json.Decode.string
+
+
+decodeMaybeStrings : Json.Decode.Decoder (Maybe (List String))
+decodeMaybeStrings =
+    Json.Decode.maybe (Json.Decode.list Json.Decode.string)
