@@ -159,8 +159,6 @@ view model =
                     ]
                 , Element.text " "
                 , Element.text "FS"
-                , Element.text "Note that if I open a dialog to ask for something,"
-                , Element.text "you need to press the button again afterwards."
                 , Element.row [ Element.spacing 10 ]
                     [ button ReadTextFile
                     , button CopyFile
