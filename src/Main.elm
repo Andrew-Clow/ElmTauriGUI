@@ -14,9 +14,9 @@ import TaskPort exposing (Error)
 import Tauri
 import Tauri.BaseDir as BaseDir exposing (BaseDir(..))
 import Tauri.DateTime as DateTime exposing (DateTime)
-import Tauri.Dialog2 as Dialog2 exposing (InfoWarningOrError(..), TitleOrAppName(..))
-import Tauri.FS2 as FS2
-import Tauri.FSInBaseDir2 as FSInBaseDir2
+import Tauri.Dialog as Dialog2 exposing (InfoWarningOrError(..), TitleOrAppName(..))
+import Tauri.FS as FS
+import Tauri.FSInBaseDir as FSInBaseDir
 import Tauri.Modified as Modified
 import Tauri.Path as Path
 import Time
@@ -367,7 +367,7 @@ update msg model =
 
         CreatedDir filePath ->
             ( { model | answerWas = { text = "Created directory\n " ++ filePath, good = Good } }
-            , FS2.createDir filePath (Created filePath) |> toCmd identity
+            , FS.createDir filePath (Created filePath) |> toCmd identity
             )
 
         Created filePath ->
@@ -519,7 +519,7 @@ press model btn =
                 , title = Just "Pick a text file to read"
                 }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult FS2.readTextFile
+                |> Tauri.andThenWithoutResult FS.readTextFile
                 |> Tauri.resultToMsg identity GotFileContents
                 |> toCmd identity
 
@@ -549,7 +549,7 @@ press model btn =
 
                 copy : { from : FilePath, to : FilePath } -> Task Error Msg
                 copy fromTo =
-                    FS2.copyFile fromTo (Copied fromTo)
+                    FS.copyFile fromTo (Copied fromTo)
             in
             open
                 |> Tauri.andThen saveDialog
@@ -575,11 +575,11 @@ press model btn =
 
                 getExistence : FilePath -> TaskErrorResultMsg FilePath
                 getExistence filePath =
-                    FS2.exists filePath { yes = Ok, no = NoSuchFolder >> Err }
+                    FS.exists filePath { yes = Ok, no = NoSuchFolder >> Err }
 
                 readDir : FilePath -> Task Error Tauri.FolderContents
                 readDir filePath =
-                    FSInBaseDir2.readDir Home { recursive = True } filePath
+                    FSInBaseDir.readDir Home { recursive = True } filePath
             in
             Dialog2.ask "Recursively?" { title = Nothing, dialogType = Info } { yes = True, no = False }
                 |> Task.andThen openDir
@@ -599,7 +599,7 @@ press model btn =
 
                 remove : FilePath -> Task Error Msg
                 remove filePath =
-                    FS2.removeDir filePath (RemovedFile filePath)
+                    FS.removeDir filePath (RemovedFile filePath)
             in
             Dialog2.openDirectory { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" } { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThen areYouSure
@@ -617,7 +617,7 @@ press model btn =
 
                 remove : FilePath -> Task Error Msg
                 remove filePath =
-                    FS2.removeFile filePath (RemovedFile filePath)
+                    FS.removeFile filePath (RemovedFile filePath)
             in
             Dialog2.openFile
                 { defaultPath = Nothing, filters = [], title = Just "Choose file to delete" }
@@ -652,7 +652,7 @@ press model btn =
 
                 rename : { from : FilePath, to : FilePath } -> Task Error Msg
                 rename fromTo =
-                    FS2.renameFile fromTo (Copied fromTo)
+                    FS.renameFile fromTo (Copied fromTo)
             in
             open
                 |> Tauri.andThen saveDialog
@@ -682,7 +682,7 @@ press model btn =
             Dialog2.save { defaultPath = Nothing, filters = [], title = Just "Save as" }
                 { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThenWithoutResult
-                    (\filePath -> FS2.writeTextFileIfDifferent { filePath = filePath, contents = string })
+                    (\filePath -> FS.writeTextFileIfDifferent { filePath = filePath, contents = string })
                 |> Tauri.resultToMsg identity WroteTextFile
                 |> toCmd identity
 
@@ -690,14 +690,14 @@ press model btn =
             Dialog2.openFile
                 { defaultPath = Nothing, filters = [], title = Just "Pick an existing file" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult (\filePath -> FS2.exists filePath { yes = Existence True, no = Existence False })
+                |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
                 |> toCmd Tauri.combineResults
 
         CheckFakeFileExists ->
             Dialog2.save
                 { defaultPath = Nothing, filters = [], title = Just "Pretend to create a file" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult (\filePath -> FS2.exists filePath { yes = Existence True, no = Existence False })
+                |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
                 |> toCmd Tauri.combineResults
 
 

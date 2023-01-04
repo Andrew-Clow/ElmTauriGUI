@@ -18,7 +18,7 @@ import Json.Decode
 import Task exposing (Task)
 import TaskPort
 import Tauri.BaseDir as BaseDir
-import Tauri.FSInBaseDir2 as FS
+import Tauri.FSInBaseDir as FS
 
 
 

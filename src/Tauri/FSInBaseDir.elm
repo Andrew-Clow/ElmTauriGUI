@@ -1,4 +1,4 @@
-module Tauri.FSInBaseDir2 exposing
+module Tauri.FSInBaseDir exposing
     ( copyFile
     , createDir
     , exists

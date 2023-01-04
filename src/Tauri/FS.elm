@@ -1,4 +1,4 @@
-module Tauri.FS2 exposing
+module Tauri.FS exposing
     ( copyFile
     , createDir
     , decodeFileEntry
