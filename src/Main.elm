@@ -541,7 +541,7 @@ press model btn =
 
                 areYouSure fromTo =
                     Dialog2.ask
-                        ("Are you sure you want to copy \n" ++ fromTo.from ++ "\n to \n" ++ fromTo.to ++ "\n?")
+                        ("Are you sure you want to copy \n" ++ Path.toFileName fromTo.from ++ "\n to \n" ++ Path.toFileName fromTo.to ++ "\n?")
                         { title = Just "Are you sure?", dialogType = Warning }
                         { no = Err Cancelled, yes = Ok fromTo }
 
@@ -591,7 +591,7 @@ press model btn =
                 areYouSure : FilePath -> TaskErrorResultMsg FilePath
                 areYouSure filePath =
                     Dialog2.ask
-                        ("Are you sure you want to remove " ++ filePath ++ " ?")
+                        ("Are you sure you want to remove " ++ Path.toFileName filePath ++ " ?")
                         { title = Just "Are you sure?", dialogType = Warning }
                         { yes = Ok filePath, no = Err Cancelled }
 
@@ -599,7 +599,9 @@ press model btn =
                 remove filePath =
                     FS.removeDir filePath (RemovedFile filePath)
             in
-            Dialog2.openDirectory { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" } { cancelled = Err Cancelled, chose = Ok }
+            Dialog2.openDirectory
+                { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" }
+                { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThen areYouSure
                 |> Tauri.andThenWithoutResult remove
                 |> toCmd Tauri.resultsCombine
@@ -609,7 +611,7 @@ press model btn =
                 ask : FilePath -> TaskErrorResultMsg FilePath
                 ask filePath =
                     Dialog2.ask
-                        ("Are you sure you want to remove " ++ filePath ++ " ?")
+                        ("Are you sure you want to remove " ++ Path.toFileName filePath ++ " ?")
                         { title = Just "Are you sure?", dialogType = Warning }
                         { yes = Ok filePath, no = Err Cancelled }
 
@@ -633,18 +635,18 @@ press model btn =
                         , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
                         , title = Just "Pick a text file to copy"
                         }
-                        { cancelled = Err <| Say "Didn't pick a file to copy", chose = Ok }
+                        { cancelled = Err <| Say "Didn't pick a file to rename", chose = Ok }
 
                 saveDialog : FilePath -> TaskErrorResultMsg { from : FilePath, to : FilePath }
                 saveDialog fromFile =
-                    Dialog2.save { defaultPath = Nothing, filters = [], title = Just "What should I save it as?" }
-                        { cancelled = Err <| Say "Didn't pick a file name to save it to"
+                    Dialog2.save { defaultPath = Nothing, filters = [], title = Just "What should I rename it as?" }
+                        { cancelled = Err <| Say "Didn't pick a file name to rename it to"
                         , chose = \toFile -> Ok { from = fromFile, to = toFile }
                         }
 
                 areYouSure fromTo =
                     Dialog2.ask
-                        ("Are you sure you want to copy \n" ++ fromTo.from ++ "\n to \n" ++ fromTo.to ++ "\n?")
+                        ("Are you sure you want to rename \n" ++ Path.toFileName fromTo.from ++ "\n to \n" ++ Path.toFileName fromTo.to ++ "\n?")
                         { title = Just "Are you sure?", dialogType = Warning }
                         { no = Err Cancelled, yes = Ok fromTo }
 
