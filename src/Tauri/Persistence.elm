@@ -18,7 +18,7 @@ import Json.Decode
 import Task exposing (Task)
 import TaskPort
 import Tauri.BaseDir as BaseDir
-import Tauri.FSInBaseDir as FS
+import Tauri.FSInBaseDir2 as FS
 
 
 
@@ -97,7 +97,7 @@ toCmd2 tagError toMsg task =
 
 init : Persist pData pMsg -> Task String (PersistentData pData)
 init persist =
-    FS.exists appConfig persist.filename
+    FS.exists appConfig persist.filename { yes = always True, no = always False }
         |> Task.mapError (\e -> "Persistence.init error: " ++ TaskPort.errorToString e)
         |> Task.andThen
             (\exists ->
@@ -166,10 +166,10 @@ writeDefault persist =
 
 write : Persist pData pMsg -> pData -> Task String (PersistentData pData)
 write persist pData =
-    FS.writeTextFile appConfig { filePath = persist.filename, contents = Codec.encodeToString 2 persist.jsonCodec pData }
+    FS.writeTextFile appConfig
+        { filePath = persist.filename, contents = Codec.encodeToString 2 persist.jsonCodec pData }
+        (PersistentData pData)
         |> Task.mapError (\e -> "Persistence.saveDefault error: " ++ TaskPort.errorToString e)
-        |> Task.map
-            (\_ -> PersistentData pData)
 
 
 
@@ -178,14 +178,14 @@ write persist pData =
 
 ensureAppConfigDirExists : Task String ()
 ensureAppConfigDirExists =
-    FS.exists appConfig ""
+    FS.exists appConfig "" { yes = always True, no = always False }
         |> Task.andThen
             (\existence ->
                 if existence then
                     Task.succeed ()
 
                 else
-                    FS.createDir appConfig { createParentsIfAbsent = True } ""
+                    FS.createDir appConfig { createParentsIfAbsent = True } "" ()
             )
         |> Task.mapError TaskPort.errorToString
 
