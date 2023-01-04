@@ -239,8 +239,8 @@ mapOk f task =
     task |> Task.map (Result.map f)
 
 
-mapBoth : (err -> newErr) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr b)
-mapBoth mapE mapO task =
+mapErrAndOk : (err -> newErr) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr b)
+mapErrAndOk mapE mapO task =
     task |> Task.map (Result.mapError mapE >> Result.map mapO)
 
 
@@ -268,8 +268,8 @@ iff t f bool =
         f
 
 
-combineResults : Result a a -> a
-combineResults result =
+resultsCombine : Result a a -> a
+resultsCombine result =
     case result of
         Ok a ->
             a

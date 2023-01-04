@@ -555,7 +555,7 @@ press model btn =
                 |> Tauri.andThen saveDialog
                 |> Tauri.andThen areYouSure
                 |> Tauri.andThenWithoutResult copy
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
         ChooseToCreateDir ->
             Dialog2.save
@@ -604,7 +604,7 @@ press model btn =
             Dialog2.openDirectory { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" } { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThen areYouSure
                 |> Tauri.andThenWithoutResult remove
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
         RemoveFile ->
             let
@@ -624,7 +624,7 @@ press model btn =
                 { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThen ask
                 |> Tauri.andThenWithoutResult remove
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
         RenameFile ->
             let
@@ -658,7 +658,7 @@ press model btn =
                 |> Tauri.andThen saveDialog
                 |> Tauri.andThen areYouSure
                 |> Tauri.andThenWithoutResult rename
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
         GetPath baseDir ->
             Path.get baseDir
@@ -691,14 +691,14 @@ press model btn =
                 { defaultPath = Nothing, filters = [], title = Just "Pick an existing file" }
                 { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
         CheckFakeFileExists ->
             Dialog2.save
                 { defaultPath = Nothing, filters = [], title = Just "Pretend to create a file" }
                 { cancelled = Err Cancelled, chose = Ok }
                 |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
-                |> toCmd Tauri.combineResults
+                |> toCmd Tauri.resultsCombine
 
 
 showFolderContents : Tauri.FolderContents -> String
