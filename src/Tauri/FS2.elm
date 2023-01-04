@@ -1,4 +1,4 @@
-module Tauri.FS exposing
+module Tauri.FS2 exposing
     ( copyFile
     , createDir
     , decodeFileEntry
@@ -15,8 +15,9 @@ module Tauri.FS exposing
 import Json.Decode
 import Json.Encode
 import Task exposing (Task)
-import TaskPort
-import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..))
+import TaskPort exposing (Error)
+import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..), iff)
+import Tauri.Constant exposing (..)
 
 
 
@@ -28,11 +29,11 @@ import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderCon
 -- exists --------------------------------------------------------------------------------------------------------------
 
 
-exists : FilePath -> Task TaskPort.Error Bool
-exists filePath =
+exists : FilePath -> { yes : FilePath -> answer, no : FilePath -> answer } -> Task Error answer
+exists filePath yesno =
     TaskPort.call
         { function = "exists"
-        , valueDecoder = Json.Decode.bool
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (iff (yesno.yes filePath) (yesno.no filePath))
         , argsEncoder = Json.Encode.string
         }
         filePath
@@ -42,7 +43,7 @@ exists filePath =
 -- readTextFile --------------------------------------------------------------------------------------------------------
 
 
-readTextFile : FilePath -> Task TaskPort.Error FileContents
+readTextFile : FilePath -> Task Error FileContents
 readTextFile filePath =
     TaskPort.call
         { function = "readTextFile"
@@ -56,48 +57,44 @@ readTextFile filePath =
 -- writeTextFile -------------------------------------------------------------------------------------------------------
 
 
-writeTextFile : { filePath : FilePath, contents : String } -> Task TaskPort.Error ()
-writeTextFile fileContents =
+writeTextFile : { filePath : FilePath, contents : String } -> ok -> Task Error ok
+writeTextFile fileContents ok =
     TaskPort.call
         { function = "writeTextFile"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = encodeFileContents
         }
         fileContents
 
 
-writeTextFileIfDifferent : { filePath : FilePath, contents : String } -> Task TaskPort.Error FileWas
+writeTextFileIfDifferent : { filePath : FilePath, contents : String } -> Task Error FileWas
 writeTextFileIfDifferent fileContents =
-    exists fileContents.filePath
-        |> Task.andThen
-            (\itAlreadyExists ->
-                if itAlreadyExists then
-                    readTextFile fileContents.filePath
-                        |> Task.andThen
-                            (\currentContents ->
-                                if fileContents.contents /= currentContents.contents then
-                                    writeTextFile fileContents
-                                        |> Task.map (always WasDifferent)
+    exists fileContents.filePath { yes = always True, no = always False }
+        |> Tauri.boolTask
+            { true =
+                readTextFile fileContents.filePath
+                    |> Task.andThen
+                        (\currentContents ->
+                            if fileContents.contents /= currentContents.contents then
+                                writeTextFile fileContents WasDifferent
 
-                                else
-                                    Task.succeed WasSame
-                            )
-
-                else
-                    writeTextFile fileContents
-                        |> Task.map (always WasNew)
-            )
+                            else
+                                Task.succeed WasSame
+                        )
+            , false =
+                writeTextFile fileContents WasNew
+            }
 
 
 
 -- renameFile ----------------------------------------------------------------------------------------------------------
 
 
-renameFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error ()
-renameFile fromTo =
+renameFile : { from : FilePath, to : FilePath } -> ok -> Task Error ok
+renameFile fromTo ok =
     TaskPort.call
         { function = "renameFile"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = encodeFromTo
         }
         fromTo
@@ -107,11 +104,11 @@ renameFile fromTo =
 -- copyFile ------------------------------------------------------------------------------------------------------------
 
 
-copyFile : { from : FilePath, to : FilePath } -> Task TaskPort.Error ()
-copyFile fromTo =
+copyFile : { from : FilePath, to : FilePath } -> ok -> Task Error ok
+copyFile fromTo ok =
     TaskPort.call
         { function = "copyFile"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = \args -> Json.Encode.list Json.Encode.string [ args.from, args.to ]
         }
         fromTo
@@ -121,11 +118,11 @@ copyFile fromTo =
 -- removeFile ----------------------------------------------------------------------------------------------------------
 
 
-removeFile : FilePath -> Task TaskPort.Error ()
-removeFile filePath =
+removeFile : FilePath -> ok -> Task Error ok
+removeFile filePath ok =
     TaskPort.call
         { function = "removeFile"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = Json.Encode.string
         }
         filePath
@@ -140,7 +137,7 @@ removeFile filePath =
 -- readDir --------------------------------------------------------------------------------------------------------------
 
 
-readDir : FilePath -> Task TaskPort.Error FolderContents
+readDir : FilePath -> Task Error FolderContents
 readDir filePath =
     TaskPort.call
         { function = "readDir"
@@ -154,11 +151,11 @@ readDir filePath =
 -- createDir -----------------------------------------------------------------------------------------------------------
 
 
-createDir : FilePath -> Task TaskPort.Error ()
-createDir nameOfDirectory =
+createDir : FilePath -> ok -> Task Error ok
+createDir nameOfDirectory ok =
     TaskPort.call
         { function = "createDir"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = Json.Encode.string
         }
         nameOfDirectory
@@ -168,11 +165,11 @@ createDir nameOfDirectory =
 -- removeDir -----------------------------------------------------------------------------------------------------------
 
 
-removeDir : FilePath -> Task TaskPort.Error ()
-removeDir filePath =
+removeDir : FilePath -> ok -> Task Error ok
+removeDir filePath ok =
     TaskPort.call
         { function = "removeDir"
-        , valueDecoder = Json.Decode.null ()
+        , valueDecoder = Json.Decode.null ok
         , argsEncoder = Json.Encode.string
         }
         filePath

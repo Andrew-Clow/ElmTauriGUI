@@ -1,5 +1,7 @@
 module Tauri exposing (..)
 
+import Maybe.Extra
+import Result.Extra
 import Task exposing (Task)
 import TaskPort
 
@@ -148,7 +150,7 @@ toCommand3 tagInteropError tagJSError toMsg task =
 type FileWas
     = WasDifferent
     | WasSame
-    | WasAbsent
+    | WasNew
 
 
 fileWasToString : FileWas -> String
@@ -160,8 +162,8 @@ fileWasToString fw =
         WasSame ->
             "was the same so I didn't do anything"
 
-        WasAbsent ->
-            "was absent so I saved it"
+        WasNew ->
+            "was new so I saved it"
 
 
 
@@ -181,3 +183,96 @@ interopErrorToString =
 errorToString : TaskPort.Error -> String
 errorToString =
     TaskPort.errorToString
+
+
+
+-- Utility functions ---------------------------------------------------------------------------------------------------
+
+
+andThen : (a -> Task TaskPort.Error (Result msg b)) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
+andThen nextTask firstTask =
+    firstTask |> resultTask (Err >> Task.succeed) nextTask
+
+
+andThenDefinitely : (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
+andThenDefinitely nextTask firstTask =
+    firstTask |> resultTask (Err >> Task.succeed) (nextTask >> Task.map Ok)
+
+
+alwaysTask : Task TaskPort.Error b -> Task TaskPort.Error a -> Task TaskPort.Error b
+alwaysTask second first =
+    first |> Task.andThen (always second)
+
+
+alwaysMsg : msg -> Task TaskPort.Error ignored -> Task TaskPort.Error msg
+alwaysMsg msg task =
+    task |> Task.map (always msg)
+
+
+maybeTask : Task TaskPort.Error b -> (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Maybe a) -> Task TaskPort.Error b
+maybeTask nothing just task =
+    task |> Task.andThen (Maybe.Extra.unwrap nothing just)
+
+
+maybeToMsg : b -> (a -> b) -> Task TaskPort.Error (Maybe a) -> Task TaskPort.Error b
+maybeToMsg nothing just task =
+    task |> Task.map (Maybe.Extra.unwrap nothing just)
+
+
+resultTask : (err -> Task TaskPort.Error b) -> (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error b
+resultTask err ok task =
+    task |> Task.andThen (Result.Extra.unpack err ok)
+
+
+resultToMsg : (err -> b) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error b
+resultToMsg err ok task =
+    task |> Task.map (Result.Extra.unpack err ok)
+
+
+mapErr : (err -> newErr) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr a)
+mapErr f task =
+    task |> Task.map (Result.mapError f)
+
+
+mapOk : (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result err b)
+mapOk f task =
+    task |> Task.map (Result.map f)
+
+
+mapBoth : (err -> newErr) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr b)
+mapBoth mapE mapO task =
+    task |> Task.map (Result.mapError mapE >> Result.map mapO)
+
+
+bothResults : Task TaskPort.Error (Result msg msg) -> Task TaskPort.Error msg
+bothResults task =
+    task |> Task.map (Result.Extra.unpack identity identity)
+
+
+boolTask : { true : Task TaskPort.Error b, false : Task TaskPort.Error b } -> Task TaskPort.Error Bool -> Task TaskPort.Error b
+boolTask thenTasks task =
+    task |> Task.andThen (iff thenTasks.true thenTasks.false)
+
+
+boolToMsg : { true : b, false : b } -> Task TaskPort.Error Bool -> Task TaskPort.Error b
+boolToMsg msgs task =
+    task |> Task.map (iff msgs.true msgs.false)
+
+
+iff : a -> a -> Bool -> a
+iff t f bool =
+    if bool then
+        t
+
+    else
+        f
+
+
+fromMaybe : Task TaskPort.Error (Maybe a) -> answer -> (a -> answer) -> Task TaskPort.Error answer
+fromMaybe task nothing just =
+    task |> Task.map (Maybe.Extra.unwrap nothing just)
+
+
+fromResult : Task TaskPort.Error (Result nope yup) -> (nope -> answer) -> (yup -> answer) -> Task TaskPort.Error answer
+fromResult task err ok =
+    task |> Task.map (Result.Extra.unpack err ok)

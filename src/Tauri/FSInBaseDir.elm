@@ -81,7 +81,7 @@ writeTextFileIfDifferent baseDir fileContents =
 
                 else
                     writeTextFile baseDir fileContents
-                        |> Task.map (always WasAbsent)
+                        |> Task.map (always WasNew)
             )
 
 

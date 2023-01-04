@@ -1,25 +1,4 @@
-module Tauri.Dialog exposing
-    ( DialogType(..)
-    , ask
-    , askOptions
-    , confirm
-    , confirmOptions
-    , ifCancel
-    , ifNo
-    , ifNotPickedOne
-    , ifOK
-    , ifPickedOne
-    , ifPickedSome
-    , ifYes
-    , message
-    , messageOptions
-    , openDirectories
-    , openDirectory
-    , openFile
-    , openFiles
-    , save
-    , warnCheckBefore
-    )
+module Tauri.Dialog2 exposing (..)
 
 {-
    Follow https://tauri.app/v1/guides/getting-started/prerequisites
@@ -51,7 +30,9 @@ import Json.Decode
 import Json.Encode
 import Maybe.Extra
 import Task exposing (Task)
-import TaskPort
+import TaskPort exposing (Error)
+import Tauri exposing (FilePath)
+import Tauri.Constant exposing (..)
 
 
 
@@ -61,168 +42,89 @@ import TaskPort
 
    ---------------------------------------------------------------------------------------------------------------------
 -}
--- ask (Yes/No), confirm (OK/Cancel), message (())
+-- ask (Yes/No), confirm (OK/Cancel), message (OK)
 
 
 type alias MessageDialogOptions =
     { title : Maybe String -- defaults to the app name
-    , dialogType : Maybe DialogType -- called type at the typescript end. Defaults to Info
+    , dialogType : Maybe InfoWarningOrError -- called type at the typescript end. Defaults to Info
     }
 
 
-type DialogType
+type InfoWarningOrError
     = Info
     | Warning
     | Error
+
+
+type TitleOrAppName
+    = Title String
+    | AppNameAsTitle
 
 
 
 -- ask -----------------------------------------------------------------------------------------------------------------
 
 
-ask : String -> Task TaskPort.Error { pressedYes : Bool }
-ask question =
-    TaskPort.call
-        { function = "ask"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
-        , argsEncoder = Json.Encode.string
-        }
-        question
+iff : answer -> answer -> Bool -> answer
+iff y n bool =
+    if bool then
+        y
+
+    else
+        n
 
 
-askOptions : String -> MessageDialogOptions -> Task TaskPort.Error { pressedYes : Bool }
-askOptions question options =
+ask : String -> TitleOrAppName -> InfoWarningOrError -> { yes : answer, no : answer } -> Task Error answer
+ask question titleOrAppName infoWarningOrError answers =
     TaskPort.call
         { function = "askOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedYes = bool }) -- Yes or No
-        , argsEncoder = encodeMessageDialogOptions options
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (iff answers.yes answers.no)
+        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
         }
         question
 
 
 
--- ask "do this thing" |> ifYes (this thing)
+-- ask "do this thing" |> ifYES (this thing)
 -- ask "do that thing" |> ifNo UserSaysNo (that thing)
 -- ask "do another thing" |> ifNo "Computer says no." (another thing)
+{- }
+   ifYES : Task Error (Result msg intendedOutput) -> Task Error (Result NO YES) -> Task Error (Result msg intendedOutput)
+   ifYES taskIfYES questionTask =
+       questionTask
+           |> andThen (always taskIfYES)
 
-
-ifYes : Task TaskPort.Error intendedOutput -> Task TaskPort.Error { pressedYes : Bool } -> Task TaskPort.Error (Maybe intendedOutput)
-ifYes taskIfYes questionTask =
-    questionTask
-        |> Task.andThen
-            (\{ pressedYes } ->
-                if pressedYes then
-                    Task.map Just taskIfYes
-
-                else
-                    Task.succeed Nothing
-            )
-
-
-ifNo : nope -> Task TaskPort.Error (Result nope intendedOutput) -> Task TaskPort.Error { pressedYes : Bool } -> Task TaskPort.Error (Result nope intendedOutput)
-ifNo nope taskIfYes questionTask =
-    questionTask
-        |> Task.andThen
-            (\{ pressedYes } ->
-                if pressedYes then
-                    taskIfYes
-
-                else
-                    Task.succeed <| Err nope
-            )
-
-
-warnCheckBefore :
-    { title : Maybe String
-    , question : String
-    , wasCancelled : msg
-    , errorMsg : TaskPort.Error -> err
-    , taskIfYes : Task err msg
-    }
-    -> Task err msg
-warnCheckBefore { title, question, wasCancelled, errorMsg, taskIfYes } =
-    askOptions question { title = title, dialogType = Just Warning }
-        |> Task.mapError errorMsg
-        |> Task.andThen
-            (\{ pressedYes } ->
-                if pressedYes then
-                    taskIfYes
-
-                else
-                    Task.succeed wasCancelled
-            )
-
-
-
+-}
 -- confirm -------------------------------------------------------------------------------------------------------------
 
 
-confirm : String -> Task TaskPort.Error { pressedOK : Bool }
-confirm question =
-    TaskPort.call
-        { function = "confirm"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
-        , argsEncoder = Json.Encode.string
-        }
-        question
-
-
-confirmOptions : String -> MessageDialogOptions -> Task TaskPort.Error { pressedOK : Bool }
-confirmOptions question options =
+confirm : String -> TitleOrAppName -> InfoWarningOrError -> answer -> answer -> Task Error answer
+confirm question titleOrAppName infoWarningOrError ok cancel =
     TaskPort.call
         { function = "confirmOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (\bool -> { pressedOK = bool }) -- OK or Cancel
-        , argsEncoder = encodeMessageDialogOptions options
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (iff ok cancel)
+        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
         }
         question
 
 
-ifOK : Task TaskPort.Error intendedOutput -> Task TaskPort.Error { pressedOK : Bool } -> Task TaskPort.Error (Maybe intendedOutput)
-ifOK taskIfYes questionTask =
-    questionTask
-        |> Task.andThen
-            (\{ pressedOK } ->
-                if pressedOK then
-                    Task.map Just taskIfYes
 
-                else
-                    Task.succeed Nothing
-            )
+{- }
+   ifOK : Task Error (Result msg intendedOutput) -> Task Error (Result CANCEL OK) -> Task Error (Result msg intendedOutput)
+   ifOK taskIfYes questionTask =
+       questionTask |> and (always taskIfYes)
 
-
-ifCancel : nope -> Task TaskPort.Error (Result nope intendedOutput) -> Task TaskPort.Error { pressedOK : Bool } -> Task TaskPort.Error (Result nope intendedOutput)
-ifCancel nope taskIfYes questionTask =
-    questionTask
-        |> Task.andThen
-            (\{ pressedOK } ->
-                if pressedOK then
-                    taskIfYes
-
-                else
-                    Task.succeed <| Err nope
-            )
-
-
-
+-}
 -- message -------------------------------------------------------------------------------------------------------------
 
 
-message : String -> Task TaskPort.Error ()
-message question =
-    TaskPort.call
-        { function = "message"
-        , valueDecoder = Json.Decode.succeed () -- should be Json.Decode.null (), but it's returning true for some reason.
-        , argsEncoder = Json.Encode.string
-        }
-        question
-
-
-messageOptions : String -> MessageDialogOptions -> Task TaskPort.Error ()
-messageOptions question options =
+message : String -> TitleOrAppName -> InfoWarningOrError -> answer -> Task Error answer
+message question titleOrAppName infoWarningOrError ok =
     TaskPort.call
         { function = "messageOptions"
-        , valueDecoder = Json.Decode.succeed () -- should be Json.Decode.null (), but it's returning true for some reason.
-        , argsEncoder = encodeMessageDialogOptions options
+        , valueDecoder = Json.Decode.succeed ok -- should be Json.Decode.null (), but it's returning true for some reason.
+        , argsEncoder = encodeMessageDialogOptions titleOrAppName infoWarningOrError
         }
         question
 
@@ -250,24 +152,42 @@ type alias FileDialogOptions =
     }
 
 
-openFile : FileDialogOptions -> Task TaskPort.Error (Maybe String)
+jsonDecodeResult : err -> Json.Decode.Decoder a -> Json.Decode.Decoder (Result err a)
+jsonDecodeResult err decoder =
+    Json.Decode.maybe decoder
+        |> Json.Decode.map (Result.fromMaybe err)
+
+
+decodeMaybeString : Json.Decode.Decoder (Maybe String)
+decodeMaybeString =
+    Json.Decode.maybe Json.Decode.string
+
+
+decodeMaybeStrings : Json.Decode.Decoder (Maybe (List String))
+decodeMaybeStrings =
+    Json.Decode.maybe (Json.Decode.list Json.Decode.string)
+
+
+openFile : FileDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
 openFile options =
     TaskPort.call
         { function = "openDlg"
-        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , valueDecoder = decodeMaybeString
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
+        |> Tauri.fromMaybe
 
 
-openFiles : FileDialogOptions -> Task TaskPort.Error (Maybe (List String))
+openFiles : FileDialogOptions -> answer -> (List FilePath -> answer) -> Task Error answer
 openFiles options =
     TaskPort.call
         { function = "openDlg"
-        , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
+        , valueDecoder = decodeMaybeStrings
         , argsEncoder = encodeFileDialogOptions { multiple = True }
         }
         options
+        |> Tauri.fromMaybe
 
 
 
@@ -281,38 +201,41 @@ type alias DirectoryDialogOptions =
     }
 
 
-openDirectory : DirectoryDialogOptions -> Task TaskPort.Error (Maybe String)
+openDirectory : DirectoryDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
 openDirectory options =
     TaskPort.call
         { function = "openDlg"
-        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , valueDecoder = decodeMaybeString
         , argsEncoder = encodeDirectoryDialogOptions { multiple = False }
         }
         options
+        |> Tauri.fromMaybe
 
 
-openDirectories : DirectoryDialogOptions -> Task TaskPort.Error (Maybe (List String))
+openDirectories : DirectoryDialogOptions -> answer -> (List FilePath -> answer) -> Task Error answer
 openDirectories options =
     TaskPort.call
         { function = "openDlg"
-        , valueDecoder = Json.Decode.maybe <| Json.Decode.list Json.Decode.string
+        , valueDecoder = decodeMaybeStrings
         , argsEncoder = encodeDirectoryDialogOptions { multiple = True }
         }
         options
+        |> Tauri.fromMaybe
 
 
 
 -- Save ----------------------------------------------------------------------------------------------------------------
 
 
-save : FileDialogOptions -> Task TaskPort.Error (Maybe String)
+save : FileDialogOptions -> answer -> (FilePath -> answer) -> Task Error answer
 save options =
     TaskPort.call
         { function = "save"
-        , valueDecoder = Json.Decode.maybe Json.Decode.string
+        , valueDecoder = decodeMaybeString
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
+        |> Tauri.fromMaybe
 
 
 
@@ -322,7 +245,7 @@ save options =
 --    |> ifPickedOne (\filename -> ....)
 
 
-ifPickedOne : (s -> Task TaskPort.Error output) -> Task TaskPort.Error (Maybe s) -> Task TaskPort.Error (Maybe output)
+ifPickedOne : (s -> Task Error output) -> Task Error (Maybe s) -> Task Error (Maybe output)
 ifPickedOne taskWithString pickTask =
     pickTask
         |> Task.andThen
@@ -336,7 +259,7 @@ ifPickedOne taskWithString pickTask =
             )
 
 
-ifNotPickedOne : nope -> (s -> Task TaskPort.Error (Result nope output)) -> Task TaskPort.Error (Maybe s) -> Task TaskPort.Error (Result nope output)
+ifNotPickedOne : nope -> (s -> Task Error (Result nope output)) -> Task Error (Maybe s) -> Task Error (Result nope output)
 ifNotPickedOne nope taskWithString pickTask =
     pickTask
         |> Task.andThen
@@ -350,7 +273,7 @@ ifNotPickedOne nope taskWithString pickTask =
             )
 
 
-ifPickedSome : (s -> Task TaskPort.Error output) -> Task TaskPort.Error (Maybe (List s)) -> Task TaskPort.Error (Maybe (List output))
+ifPickedSome : (s -> Task Error output) -> Task Error (Maybe (List s)) -> Task Error (Maybe (List output))
 ifPickedSome taskWithString pickTask =
     pickTask
         |> Task.andThen
@@ -364,6 +287,125 @@ ifPickedSome taskWithString pickTask =
                             Task.sequence <|
                                 List.map taskWithString ss
             )
+
+
+
+-- Utilities -----------------------------------------------------------------------------------------------------------
+
+
+onOk : (a -> msg) -> Task Error (Result msg a) -> Task Error msg
+onOk toCmd task =
+    let
+        fromResult : Result msg a -> msg
+        fromResult result =
+            case result of
+                Err msg ->
+                    msg
+
+                Ok a ->
+                    toCmd a
+    in
+    Task.map fromResult task
+
+
+fail : msg -> Task Error (Result msg Never)
+fail msg =
+    Task.succeed (Err msg)
+
+
+onErr : msg -> Task Error (Result ignored value) -> Task Error (Result msg value)
+onErr msg task =
+    task |> Task.map (Result.mapError <| always msg)
+
+
+andUse : (a -> errB -> msg) -> (a -> Task Error (Result errB okB)) -> Task Error (Result msg a) -> Task Error (Result msg okB)
+andUse failureToMsg thenTask firstTask =
+    let
+        next firstResult =
+            case firstResult of
+                Err errMsg ->
+                    Task.succeed (Err errMsg)
+
+                Ok a ->
+                    thenTask a
+                        |> Task.map (Result.mapError <| failureToMsg a)
+    in
+    firstTask |> Task.andThen next
+
+
+and : (errB -> msg) -> Task Error (Result errB okB) -> Task Error (Result msg ignored) -> Task Error (Result msg okB)
+and failureToMsg thenTask firstTask =
+    let
+        next firstResult =
+            case firstResult of
+                Err firstErr ->
+                    Task.succeed (Err firstErr)
+
+                Ok _ ->
+                    thenTask
+                        |> Task.map (Result.mapError failureToMsg)
+    in
+    firstTask |> Task.andThen next
+
+
+andThen : (a -> Task Error (Result msg b)) -> Task Error (Result msg a) -> Task Error (Result msg b)
+andThen thenTask firstTask =
+    let
+        next result =
+            case result of
+                Err msg ->
+                    Task.succeed (Err msg)
+
+                Ok a ->
+                    thenTask a
+    in
+    firstTask |> Task.andThen next
+
+
+map : (a -> b) -> Task Error (Result msg a) -> Task Error (Result msg b)
+map f =
+    Task.map (Result.map f)
+
+
+andMap : Task Error (Result msg a) -> Task Error (Result msg (a -> b)) -> Task Error (Result msg b)
+andMap =
+    map2 (|>)
+
+
+map2Tee : (a -> Result msg b -> c) -> Task Error (Result msg a) -> (a -> Task Error (Result msg b)) -> Task Error (Result msg c)
+map2Tee f firstTask secondTaskFunction =
+    firstTask
+        |> Task.andThen
+            (\maybeA ->
+                case maybeA of
+                    Err msg ->
+                        Task.succeed <| Err msg
+
+                    Ok a ->
+                        secondTaskFunction a
+                            |> Task.map
+                                (f a >> Ok)
+            )
+
+
+map2 : (a -> b -> c) -> Task Error (Result msg a) -> Task Error (Result msg b) -> Task Error (Result msg c)
+map2 f =
+    Task.map2 (Result.map2 f)
+
+
+map3 : (a -> b -> c -> d) -> Task Error (Result msg a) -> Task Error (Result msg b) -> Task Error (Result msg c) -> Task Error (Result msg d)
+map3 f =
+    Task.map3 (Result.map3 f)
+
+
+map4 : (a -> b -> c -> d -> e) -> Task Error (Result msg a) -> Task Error (Result msg b) -> Task Error (Result msg c) -> Task Error (Result msg d) -> Task Error (Result msg e)
+map4 f =
+    Task.map4 (Result.map4 f)
+
+
+map5 : (a -> b -> c -> d -> e -> f) -> Task Error (Result msg a) -> Task Error (Result msg b) -> Task Error (Result msg c) -> Task Error (Result msg d) -> Task Error (Result msg e) -> Task Error (Result msg f)
+map5 f =
+    Task.map5 (Result.map5 f)
 
 
 
@@ -399,13 +441,23 @@ encodeNothingAsNull encoder maybe =
 -}
 
 
-encodeMessageDialogOptions : MessageDialogOptions -> String -> Json.Encode.Value
-encodeMessageDialogOptions { title, dialogType } msg =
+titleToString : TitleOrAppName -> Maybe String
+titleToString t =
+    case t of
+        Title string ->
+            Just string
+
+        AppNameAsTitle ->
+            Nothing
+
+
+encodeMessageDialogOptions : TitleOrAppName -> InfoWarningOrError -> String -> Json.Encode.Value
+encodeMessageDialogOptions titleOrAppName infoWarningOrError msg =
     Json.Encode.list identity
         [ Json.Encode.string msg
         , Json.Encode.object
-            [ ( "title", encodeNothingAsNull Json.Encode.string title )
-            , ( "type", encodeNothingAsNull encodeDialogType dialogType )
+            [ ( "title", encodeNothingAsNull Json.Encode.string (titleToString titleOrAppName) )
+            , ( "type", encodeDialogType infoWarningOrError )
             ]
         ]
 
@@ -419,7 +471,7 @@ encodeMessageDialogOptions { title, dialogType } msg =
 -}
 
 
-encodeDialogType : DialogType -> Json.Encode.Value
+encodeDialogType : InfoWarningOrError -> Json.Encode.Value
 encodeDialogType dialogType =
     Json.Encode.string <|
         case dialogType of

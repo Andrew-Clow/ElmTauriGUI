@@ -11,16 +11,23 @@ import Json.Decode
 import Main.Config as Config exposing (Config, ConfigMsg(..), PersistentConfig)
 import Maybe.Extra
 import Task exposing (Task)
-import TaskPort
+import TaskPort exposing (Error)
 import Tauri
 import Tauri.BaseDir as BaseDir exposing (BaseDir(..))
+import Tauri.Constant exposing (..)
 import Tauri.DateTime as DateTime exposing (DateTime)
 import Tauri.Dialog as Dialog
+import Tauri.Dialog2 as Dialog2 exposing (InfoWarningOrError(..), TitleOrAppName(..))
 import Tauri.FS as FS
+import Tauri.FS2 as FS2
 import Tauri.FSInBaseDir as FSInBaseDir
 import Tauri.Modified as Modified
 import Tauri.Path as Path
 import Time
+
+
+type alias TaskErrorResultMsg a =
+    Task Error (Result Msg a)
 
 
 main : Program () Model Msg
@@ -41,7 +48,6 @@ type alias Model =
     { answerWas : { text : String, good : Good }
     , readFilePath : Maybe FilePath
     , saveFilePath : Maybe FilePath
-    , directory : Maybe FilePath
     , textFileContent : Maybe String
     , showPathButtons : Bool
     , config : PersistentConfig
@@ -52,6 +58,11 @@ type alias Model =
 good : Model -> String -> Model
 good model text =
     { model | answerWas = { text = text, good = Good } }
+
+
+bad : Model -> String -> Model
+bad model text =
+    { model | answerWas = { text = text, good = Bad } }
 
 
 type Good
@@ -71,16 +82,15 @@ type Button
     | ReadTextFile
     | CopyFile
     | ChooseToCreateDir
-    | CheckExists
-    | ChooseDir
+    | CheckRealFileExists
+    | CheckFakeFileExists
     | ReadDir
     | RemoveDir
     | RemoveFile
     | RenameFile
-    | WriteTextFile
+    | WriteTextFileContaining String
     | GetPath BaseDir.BaseDir
     | TestbaseDirectoryIsTotal
-    | NewCopyFile
     | ConfigMsg Config.ConfigMsg
     | GetModified
 
@@ -98,22 +108,17 @@ type Msg
     | GotFilePath (Maybe String)
     | NoSaveFileSpecified
     | GotSaveFilePath (Maybe String)
-    | GotFileContents (Maybe Tauri.FileContents)
-    | ConfirmCopy { from : FilePath, to : FilePath } { pressedYes : Bool }
-    | Copied { from : FilePath, to : FilePath }
+    | GotFileContents Tauri.FileContents
+    | Cancelled
+    | Copied (Result String { from : FilePath, to : FilePath })
     | CreateDir (Maybe FilePath)
     | Created FilePath
-    | Existence FilePath Bool
-    | Directory FilePath
-    | NoFolderSpecified
+    | Existence Bool FilePath
     | Folder Tauri.FolderContents
-    | ConfirmRemoveDir FilePath { pressedYes : Bool }
-    | Removed FilePath
-    | ConfirmRemoveFile FilePath { pressedYes : Bool }
-    | ConfirmRename { from : FilePath, to : FilePath } { pressedYes : Bool }
-    | Renamed { from : FilePath, to : FilePath }
-    | EnableTextBox
-    | WroteTextFile FilePath Tauri.FileWas
+    | RemovedFile FilePath
+    | Renamed (Result String { from : FilePath, to : FilePath })
+    | ToggleTextBox
+    | WroteTextFile (Maybe { filePath : FilePath, fileWas : Tauri.FileWas })
     | EditedTextBox String
     | ToggleShowPathButtons
     | GotPath BaseDir.BaseDir FilePath
@@ -121,6 +126,7 @@ type Msg
     | GotConfig (Result String Config.PersistentConfig)
     | GotTimeZone Time.Zone
     | GotModified (Maybe { filePath : FilePath, modified : DateTime })
+    | NoSuchFolder FilePath
 
 
 init : flags -> ( Model, Cmd Msg )
@@ -129,7 +135,6 @@ init =
         ( { answerWas = { text = "", good = Neutral }
           , readFilePath = Nothing
           , saveFilePath = Nothing
-          , directory = Nothing
           , textFileContent = Nothing
           , showPathButtons = False
           , config = Config.default
@@ -165,14 +170,14 @@ view model =
                 , Element.text "you need to press the button again afterwards."
                 , Element.row [ Element.spacing 10 ]
                     [ button ReadTextFile
-                    , button NewCopyFile
+                    , button CopyFile
                     , button RemoveFile
                     , button RenameFile
-                    , greenButton "Write Text File (if different)" <| writeTextFileLogic model
+                    , greenButton "Write Text File (if different)" ToggleTextBox
                     ]
                 , Element.row [ Element.spacing 10 ]
-                    [ button CheckExists
-                    , button ChooseDir
+                    [ button CheckRealFileExists
+                    , button CheckFakeFileExists
                     , button ChooseToCreateDir
                     , button ReadDir
                     , button RemoveDir
@@ -243,12 +248,15 @@ view model =
                     Element.none
 
                 Just content ->
-                    Element.Input.text []
-                        { onChange = EditedTextBox
-                        , text = content
-                        , placeholder = Just (Element.Input.placeholder [] <| Element.text "Contents to write to text file.")
-                        , label = Element.Input.labelLeft [] <| Element.text ""
-                        }
+                    Element.row [ Element.spacing 10 ]
+                        [ Element.Input.text []
+                            { onChange = EditedTextBox
+                            , text = content
+                            , placeholder = Just (Element.Input.placeholder [] <| Element.text "Contents to write to text file.")
+                            , label = Element.Input.labelLeft [] <| Element.text ""
+                            }
+                        , button (WriteTextFileContaining content)
+                        ]
             ]
 
 
@@ -271,16 +279,6 @@ greenButton string msg =
             }
         ]
         { onPress = Just msg, label = Element.text string }
-
-
-writeTextFileLogic : Model -> Msg
-writeTextFileLogic model =
-    case model.textFileContent of
-        Just _ ->
-            Pressed WriteTextFile
-
-        Nothing ->
-            EnableTextBox
 
 
 buttonName : Button -> String
@@ -313,14 +311,8 @@ buttonName btn =
         ChooseToCreateDir ->
             "Create Dir"
 
-        CheckExists ->
-            "Check Exists"
-
         ReadDir ->
             "Read Dir"
-
-        ChooseDir ->
-            "Choose Dir"
 
         RemoveDir ->
             "Remove Dir"
@@ -331,17 +323,11 @@ buttonName btn =
         RenameFile ->
             "Rename File"
 
-        WriteTextFile ->
-            "Write File (if different)"
-
         GetPath baseDir ->
             BaseDir.toString baseDir
 
         TestbaseDirectoryIsTotal ->
             "Temp Test"
-
-        NewCopyFile ->
-            "Copy File"
 
         ConfigMsg configMsg ->
             Config.configMsgToString configMsg
@@ -349,8 +335,17 @@ buttonName btn =
         GetModified ->
             "Get File Modified Date/Time"
 
+        WriteTextFileContaining _ ->
+            "Save"
 
-toCmd : (a -> Msg) -> Task TaskPort.Error a -> Cmd Msg
+        CheckRealFileExists ->
+            "Check File Exists"
+
+        CheckFakeFileExists ->
+            "Check File Doesn't Exist"
+
+
+toCmd : (a -> Msg) -> Task Error a -> Cmd Msg
 toCmd =
     Tauri.toCmd3 InteropError JSReturnError
 
@@ -402,36 +397,27 @@ update msg model =
                 |> toCmd GotSaveFilePath
             )
 
-        GotFileContents maybeFileContents ->
-            case maybeFileContents of
-                Nothing ->
-                    ( { model | answerWas = { text = "Cancelled Read File", good = Neutral } }, Cmd.none )
+        GotFileContents fileContents ->
+            let
+                showFileContents : Tauri.FileContents -> String
+                showFileContents { filePath, contents } =
+                    filePath ++ "\n\n" ++ contents
+            in
+            ( good model <| showFileContents fileContents, Cmd.none )
 
-                Just fileContents ->
-                    let
-                        showFileContents : Tauri.FileContents -> String
-                        showFileContents { filePath, contents } =
-                            filePath ++ "\n\n" ++ contents
-                    in
-                    ( good model <| showFileContents fileContents, Cmd.none )
+        Copied result ->
+            case result of
+                Ok record ->
+                    ( { model | answerWas = { text = "Copied " ++ record.from ++ " to " ++ record.to, good = Good } }, Cmd.none )
 
-        ConfirmCopy record value ->
-            if value.pressedYes then
-                ( { model | answerWas = { text = "Copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }
-                , FS.copyFile record |> toCmd (always <| Copied record)
-                )
-
-            else
-                ( { model | answerWas = { text = "Not copying " ++ record.from ++ " to " ++ record.to, good = Neutral } }, Cmd.none )
-
-        Copied record ->
-            ( { model | answerWas = { text = "Copied " ++ record.from ++ " to " ++ record.to, good = Good } }, Cmd.none )
+                Err string ->
+                    ( { model | answerWas = { text = string, good = Neutral } }, Cmd.none )
 
         CreateDir result ->
             case result of
                 Just filePath ->
                     ( { model | answerWas = { text = "Saving as " ++ filePath, good = Good } }
-                    , FS.createDir filePath |> toCmd (\_ -> Created filePath)
+                    , FS2.createDir filePath (Created filePath) |> toCmd identity
                     )
 
                 Nothing ->
@@ -440,22 +426,9 @@ update msg model =
         Created filePath ->
             ( { model | answerWas = { text = filePath, good = Good } }, Cmd.none )
 
-        Existence filePath bool ->
-            ( { model | answerWas = { text = filePath ++ iff bool " exists." " doesn't exist.", good = Good } }
+        Existence exists filePath ->
+            ( { model | answerWas = { text = filePath ++ iff exists "\n exists." "\n doesn't exist.", good = Good } }
             , Cmd.none
-            )
-
-        Directory filePath ->
-            ( { model | directory = Just filePath, answerWas = { text = filePath, good = Good } }, Cmd.none )
-
-        NoFolderSpecified ->
-            ( { model | answerWas = { text = "No folder specified", good = Bad } }
-            , Dialog.openDirectory
-                { defaultPath = Nothing
-                , recursive = False
-                , title = Just "Please pick a folder"
-                }
-                |> toCmd (ignoreNothing Directory)
             )
 
         Folder folderContents ->
@@ -467,44 +440,32 @@ update msg model =
         JSReturnError jSError ->
             ( { model | answerWas = { text = "Error Returned from Javascript:\n" ++ TaskPort.errorToString (TaskPort.JSError jSError), good = Bad } }, Cmd.none )
 
-        ConfirmRemoveDir filePath value ->
-            if value.pressedYes then
-                ( { model | answerWas = { text = "Removing " ++ filePath, good = Neutral } }
-                , FS.removeDir filePath |> toCmd (always <| Removed filePath)
-                )
-
-            else
-                ( { model | answerWas = { text = "Not removing " ++ filePath, good = Neutral } }, Cmd.none )
-
-        Removed filePath ->
+        RemovedFile filePath ->
             ( good model <| "Removed " ++ filePath, Cmd.none )
 
-        ConfirmRemoveFile filePath value ->
-            if value.pressedYes then
-                ( { model | answerWas = { text = "Removing " ++ filePath, good = Neutral } }
-                , FS.removeFile filePath |> toCmd (always <| Removed filePath)
-                )
+        Renamed result ->
+            case result of
+                Ok record ->
+                    ( { model | answerWas = { text = "Renamed\n " ++ record.from ++ "\n to \n " ++ record.to, good = Good } }, Cmd.none )
 
-            else
-                ( { model | answerWas = { text = "Not removing " ++ filePath, good = Neutral } }, Cmd.none )
+                Err string ->
+                    ( bad model string, Cmd.none )
 
-        ConfirmRename record value ->
-            if value.pressedYes then
-                ( { model | answerWas = { text = "Rename " ++ record.from ++ " to " ++ record.to, good = Neutral } }
-                , FS.renameFile record |> toCmd (always <| Renamed record)
-                )
+        ToggleTextBox ->
+            case model.textFileContent of
+                Nothing ->
+                    ( { model | textFileContent = Just "", answerWas = { text = "Writing a text file...", good = Neutral } }, Cmd.none )
 
-            else
-                ( { model | answerWas = { text = "Not renaming " ++ record.from ++ " to " ++ record.to, good = Neutral } }, Cmd.none )
+                Just _ ->
+                    ( { model | textFileContent = Nothing, answerWas = { text = "Cancelled writing a text file", good = Neutral } }, Cmd.none )
 
-        Renamed record ->
-            ( { model | answerWas = { text = "Renamed " ++ record.from ++ " to " ++ record.to, good = Good } }, Cmd.none )
+        WroteTextFile maybe ->
+            case maybe of
+                Nothing ->
+                    ( { model | answerWas = { text = "Cancelled save", good = Neutral } }, Cmd.none )
 
-        EnableTextBox ->
-            ( { model | textFileContent = Just "" }, Cmd.none )
-
-        WroteTextFile filePath fileWas ->
-            ( good { model | textFileContent = Nothing } <| filePath ++ " " ++ Tauri.fileWasToString fileWas, Cmd.none )
+                Just { filePath, fileWas } ->
+                    ( good { model | textFileContent = Nothing } <| filePath ++ " \n " ++ Tauri.fileWasToString fileWas, Cmd.none )
 
         EditedTextBox string ->
             ( { model | textFileContent = Just string }, Cmd.none )
@@ -542,6 +503,12 @@ update msg model =
 
                 Just modified ->
                     ( good model <| modified.filePath ++ "\n" ++ DateTime.dateTimeToString modified.modified, Cmd.none )
+
+        Cancelled ->
+            ( { model | answerWas = { text = "Cancelled", good = Neutral } }, Cmd.none )
+
+        NoSuchFolder filePath ->
+            ( bad model <| "Folder doesn't exist: \n" ++ filePath, Cmd.none )
 
 
 iff : Bool -> a -> a -> a
@@ -598,131 +565,114 @@ press model btn =
                 |> toCmd GotSaveFilePath
 
         ReadTextFile ->
-            Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to read" }
-                |> Dialog.ifPickedOne FS.readTextFile
-                |> toCmd GotFileContents
+            Dialog2.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to read" }
+                (Err Cancelled)
+                Ok
+                |> Tauri.andThenDefinitely FS2.readTextFile
+                |> Tauri.resultToMsg identity GotFileContents
+                |> toCmd identity
 
         CopyFile ->
-            {-
-               let
-                   fromTo from maybeTo =
-                       case maybeTo of
-                           Nothing ->
-                               Nothing
-
-                           Just to ->
-                               Just { from = from, to = to }
-               in
-               Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to copy" }
-                   |> Dialog.ifPickedOne
-                       (\fromFilePath ->
-                           Dialog.save { defaultPath = Nothing, filters = [], title = Just "What should I save it as?" }
-                               |> Dialog.ifPickedOne
-                                   (\toFilePath ->
-                                       Dialog.askOptions ("Are you sure you want to copy\n" ++ fromFilePath ++ "\nto\n" ++ toFilePath ++ "\n?")
-                                           { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
-                                           |> Dialog.ifYes (FS.copyFile { from = fromFilePath, to = toFilePath })
-                                   )
-                       )
-                   |> toCmd Copied
-            -}
-            case ( model.readFilePath, model.saveFilePath ) of
-                ( Just from, Just to ) ->
-                    Dialog.askOptions
-                        ("Are you sure you want to copy\n" ++ from ++ "\nto\n" ++ to ++ "\n?")
-                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
-                        |> toCmd (ConfirmCopy { from = from, to = to })
-
-                ( Nothing, _ ) ->
-                    cmdSucceed NoReadFileSpecified
-
-                ( Just _, Nothing ) ->
-                    cmdSucceed NoSaveFileSpecified
+            Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to copy" }
+                |> Dialog.ifNotPickedOne "Didn't pick a file to copy"
+                    (\fromFilePath ->
+                        Dialog.save { defaultPath = Nothing, filters = [], title = Just "What should I save it as?" }
+                            |> Dialog.ifNotPickedOne "Didn't pick a file name to save it to"
+                                (\toFilePath ->
+                                    Dialog.askOptions
+                                        ("Are you sure you want to copy \n" ++ fromFilePath ++ "\n to \n" ++ toFilePath ++ "\n?")
+                                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                                        |> Dialog.ifNo "Cancelled copy"
+                                            (FS.copyFile { from = fromFilePath, to = toFilePath }
+                                                |> Task.map (always <| Ok { from = fromFilePath, to = toFilePath })
+                                            )
+                                )
+                    )
+                |> toCmd Copied
 
         ChooseToCreateDir ->
             Dialog.save { defaultPath = Nothing, filters = [], title = Just "Please enter the name of your new folder." } |> toCmd CreateDir
 
-        CheckExists ->
-            case model.saveFilePath of
-                Just saveFilePath ->
-                    FS.exists saveFilePath
-                        |> toCmd (Existence saveFilePath)
-
-                Nothing ->
-                    case model.readFilePath of
-                        Just filePath ->
-                            FS.exists filePath
-                                |> toCmd (Existence filePath)
-
-                        Nothing ->
-                            cmdSucceed NoReadFileSpecified
-
-        ChooseDir ->
-            Dialog.openDirectory { defaultPath = Nothing, recursive = False, title = Nothing }
-                |> toCmd (ignoreNothing Directory)
-
         ReadDir ->
-            case model.directory of
-                Just filePath ->
-                    FSInBaseDir.readDir Home { recursive = True } filePath |> toCmd Folder
+            let
+                openDir : Bool -> TaskErrorResultMsg FilePath
+                openDir recursive =
+                    Dialog2.openDirectory { defaultPath = Nothing, recursive = recursive, title = Just "Choose a directory to read" }
+                        (Err Cancelled)
+                        Ok
 
-                Nothing ->
-                    cmdSucceed NoFolderSpecified
+                getExistence : FilePath -> TaskErrorResultMsg FilePath
+                getExistence filePath =
+                    FS2.exists filePath { yes = Ok, no = NoSuchFolder >> Err }
+
+                readDir : FilePath -> Task Error Tauri.FolderContents
+                readDir filePath =
+                    FSInBaseDir.readDir Home { recursive = True } filePath
+            in
+            Dialog2.ask "Recursively?" AppNameAsTitle Info { yes = True, no = False }
+                |> Task.andThen openDir
+                |> Tauri.andThen getExistence
+                |> Tauri.andThenDefinitely readDir
+                |> Tauri.resultToMsg identity Folder
+                |> toCmd identity
 
         RemoveDir ->
-            case model.directory of
-                Just filePath ->
-                    Dialog.askOptions
-                        ("Are you sure you want to remove" ++ filePath ++ "?")
-                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
-                        |> toCmd (ConfirmRemoveDir filePath)
+            let
+                areYouSure : FilePath -> TaskErrorResultMsg FilePath
+                areYouSure filePath =
+                    Dialog2.ask
+                        ("Are you sure you want to remove " ++ filePath ++ " ?")
+                        (Title "Are you sure?")
+                        Warning
+                        { yes = Ok filePath, no = Err Cancelled }
 
-                Nothing ->
-                    cmdSucceed NoFolderSpecified
+                remove : FilePath -> Task Error Msg
+                remove filePath =
+                    FS2.removeDir filePath (RemovedFile filePath)
+            in
+            Dialog2.openDirectory { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" } (Err Cancelled) Ok
+                |> Tauri.andThen areYouSure
+                |> Tauri.andThenDefinitely remove
+                |> Tauri.bothResults
+                |> toCmd identity
 
         RemoveFile ->
-            case model.readFilePath of
-                Just filePath ->
-                    Dialog.askOptions
-                        ("Are you sure you want to remove" ++ filePath ++ "?")
-                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
-                        |> toCmd (ConfirmRemoveFile filePath)
+            let
+                ask : FilePath -> TaskErrorResultMsg FilePath
+                ask filePath =
+                    Dialog2.ask
+                        ("Are you sure you want to remove " ++ filePath ++ " ?")
+                        (Title "Are you sure?")
+                        Warning
+                        { yes = Ok filePath, no = Err Cancelled }
 
-                Nothing ->
-                    cmdSucceed NoReadFileSpecified
+                remove : FilePath -> Task Error Msg
+                remove filePath =
+                    FS2.removeFile filePath (RemovedFile filePath)
+            in
+            Dialog2.openFile { defaultPath = Nothing, filters = [], title = Just "Choose file to delete" } (Err Cancelled) Ok
+                |> Tauri.andThen ask
+                |> Tauri.andThenDefinitely remove
+                |> Tauri.bothResults
+                |> toCmd identity
 
         RenameFile ->
-            case ( model.readFilePath, model.saveFilePath ) of
-                ( Just from, Just to ) ->
-                    Dialog.askOptions
-                        ("Are you sure you want to rename\n" ++ from ++ "\nto\n" ++ to ++ "\n?")
-                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
-                        |> toCmd (ConfirmRename { from = from, to = to })
-
-                ( Nothing, _ ) ->
-                    cmdSucceed NoReadFileSpecified
-
-                ( Just _, Nothing ) ->
-                    cmdSucceed NoSaveFileSpecified
-
-        WriteTextFile ->
-            case model.textFileContent of
-                Nothing ->
-                    cmdSucceed EnableTextBox
-
-                Just contents ->
-                    case model.saveFilePath of
-                        Just filePath ->
-                            FSInBaseDir.writeTextFileIfDifferent Home { filePath = filePath, contents = contents }
-                                |> toCmd (WroteTextFile filePath)
-
-                        Nothing ->
-                            Dialog.save
-                                { defaultPath = Nothing
-                                , filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ]
-                                , title = Just "What do you want me to save it as?"
-                                }
-                                |> toCmd GotSaveFilePath
+            Dialog.openFile { defaultPath = Nothing, filters = [ { extensions = [ "txt", "elm", "md" ], name = "Texty Files" } ], title = Just "Pick a text file to rename" }
+                |> Dialog.ifNotPickedOne "Didn't pick a file to rename"
+                    (\fromFilePath ->
+                        Dialog.save { defaultPath = Nothing, filters = [], title = Just "What should I rename it to?" }
+                            |> Dialog.ifNotPickedOne "Didn't pick a new name"
+                                (\toFilePath ->
+                                    Dialog.askOptions
+                                        ("Are you sure you want to rename \n" ++ fromFilePath ++ "\n to \n" ++ toFilePath ++ "\n?")
+                                        { title = Just "Are you sure?", dialogType = Just Dialog.Warning }
+                                        |> Dialog.ifNo "Cancelled rename"
+                                            (FS.renameFile { from = fromFilePath, to = toFilePath }
+                                                |> Task.map (always <| Ok { from = fromFilePath, to = toFilePath })
+                                            )
+                                )
+                    )
+                |> toCmd Renamed
 
         GetPath baseDir ->
             Path.get baseDir
@@ -748,25 +698,6 @@ press model btn =
                             , [ Public, Resource, Runtime, Temp, Template, Video ]
                             ]
 
-        NewCopyFile ->
-            Dialog.openFile { defaultPath = Nothing, filters = [], title = Just "File to copy?" }
-                |> Task.andThen
-                    (Maybe.Extra.unwrap (Task.succeed IgnoreTauriFeedback)
-                        -- succeed is a misnomer there
-                        (\source ->
-                            Dialog.save { defaultPath = Nothing, filters = [], title = Just "File to save?" }
-                                |> Task.andThen
-                                    (Maybe.Extra.unwrap (Task.succeed IgnoreTauriFeedback)
-                                        -- succeed is a misnomer there too
-                                        (\target ->
-                                            FS.copyFile { from = source, to = target }
-                                                |> Task.map (always <| Copied { from = source, to = target })
-                                        )
-                                    )
-                        )
-                    )
-                |> toCmd identity
-
         ConfigMsg configMsg ->
             Config.updateFromDisk GotConfig configMsg
 
@@ -774,6 +705,27 @@ press model btn =
             Dialog.openFile { defaultPath = Nothing, filters = [], title = Just "Pick a file to see when it was last modified." }
                 |> Dialog.ifPickedOne (Modified.getFileModifiedDateTime model.zone)
                 |> toCmd GotModified
+
+        WriteTextFileContaining string ->
+            Dialog.save { defaultPath = Nothing, filters = [], title = Just "Save as" }
+                |> Dialog.ifPickedOne
+                    (\filePath ->
+                        FS.writeTextFileIfDifferent { filePath = filePath, contents = string }
+                            |> Task.map (\fileWas -> { filePath = filePath, fileWas = fileWas })
+                    )
+                |> toCmd WroteTextFile
+
+        CheckRealFileExists ->
+            Dialog2.openFile { defaultPath = Nothing, filters = [], title = Just "Pick an existing file" } (Err Cancelled) Ok
+                |> Tauri.andThenDefinitely (\filePath -> FS2.exists filePath { yes = Existence True, no = Existence False })
+                |> Tauri.bothResults
+                |> toCmd identity
+
+        CheckFakeFileExists ->
+            Dialog2.save { defaultPath = Nothing, filters = [], title = Just "Pretend to create a file" } (Err Cancelled) Ok
+                |> Tauri.andThenDefinitely (\filePath -> FS2.exists filePath { yes = Existence True, no = Existence False })
+                |> Tauri.bothResults
+                |> toCmd identity
 
 
 cmdSucceed : msg -> Cmd msg
@@ -798,11 +750,17 @@ showFolderContents (Tauri.FolderContents list) =
 
 showFile : Tauri.FileEntry -> String
 showFile { folderContents, name, path } =
+    let
+        folder =
+            case folderContents of
+                Nothing ->
+                    ""
+
+                Just (Tauri.FolderContents list) ->
+                    " -> " ++ (indent 4 <| Maybe.Extra.unwrap "" showFolderContents folderContents)
+    in
     Maybe.withDefault "" name
-        ++ "  "
-        ++ path
-        ++ "  "
-        ++ (indent 4 <| Maybe.Extra.unwrap "" showFolderContents folderContents)
+        ++ folder
 
 
 indent : Int -> String -> String
