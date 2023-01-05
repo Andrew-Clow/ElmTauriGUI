@@ -189,72 +189,72 @@ errorToString =
 -- Utility functions ---------------------------------------------------------------------------------------------------
 
 
-andThen : (a -> Task TaskPort.Error (Result msg b)) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
+andThen : (a -> Task error (Result msg b)) -> Task error (Result msg a) -> Task error (Result msg b)
 andThen nextTask firstTask =
     firstTask |> resultTask (Err >> Task.succeed) nextTask
 
 
-andThenWithoutResult : (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result msg a) -> Task TaskPort.Error (Result msg b)
+andThenWithoutResult : (a -> Task error b) -> Task error (Result msg a) -> Task error (Result msg b)
 andThenWithoutResult nextTask firstTask =
     firstTask |> resultTask (Err >> Task.succeed) (nextTask >> Task.map Ok)
 
 
-alwaysTask : Task TaskPort.Error b -> Task TaskPort.Error a -> Task TaskPort.Error b
+alwaysTask : Task error b -> Task error a -> Task error b
 alwaysTask second first =
     first |> Task.andThen (always second)
 
 
-alwaysMsg : msg -> Task TaskPort.Error ignored -> Task TaskPort.Error msg
+alwaysMsg : msg -> Task error ignored -> Task error msg
 alwaysMsg msg task =
     task |> Task.map (always msg)
 
 
-maybeTask : Task TaskPort.Error b -> (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Maybe a) -> Task TaskPort.Error b
+maybeTask : Task error b -> (a -> Task error b) -> Task error (Maybe a) -> Task error b
 maybeTask nothing just task =
     task |> Task.andThen (Maybe.Extra.unwrap nothing just)
 
 
-maybeToMsg : b -> (a -> b) -> Task TaskPort.Error (Maybe a) -> Task TaskPort.Error b
+maybeToMsg : b -> (a -> b) -> Task error (Maybe a) -> Task error b
 maybeToMsg nothing just task =
     task |> Task.map (Maybe.Extra.unwrap nothing just)
 
 
-resultTask : (err -> Task TaskPort.Error b) -> (a -> Task TaskPort.Error b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error b
+resultTask : (err -> Task error b) -> (a -> Task error b) -> Task error (Result err a) -> Task error b
 resultTask err ok task =
     task |> Task.andThen (Result.Extra.unpack err ok)
 
 
-resultToMsg : (err -> b) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error b
+resultToMsg : (err -> b) -> (a -> b) -> Task error (Result err a) -> Task error b
 resultToMsg err ok task =
     task |> Task.map (Result.Extra.unpack err ok)
 
 
-mapErr : (err -> newErr) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr a)
+mapErr : (err -> newErr) -> Task error (Result err a) -> Task error (Result newErr a)
 mapErr f task =
     task |> Task.map (Result.mapError f)
 
 
-mapOk : (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result err b)
+mapOk : (a -> b) -> Task error (Result err a) -> Task error (Result err b)
 mapOk f task =
     task |> Task.map (Result.map f)
 
 
-mapErrAndOk : (err -> newErr) -> (a -> b) -> Task TaskPort.Error (Result err a) -> Task TaskPort.Error (Result newErr b)
+mapErrAndOk : (err -> newErr) -> (a -> b) -> Task error (Result err a) -> Task error (Result newErr b)
 mapErrAndOk mapE mapO task =
     task |> Task.map (Result.mapError mapE >> Result.map mapO)
 
 
-resultsAreMsgs : Task TaskPort.Error (Result msg msg) -> Task TaskPort.Error msg
+resultsAreMsgs : Task error (Result msg msg) -> Task error msg
 resultsAreMsgs task =
     task |> Task.map (Result.Extra.unpack identity identity)
 
 
-boolTask : { true : Task TaskPort.Error b, false : Task TaskPort.Error b } -> Task TaskPort.Error Bool -> Task TaskPort.Error b
+boolTask : { true : Task error b, false : Task error b } -> Task error Bool -> Task error b
 boolTask thenTasks task =
     task |> Task.andThen (iff thenTasks.true thenTasks.false)
 
 
-boolToMsg : { true : b, false : b } -> Task TaskPort.Error Bool -> Task TaskPort.Error b
+boolToMsg : { true : b, false : b } -> Task error Bool -> Task error b
 boolToMsg msgs task =
     task |> Task.map (iff msgs.true msgs.false)
 
