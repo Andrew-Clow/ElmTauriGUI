@@ -1,6 +1,7 @@
 module Main.Config exposing (..)
 
 import Codec exposing (Codec)
+import Tauri
 import Tauri.Persistence as Persistence exposing (Persist, PersistentData)
 
 
@@ -57,20 +58,15 @@ default =
     Persistence.default persist
 
 
-init : (Result String PersistentConfig -> msg) -> Cmd msg
+init : (Result { default : PersistentConfig, error : String } PersistentConfig -> msg) -> Cmd msg
 init toMsg =
-    Persistence.init persist |> Persistence.toCmd1 toMsg
+    Persistence.initCmdWithStringError persist toMsg
 
 
 updateFromCurrentValue : (Result String PersistentConfig -> msg) -> ConfigMsg -> PersistentConfig -> Cmd msg
 updateFromCurrentValue toMsg msg persistentConfig =
     Persistence.updateFromCurrentValue persist msg persistentConfig
         |> Persistence.toCmd1 toMsg
-
-
-updateFromDisk : (Result String PersistentConfig -> msg) -> ConfigMsg -> Cmd msg
-updateFromDisk toMsg msg =
-    Persistence.updateFromDisk persist msg |> Persistence.toCmd1 toMsg
 
 
 getCheesesPerPage : PersistentConfig -> Int

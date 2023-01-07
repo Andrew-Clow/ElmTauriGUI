@@ -19,6 +19,7 @@ import Tauri.FS as FS
 import Tauri.FSInBaseDir as FSInBaseDir
 import Tauri.Modified as Modified
 import Tauri.Path as Path
+import Tauri.TaskUtils as TaskUtils
 import Time
 
 
@@ -84,7 +85,6 @@ type Button
     | RenameFile
     | WriteTextFileContaining String
     | GetPath BaseDir.BaseDir
-    | ConfigMsg Config.ConfigMsg
     | GetModified
 
 
@@ -93,7 +93,8 @@ type Msg
       IgnoreTauriFeedback --    noop for boring events
     | InteropError TaskPort.InteropError -- TaskPort setup
     | JSReturnError TaskPort.JSError --     TaskPort setup
-    | GotConfig (Result String Config.PersistentConfig) --  app setup
+    | GotConfig (Result String Config.PersistentConfig)
+    | GotNewConfig (Result { default : Config.PersistentConfig, error : String } Config.PersistentConfig) --  app setup
     | GotTimeZone Time.Zone --                              app setup
       -- interaction ----------------------------------------------------------
       -- Dialog
@@ -122,6 +123,8 @@ type Msg
     | GotPath BaseDir.BaseDir FilePath
       -- Modified
     | GotModified { filePath : FilePath, modified : DateTime }
+      -- Config
+    | ConfigMsg Config.ConfigMsg
 
 
 init : flags -> ( Model, Cmd Msg )
@@ -134,7 +137,7 @@ init =
           , zone = Time.utc
           }
         , Cmd.batch
-            [ Config.init GotConfig
+            [ Config.init GotNewConfig
             , Task.perform GotTimeZone Time.here
             ]
         )
@@ -176,12 +179,12 @@ view model =
                 , Element.text " "
                 , Element.text "Persistence"
                 , Element.row [ Element.spacing 10 ]
-                    [ button <| ConfigMsg (ChangeCheesePerPageBy 1)
-                    , button <| ConfigMsg (ChangeCheesePerPageBy -1)
+                    [ greenButton "+1 cheese per page" <| ConfigMsg (ChangeCheesePerPageBy 1)
+                    , greenButton "-1 cheese per page" <| ConfigMsg (ChangeCheesePerPageBy -1)
                     ]
                 , Element.row [ Element.spacing 10 ]
-                    [ button <| ConfigMsg (AddCheese <| Config.Hard "Gruyere")
-                    , button <| ConfigMsg (RemoveCheese <| Config.Hard "Gruyere")
+                    [ greenButton "+ Gruyere" <| ConfigMsg (AddCheese <| Config.Hard "Gruyere")
+                    , greenButton "- Gruyere" <| ConfigMsg (RemoveCheese <| Config.Hard "Gruyere")
                     ]
                 , Element.text " "
                 , Element.row [ Element.spacing 30 ]
@@ -313,9 +316,6 @@ buttonName btn =
         GetPath baseDir ->
             BaseDir.toString baseDir
 
-        ConfigMsg configMsg ->
-            Config.configMsgToString configMsg
-
         GetModified ->
             "Get File Modified Date/Time"
 
@@ -416,6 +416,20 @@ update msg model =
         GotPath baseDir filePath ->
             ( good model <| BaseDir.toString baseDir ++ ":\n" ++ filePath, Cmd.none )
 
+        GotNewConfig result ->
+            case result of
+                Ok newConfig ->
+                    ( good { model | config = newConfig } <|
+                        "saved config: \n cheesesPerPage = "
+                            ++ String.fromInt (Config.getCheesesPerPage newConfig)
+                            ++ "\n cheeses = \n   "
+                            ++ String.join "\n   " (List.map Config.cheeseToString <| Config.getCheeses newConfig)
+                    , Cmd.none
+                    )
+
+                Err { default, error } ->
+                    ( { model | answerWas = { text = error, good = Bad }, config = default }, Cmd.none )
+
         GotConfig result ->
             case result of
                 Ok newConfig ->
@@ -447,6 +461,9 @@ update msg model =
 
         Say string ->
             ( good model string, Cmd.none )
+
+        ConfigMsg configMsg ->
+            ( model, Config.updateFromCurrentValue GotConfig configMsg model.config )
 
 
 iff : Bool -> a -> a -> a
@@ -517,8 +534,8 @@ press model btn =
                 , title = Just "Pick a text file to read"
                 }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult FS.readTextFile
-                |> Tauri.resultToMsg identity GotFileContents
+                |> TaskUtils.andThenWithoutResult FS.readTextFile
+                |> TaskUtils.resultToMsg identity GotFileContents
                 |> toCmd identity
 
         CopyFile ->
@@ -550,10 +567,10 @@ press model btn =
                     FS.copyFile fromTo (Copied fromTo)
             in
             open
-                |> Tauri.andThen saveDialog
-                |> Tauri.andThen areYouSure
-                |> Tauri.andThenWithoutResult copy
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThen saveDialog
+                |> TaskUtils.andThen areYouSure
+                |> TaskUtils.andThenWithoutResult copy
+                |> toCmd TaskUtils.resultsCombine
 
         ChooseToCreateDir ->
             Dialog2.save
@@ -581,9 +598,9 @@ press model btn =
             in
             Dialog2.ask "Recursively?" { title = Nothing, dialogType = Info } { yes = True, no = False }
                 |> Task.andThen openDir
-                |> Tauri.andThen getExistence
-                |> Tauri.andThenWithoutResult readDir
-                |> Tauri.resultToMsg identity Folder
+                |> TaskUtils.andThen getExistence
+                |> TaskUtils.andThenWithoutResult readDir
+                |> TaskUtils.resultToMsg identity Folder
                 |> toCmd identity
 
         RemoveDir ->
@@ -602,9 +619,9 @@ press model btn =
             Dialog2.openDirectory
                 { defaultPath = Nothing, recursive = False, title = Just "Choose a directory to read" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThen areYouSure
-                |> Tauri.andThenWithoutResult remove
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThen areYouSure
+                |> TaskUtils.andThenWithoutResult remove
+                |> toCmd TaskUtils.resultsCombine
 
         RemoveFile ->
             let
@@ -622,9 +639,9 @@ press model btn =
             Dialog2.openFile
                 { defaultPath = Nothing, filters = [], title = Just "Choose file to delete" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThen ask
-                |> Tauri.andThenWithoutResult remove
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThen ask
+                |> TaskUtils.andThenWithoutResult remove
+                |> toCmd TaskUtils.resultsCombine
 
         RenameFile ->
             let
@@ -655,17 +672,14 @@ press model btn =
                     FS.renameFile fromTo (Copied fromTo)
             in
             open
-                |> Tauri.andThen saveDialog
-                |> Tauri.andThen areYouSure
-                |> Tauri.andThenWithoutResult rename
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThen saveDialog
+                |> TaskUtils.andThen areYouSure
+                |> TaskUtils.andThenWithoutResult rename
+                |> toCmd TaskUtils.resultsCombine
 
         GetPath baseDir ->
             Path.get baseDir
                 |> toCmd (GotPath baseDir)
-
-        ConfigMsg configMsg ->
-            Config.updateFromDisk GotConfig configMsg
 
         GetModified ->
             Dialog2.openFile
@@ -674,31 +688,31 @@ press model btn =
                 , title = Just "Pick a file to see when it was last modified."
                 }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult (Modified.getFileModifiedDateTime model.zone)
-                |> Tauri.resultToMsg identity GotModified
+                |> TaskUtils.andThenWithoutResult (Modified.getFileModifiedDateTime model.zone)
+                |> TaskUtils.resultToMsg identity GotModified
                 |> toCmd identity
 
         WriteTextFileContaining string ->
             Dialog2.save { defaultPath = Nothing, filters = [], title = Just "Save as" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult
+                |> TaskUtils.andThenWithoutResult
                     (\filePath -> FS.writeTextFileIfDifferent { filePath = filePath, contents = string })
-                |> Tauri.resultToMsg identity WroteTextFile
+                |> TaskUtils.resultToMsg identity WroteTextFile
                 |> toCmd identity
 
         CheckRealFileExists ->
             Dialog2.openFile
                 { defaultPath = Nothing, filters = [], title = Just "Pick an existing file" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
+                |> toCmd TaskUtils.resultsCombine
 
         CheckFakeFileExists ->
             Dialog2.save
                 { defaultPath = Nothing, filters = [], title = Just "Pretend to create a file" }
                 { cancelled = Err Cancelled, chose = Ok }
-                |> Tauri.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
-                |> toCmd Tauri.resultsCombine
+                |> TaskUtils.andThenWithoutResult (\filePath -> FS.exists filePath { yes = Existence True, no = Existence False })
+                |> toCmd TaskUtils.resultsCombine
 
 
 showFolderContents : Tauri.FolderContents -> String

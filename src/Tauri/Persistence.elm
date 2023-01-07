@@ -1,14 +1,18 @@
 module Tauri.Persistence exposing
     ( Persist
+    , PersistenceError
     , PersistentData
     , default
     , get
     , init
+    , initCmd
+    , initCmdWithStringError
+    , initWithStringError
     , modifyCurrentValue
+    , persistenceErrorToString
     , toCmd1
     , toCmd2
     , updateFromCurrentValue
-    , updateFromDisk
     )
 
 -- Codec couples your encoder and decoder together so it's hard for them not to match up.
@@ -18,7 +22,8 @@ import Json.Decode
 import Task exposing (Task)
 import TaskPort
 import Tauri.BaseDir as BaseDir
-import Tauri.FSInBaseDir as FS
+import Tauri.FSInBaseDir as FSInBaseDir
+import Tauri.TaskUtils as TaskUtils
 
 
 
@@ -95,21 +100,6 @@ toCmd2 tagError toMsg task =
             )
 
 
-init : Persist pData pMsg -> Task String (PersistentData pData)
-init persist =
-    FS.exists appConfig persist.filename { yes = always True, no = always False }
-        |> Task.mapError (\e -> "Persistence.init error: " ++ TaskPort.errorToString e)
-        |> Task.andThen
-            (\exists ->
-                if exists then
-                    read persist
-
-                else
-                    ensureAppConfigDirExists
-                        |> Task.andThen (\_ -> writeDefault persist)
-            )
-
-
 modifyCurrentValue : Persist pData pMsg -> (pData -> pData) -> PersistentData pData -> Task String (PersistentData pData)
 modifyCurrentValue persist change (PersistentData data) =
     write persist <| change data
@@ -120,15 +110,151 @@ updateFromCurrentValue persist msg (PersistentData data) =
     write persist <| persist.update msg data
 
 
+initCmd : Persist pData pMsg -> (Result { default : PersistentData pData, error : PersistenceError } (PersistentData pData) -> msg) -> Cmd msg
+initCmd persist toMsg =
+    Task.attempt toMsg (init persist)
 
--- Hack I wrote because I didn't have access to the model in the part of the code I was writing.
--- I shouldn't really do this because the Model should be the source of truth,
--- saved to the disk every time it changes ready for next time.
+
+init : Persist pData pMsg -> Task { default : PersistentData pData, error : PersistenceError } (PersistentData pData)
+init persist =
+    checkExists persist.filename
+        |> TaskUtils.boolTask
+            { true = readOrDefault persist
+            , false = writeDefaultCarefully persist
+            }
+        |> Task.mapError (\err -> { default = PersistentData persist.default, error = err })
 
 
-updateFromDisk : Persist pData pMsg -> pMsg -> Task String (PersistentData pData)
-updateFromDisk persist msg =
-    read persist |> Task.andThen (updateFromCurrentValue persist msg)
+initCmdWithStringError : Persist pData pMsg -> (Result { default : PersistentData pData, error : String } (PersistentData pData) -> msg) -> Cmd msg
+initCmdWithStringError persist toMsg =
+    Task.attempt toMsg (initWithStringError persist)
+
+
+initWithStringError : Persist pData pMsg -> Task { default : PersistentData pData, error : String } (PersistentData pData)
+initWithStringError persist =
+    let
+        newError : { default : PersistentData pData, error : PersistenceError } -> { default : PersistentData pData, error : String }
+        newError oldError =
+            { default = PersistentData persist.default, error = persistenceErrorToString persist oldError.error }
+    in
+    init persist |> Task.mapError newError
+
+
+readOrDefault :
+    Persist pData pMsg
+    -> Task PersistenceError (PersistentData pData)
+readOrDefault persist =
+    readCarefully persist
+        |> Task.map PersistentData
+
+
+checkExists : FilePath -> Task PersistenceError Bool
+checkExists filePath =
+    FSInBaseDir.exists appConfig filePath { no = always False, yes = always True }
+        |> Task.mapError CouldNotCheckExistence
+
+
+readCarefully : Persist pData pMsg -> Task PersistenceError pData
+readCarefully persist =
+    let
+        readPersistedFile : Task PersistenceError String
+        readPersistedFile =
+            FSInBaseDir.readTextFile appConfig persist.filename
+                |> Task.mapError CouldNotReadFile
+                |> Task.map .contents
+
+        toJson : String -> Result PersistenceError pData
+        toJson content =
+            Json.Decode.decodeString (Codec.decoder persist.jsonCodec) content
+                |> Result.mapError (IncorrectJson content)
+    in
+    checkExists persist.filename
+        |> TaskUtils.boolTask { true = readPersistedFile, false = Task.fail FileDoesNotExist }
+        |> Task.map toJson
+        |> TaskUtils.combineErrToFail
+
+
+ensureAppConfigDirExistsCarefully : Task PersistenceError ()
+ensureAppConfigDirExistsCarefully =
+    checkExists ""
+        |> TaskUtils.boolTask
+            { true = Task.succeed ()
+            , false =
+                FSInBaseDir.createDir appConfig { createParentsIfAbsent = True } "" ()
+                    |> Task.mapError CouldNotCreateAppConfigFolder
+            }
+
+
+type PersistenceError
+    = CouldNotCheckExistence TaskPort.Error
+    | CouldNotCreateAppConfigFolder TaskPort.Error
+    | FileDoesNotExist
+    | CouldNotReadFile TaskPort.Error
+    | IncorrectJson String Json.Decode.Error
+    | CouldNotSaveDefaultConfig TaskPort.Error
+
+
+persistenceErrorToString : Persist pData pMsg -> PersistenceError -> String
+persistenceErrorToString persist err =
+    case err of
+        CouldNotCheckExistence error ->
+            String.join "\n"
+                [ "Sorry, I couldn't check the existence of"
+                , persist.filename
+                , ""
+                , "I got this error message:"
+                , TaskPort.errorToString error
+                ]
+
+        FileDoesNotExist ->
+            String.join "\n"
+                [ "Sorry, I needed this file to exist, but it doesn't seem to:"
+                , persist.filename
+                ]
+
+        CouldNotReadFile error ->
+            String.join "\n"
+                [ "Sorry, I couldn't find the file"
+                , persist.filename
+                , ""
+                , "I got this error message:"
+                , ""
+                , TaskPort.errorToString error
+                ]
+
+        IncorrectJson string error ->
+            String.join "\n"
+                [ "Sorry, although I found"
+                , persist.filename
+                , "the Json in it seemed wrong."
+                , ""
+                , "I got the error message below"
+                , "and I've included the file contents at the bottom"
+                , ""
+                , Json.Decode.errorToString error
+                , ""
+                , string
+                ]
+
+        CouldNotCreateAppConfigFolder error ->
+            String.join "\n"
+                [ "Sorry, I couldn't find the folder that "
+                , persist.filename
+                , "is supposed to go in, so I tried to create it,"
+                , "but I got this error message:"
+                , ""
+                , TaskPort.errorToString error
+                ]
+
+        CouldNotSaveDefaultConfig error ->
+            String.join "\n"
+                [ "Sorry, I couldn't find the file"
+                , persist.filename
+                , "and so I tried to create one with the default one,"
+                , "but I got this error message:"
+                , ""
+                , TaskPort.errorToString error
+                ]
 
 
 
@@ -136,9 +262,9 @@ updateFromDisk persist msg =
 -- Not giving you read - The model is the source of truth, not the disk.
 
 
-read : Persist pData pMsg -> Task String (PersistentData pData)
-read persist =
-    FS.readTextFile appConfig persist.filename
+readDeprecated : Persist pData pMsg -> Task String (PersistentData pData)
+readDeprecated persist =
+    FSInBaseDir.readTextFile appConfig persist.filename
         |> Task.mapError (\e -> "Persistence.init error: " ++ TaskPort.errorToString e)
         |> Task.andThen
             (\fileContents ->
@@ -160,13 +286,21 @@ writeDefault persist =
     write persist persist.default
 
 
+writeDefaultCarefully : Persist pData pMsg -> Task PersistenceError (PersistentData pData)
+writeDefaultCarefully persist =
+    FSInBaseDir.writeTextFile appConfig
+        { filePath = persist.filename, contents = Codec.encodeToString 2 persist.jsonCodec persist.default }
+        (PersistentData persist.default)
+        |> Task.mapError CouldNotSaveDefaultConfig
+
+
 
 -- Not giving you write - you could generate values outside of your model's PersistentData pData
 
 
 write : Persist pData pMsg -> pData -> Task String (PersistentData pData)
 write persist pData =
-    FS.writeTextFile appConfig
+    FSInBaseDir.writeTextFile appConfig
         { filePath = persist.filename, contents = Codec.encodeToString 2 persist.jsonCodec pData }
         (PersistentData pData)
         |> Task.mapError (\e -> "Persistence.saveDefault error: " ++ TaskPort.errorToString e)
@@ -178,14 +312,14 @@ write persist pData =
 
 ensureAppConfigDirExists : Task String ()
 ensureAppConfigDirExists =
-    FS.exists appConfig "" { yes = always True, no = always False }
+    FSInBaseDir.exists appConfig "" { yes = always True, no = always False }
         |> Task.andThen
             (\existence ->
                 if existence then
                     Task.succeed ()
 
                 else
-                    FS.createDir appConfig { createParentsIfAbsent = True } "" ()
+                    FSInBaseDir.createDir appConfig { createParentsIfAbsent = True } "" ()
             )
         |> Task.mapError TaskPort.errorToString
 

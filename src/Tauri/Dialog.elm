@@ -31,6 +31,7 @@ import Json.Encode
 import Task exposing (Task)
 import TaskPort exposing (Error)
 import Tauri exposing (FilePath)
+import Tauri.TaskUtils as TaskUtils
 
 
 
@@ -68,7 +69,7 @@ ask : String -> { title : Maybe String, dialogType : InfoWarningOrError } -> { y
 ask question options answers =
     TaskPort.call
         { function = "askOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (Tauri.iff answers.yes answers.no)
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (TaskUtils.iff answers.yes answers.no)
         , argsEncoder = encodeMessageDialogOptions options
         }
         question
@@ -82,7 +83,7 @@ confirm : String -> { title : Maybe String, dialogType : InfoWarningOrError } ->
 confirm question options { ok, cancel } =
     TaskPort.call
         { function = "confirmOptions"
-        , valueDecoder = Json.Decode.bool |> Json.Decode.map (Tauri.iff ok cancel)
+        , valueDecoder = Json.Decode.bool |> Json.Decode.map (TaskUtils.iff ok cancel)
         , argsEncoder = encodeMessageDialogOptions options
         }
         question
@@ -133,7 +134,7 @@ openFile options { cancelled, chose } =
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
-        |> Tauri.maybeToMsg cancelled chose
+        |> TaskUtils.maybeToMsg cancelled chose
 
 
 openFiles : FileDialogOptions -> { cancelled : answer, chose : List FilePath -> answer } -> Task Error answer
@@ -144,7 +145,7 @@ openFiles options { cancelled, chose } =
         , argsEncoder = encodeFileDialogOptions { multiple = True }
         }
         options
-        |> Tauri.maybeToMsg cancelled chose
+        |> TaskUtils.maybeToMsg cancelled chose
 
 
 
@@ -166,7 +167,7 @@ openDirectory options { cancelled, chose } =
         , argsEncoder = encodeDirectoryDialogOptions { multiple = False }
         }
         options
-        |> Tauri.maybeToMsg cancelled chose
+        |> TaskUtils.maybeToMsg cancelled chose
 
 
 openDirectories : DirectoryDialogOptions -> { cancelled : answer, chose : List FilePath -> answer } -> Task Error answer
@@ -177,7 +178,7 @@ openDirectories options { cancelled, chose } =
         , argsEncoder = encodeDirectoryDialogOptions { multiple = True }
         }
         options
-        |> Tauri.maybeToMsg cancelled chose
+        |> TaskUtils.maybeToMsg cancelled chose
 
 
 
@@ -192,7 +193,7 @@ save options { cancelled, chose } =
         , argsEncoder = encodeFileDialogOptions { multiple = False }
         }
         options
-        |> Tauri.maybeToMsg cancelled chose
+        |> TaskUtils.maybeToMsg cancelled chose
 
 
 

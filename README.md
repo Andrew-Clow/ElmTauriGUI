@@ -6,6 +6,26 @@ There's an example app with LOTS of buttons in Main.elm with persistent Main/Con
 
 ![screenshot showing many buttons like "Open Dialog" "Copy File" etc](screenshot.png?raw=true "Screenshot")
 
+## Stuff
+
+Mainly I'm providing `Task`s because you can chain them with `andThen`.
+You'll want to turn them into `Cmd`s and you can use Tauri.toCmd3 or Tauri.toCommand1 etc to help that.
+I import it but define my own local one to keep the Interop errors (probably broken javascript in index.html)
+and the Javascript errors (usually runtime errors) separate from my messages.
+
+* src/Main.elm has _lots_ of examples, some of them simple like asking a question, some multi-stage interactions like 
+  the user choosing a source and a destination, confirming to go ahead and then copying the file.
+* src/Tauri/FS.elm is FileSystem functions
+* src/Tauri has functions to turn the Tasks into commands
+* src/Tauri/TaskUtils has lots of tools for
+    - Using `Task` rather than `Cmd` so you can use `andThen` to conditionally run other Tasks,
+      for if stuff's absent or the user says yes or no etc.
+    - Keeping errors out of fail state: I find it's useful to usually return a `Result Msg a` 
+      so that `Tauri.andThen` chains them together OK. Once an error is in the fail part of the Task, 
+      your Task is stopping and your error recovery is up to the calling code.
+
+# How To
+
 If you're cloning it to edit, you'll certainly want to edit tauri.conf.json from what I put:
 
     "package": {

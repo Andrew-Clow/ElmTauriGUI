@@ -16,7 +16,8 @@ import Json.Decode
 import Json.Encode
 import Task exposing (Task)
 import TaskPort exposing (Error)
-import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..), iff)
+import Tauri exposing (FileContents, FileEntry, FilePath, FileWas(..), FolderContents(..))
+import Tauri.TaskUtils as TaskUtils exposing (iff)
 
 
 
@@ -69,7 +70,7 @@ writeTextFile fileContents ok =
 writeTextFileIfDifferent : { filePath : FilePath, contents : String } -> Task Error { filePath : FilePath, fileWas : FileWas }
 writeTextFileIfDifferent fileContents =
     exists fileContents.filePath { yes = always True, no = always False }
-        |> Tauri.boolTask
+        |> TaskUtils.boolTask
             { true =
                 readTextFile fileContents.filePath
                     |> Task.andThen
