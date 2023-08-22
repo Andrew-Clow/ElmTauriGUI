@@ -1,6 +1,11 @@
-module ABetterWayToAvoidMonadicCode exposing (..)
+module AIdeaAboutABetterWayToAvoidMonadicCode exposing (..)
 
--- This is ideas in code form rather than working code, written for a post in elm slack, but preserved here for my future reference.
+-- This is ideas in mock code form
+-- rather than working code,
+-- written for a post in elm slack,
+-- but preserved here for my future reference.
+--
+-- The central idea is to put a message inside a message to describe the future messages you want to trigger.
 
 import Task exposing (Task)
 
@@ -11,6 +16,74 @@ type alias Model =
 
 type alias FilePath =
     String
+
+
+
+-- MsgTree: program sequencing logic is in the messages.
+-- Good: fewer messages, less repetition because code becomes multipurpose
+-- Bad: Messages can be hard to read.
+-- Balance: the elm architecture, more consisely, but with maybe uglier messages
+
+
+type MsgTree
+    = ClickedSaveAs
+    | ClickedSave
+    | ClickedOpen
+    | ClickedExport
+    | CheckExists FilePath { fileExists : MsgTree, fileDoesNotExist : MsgTree }
+    | Confirm String { saidYes : MsgTree, saidNo : MsgTree }
+    | Clobber FilePath String
+    | CancelledSomething
+    | GotFSError Tauri.FS.Error
+
+
+updateMsgTree : MsgTree -> Model -> ( Model, Cmd MsgTree )
+updateMsgTree msg model =
+    case msg of
+        ClickedSaveAs ->
+            ( model
+            , TauriCmd.Dialog.saveAs <|
+                \filePath ->
+                    CheckExists filePath
+                        { fileExists =
+                            Confirm (filePath ++ " already exists. Save anyway?")
+                                { saidYes = Clobber filePath (Content.File.output <| model.content)
+                                , saidNo = CancelledSomething
+                                }
+                        , fileDoesNotExist = Clobber filePath (Content.File.output <| model.content)
+                        }
+            )
+
+        CheckExists filePath { fileExists, fileDoesNotExist } ->
+            ( model
+            , TauriCmd.FS.exists filePath <|
+                \existence ->
+                    if existence then
+                        fileExists
+
+                    else
+                        fileDoesNotExist
+            )
+
+        Confirm question { saidYes, saidNo } ->
+            -- I'm tempted to do ifThenElse : a -> a -> Bool to make these one-liners!
+            ( model
+            , TauriCmd.Dialog.confirm Tauri.Dialog.Warning question <|
+                \answer ->
+                    if answer then
+                        saidYes
+
+                    else
+                        saidNo
+            )
+
+        Clobber filePath contents ->
+            ( model, TauriCmd.save filePath contents GotFSError )
+
+        _ ->
+            -- Actually, three more cases, each as clearly self-documenting as the ClickedSaveAs case,
+            -- and a little error-handling, as usual.
+            ( model, Cmd.none )
 
 
 
@@ -163,72 +236,4 @@ updateMonadicTaskMsgsWithLetBindings msg model =
         _ ->
             -- Actually, three more lengthy, multiple let-bindings type things
             -- and a little error handling
-            ( model, Cmd.none )
-
-
-
--- MsgTree: program sequencing logic is in the messages.
--- Good: fewer messages, less repetition because code becomes multipurpose
--- Bad: Messages can be hard to read.
--- Balance: the elm architecture, more consisely, but with maybe uglier messages
-
-
-type MsgTree
-    = ClickedSaveAs
-    | ClickedSave
-    | ClickedOpen
-    | ClickedExport
-    | CheckExists FilePath { fileExists : MsgTree, fileDoesNotExist : MsgTree }
-    | Confirm String { saidYes : MsgTree, saidNo : MsgTree }
-    | Clobber FilePath String
-    | CancelledSomething
-    | GotFSError Tauri.FS.Error
-
-
-updateMsgTree : MsgTree -> Model -> ( Model, Cmd MsgTree )
-updateMsgTree msg model =
-    case msg of
-        ClickedSaveAs ->
-            ( model
-            , TauriCmd.Dialog.saveAs <|
-                \filePath ->
-                    CheckExists filePath
-                        { fileExists =
-                            Confirm (filePath ++ " already exists. Save anyway?")
-                                { saidYes = Clobber filePath (Content.File.output <| model.content)
-                                , saidNo = CancelledSomething
-                                }
-                        , fileDoesNotExist = Clobber filePath (Content.File.output <| model.content)
-                        }
-            )
-
-        CheckExists filePath { fileExists, fileDoesNotExist } ->
-            ( model
-            , TauriCmd.FS.exists filePath <|
-                \existence ->
-                    if existence then
-                        fileExists
-
-                    else
-                        fileDoesNotExist
-            )
-
-        Confirm question { saidYes, saidNo } ->
-            -- I'm tempted to do ifThenElse : a -> a -> Bool to make these one-liners!
-            ( model
-            , TauriCmd.Dialog.confirm Tauri.Dialog.Warning question <|
-                \answer ->
-                    if answer then
-                        saidYes
-
-                    else
-                        saidNo
-            )
-
-        Clobber filePath contents ->
-            ( model, TauriCmd.save filePath contents GotFSError )
-
-        _ ->
-            -- Actually, three more cases, each as clearly self-documenting as the ClickedSaveAs case,
-            -- and a little error-handling, as usual.
             ( model, Cmd.none )
