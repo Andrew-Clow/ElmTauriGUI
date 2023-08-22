@@ -2,7 +2,7 @@ module ABetterWayToAvoidMonadicCode exposing (..)
 
 -- This is ideas in code form rather than working code, written for a post in elm slack, but preserved here for my future reference.
 
-import Task
+import Task exposing (Task)
 
 
 type alias Model =
@@ -118,6 +118,50 @@ updateMonadicTaskMsgs msg model =
 
         _ ->
             -- Actually, three more horrible, complex, difficult to understand cases
+            -- and a little error handling
+            ( model, Cmd.none )
+
+
+updateMonadicTaskMsgsWithLetBindings : MonadicTaskMsgs -> Model -> ( Model, Cmd MonadicTaskMsgs )
+updateMonadicTaskMsgsWithLetBindings msg model =
+    let
+        checkExists : FilePath -> Task Tauri.FSError { filePath : FilePath, exists : Bool }
+        checkExists filePath =
+            TauriTask.FS.exists |> Task.map (\exists -> { filePath = filePath, exists = exists })
+
+        ifExistsThenConfirm : { filePath : FilePath, exists : Bool } -> Task Tauri.FSError ()
+        ifExistsThenConfirm { filePath, exists } =
+            if exists then
+                TauriTask.Dialog.confirm Tauri.Dialog.Warning (filePath ++ " already exists. Save anyway?")
+                    |> TauriTask.andThen (ifConfirmedThenSave filePath)
+
+            else
+                actuallySave filePath
+
+        ifConfirmedThenSave : FilePath -> Bool -> Task Tauri.FSError ()
+        ifConfirmedThenSave filePath confirmed =
+            if confirmed then
+                actuallySave filePath
+
+            else
+                Task.succeed ()
+
+        actuallySave : FilePath -> Task Tauri.FSError ()
+        actuallySave filePath =
+            TauriTask.FS.save filePath (Content.toString <| model.content) FSErrorArrived
+    in
+    case msg of
+        SaveAs ->
+            ( model
+            , TauriTask.Dialog.saveAs
+                |> TauriTask.andThen checkExists
+                |> TauriTask.andThen ifExistsThenConfirm
+                |> TauriTask.andThen ifConfirmedThenSave
+                |> Task.attempt TaskResult
+            )
+
+        _ ->
+            -- Actually, three more lengthy, multiple let-bindings type things
             -- and a little error handling
             ( model, Cmd.none )
 
